@@ -38,6 +38,11 @@ async function applyDelay(delayMs) {
   await new Promise((resolve) => setTimeout(resolve, delayMs));
 }
 
+function isMasterLockoutBypassEnabled() {
+  const flag = String(process.env.MASTER_BYPASS_LOCKOUT || '').trim().toLowerCase();
+  return flag === '1' || flag === 'true' || flag === 'on' || flag === 'yes';
+}
+
 export async function evaluateLoginPreAuthGateService({ email, senha } = {}) {
   let user = null;
 
@@ -58,9 +63,10 @@ export async function evaluateLoginPreAuthGateService({ email, senha } = {}) {
   const lockMinutos = Number(process.env.LOGIN_LOCK_MINUTES || 15);
   const agora = new Date();
   const isMasterRole = user.role === 'master' || user.global_role === 'master';
-  const masterBypassLockout = (process.env.MASTER_BYPASS_LOCKOUT || 'true').toLowerCase() !== 'false';
+  const masterBypassLockout = isMasterLockoutBypassEnabled();
+  const shouldEnforceLockout = !(isMasterRole && masterBypassLockout);
 
-  if (user.lock_until && user.lock_until > agora && !(isMasterRole && masterBypassLockout)) {
+  if (user.lock_until && user.lock_until > agora && shouldEnforceLockout) {
     const minutosRestantes = Math.ceil((user.lock_until.getTime() - agora.getTime()) / 60000);
     console.warn('[login] tentativa durante bloqueio', { user: maskEmail(user.email), ate: user.lock_until });
     const retrySeconds = Math.max(1, Math.ceil((user.lock_until.getTime() - agora.getTime()) / 1000));
@@ -100,7 +106,7 @@ export async function evaluateLoginPreAuthGateService({ email, senha } = {}) {
     const maxDelay = Number(process.env.LOGIN_FAILED_DELAY_MAX_MS || 3000);
     const delay = Math.min(baseDelay * user.failed_login_attempts, maxDelay);
 
-    if (user.failed_login_attempts >= maxTentativas && !(isMasterRole && masterBypassLockout)) {
+    if (user.failed_login_attempts >= maxTentativas && shouldEnforceLockout) {
       user.lock_until = new Date(Date.now() + lockMinutos * 60000);
       try {
         await saveLoginPreAuthUserStateData({ user });
@@ -132,14 +138,15 @@ export async function evaluateLoginPreAuthGateService({ email, senha } = {}) {
 
     await applyDelay(delay);
 
-    const restantes = (isMasterRole && masterBypassLockout)
-      ? maxTentativas
-      : Math.max(0, maxTentativas - user.failed_login_attempts);
+    const restantes = Math.max(0, maxTentativas - user.failed_login_attempts);
+    const resultExtras = shouldEnforceLockout ? { restantes } : {};
 
-    let result = buildErrorResult('senha', { restantes });
+    let result = buildErrorResult('senha', resultExtras);
     result = withHeader(result, 'X-Account-Attempts-Used', String(user.failed_login_attempts));
-    result = withHeader(result, 'X-Account-Attempts-Remaining', String(restantes));
     result = withHeader(result, 'X-Account-Attempts-Limit', String(maxTentativas));
+    if (shouldEnforceLockout) {
+      result = withHeader(result, 'X-Account-Attempts-Remaining', String(restantes));
+    }
     return result;
   }
 

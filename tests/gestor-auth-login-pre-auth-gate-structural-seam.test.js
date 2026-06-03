@@ -156,6 +156,11 @@ function importFresh(filePath, token) {
   return import(`${pathToFileURL(filePath).href}?case=${token}`);
 }
 
+function restoreEnv(name, value) {
+  if (value === undefined) delete process.env[name];
+  else process.env[name] = value;
+}
+
 test('login: owner real delega o gate pre-auth para services/auth/evaluateLoginPreAuthGate.service.js', () => {
   assert.match(CONTROLLER_SOURCE, /evaluateLoginPreAuthGate\.service\.js/);
   assert.match(CONTROLLER_SOURCE, /openLocalPostAuthSession\.service\.js/);
@@ -170,6 +175,12 @@ test('login: owner real delega o gate pre-auth para services/auth/evaluateLoginP
 });
 
 test('login pre-auth service preserva semantica de bloqueio, senha incorreta e sucesso antes da sessao', async () => {
+  const prevBaseDelay = process.env.LOGIN_FAILED_DELAY_BASE_MS;
+  const prevMaxDelay = process.env.LOGIN_FAILED_DELAY_MAX_MS;
+  const prevMaxAttempts = process.env.LOGIN_MAX_ATTEMPTS;
+  const prevLockMinutes = process.env.LOGIN_LOCK_MINUTES;
+  const prevMasterBypassLockout = process.env.MASTER_BYPASS_LOCKOUT;
+
   process.env.LOGIN_FAILED_DELAY_BASE_MS = '0';
   process.env.LOGIN_FAILED_DELAY_MAX_MS = '0';
   process.env.LOGIN_MAX_ATTEMPTS = '3';
@@ -266,4 +277,142 @@ test('login pre-auth service preserva semantica de bloqueio, senha incorreta e s
     ['saveLoginPreAuthUserStateData', { failed_login_attempts: 2, hasLockUntil: false }],
     ['saveLoginPreAuthUserStateData', { failed_login_attempts: 0, hasLockUntil: false }],
   ]);
+
+  restoreEnv('LOGIN_FAILED_DELAY_BASE_MS', prevBaseDelay);
+  restoreEnv('LOGIN_FAILED_DELAY_MAX_MS', prevMaxDelay);
+  restoreEnv('LOGIN_MAX_ATTEMPTS', prevMaxAttempts);
+  restoreEnv('LOGIN_LOCK_MINUTES', prevLockMinutes);
+  restoreEnv('MASTER_BYPASS_LOCKOUT', prevMasterBypassLockout);
+});
+
+test('login pre-auth service aplica lockout ao master por padrão e só bypassa com env explícita sem contador falso', async () => {
+  const prevBaseDelay = process.env.LOGIN_FAILED_DELAY_BASE_MS;
+  const prevMaxDelay = process.env.LOGIN_FAILED_DELAY_MAX_MS;
+  const prevMaxAttempts = process.env.LOGIN_MAX_ATTEMPTS;
+  const prevLockMinutes = process.env.LOGIN_LOCK_MINUTES;
+  const prevMasterBypassLockout = process.env.MASTER_BYPASS_LOCKOUT;
+
+  process.env.LOGIN_FAILED_DELAY_BASE_MS = '0';
+  process.env.LOGIN_FAILED_DELAY_MAX_MS = '0';
+  process.env.LOGIN_MAX_ATTEMPTS = '5';
+  process.env.LOGIN_LOCK_MINUTES = '15';
+  delete process.env.MASTER_BYPASS_LOCKOUT;
+
+  globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_BCRYPT_STATE__ = {
+    compare: async () => false,
+  };
+
+  globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_DATA_FACADE_STATE__ = {
+    async loadLoginPreAuthUserData() {
+      return {
+        _id: '507f1f77bcf86cd799439921',
+        email: 'master@gestor.test',
+        senha: 'hash-salvo',
+        role: 'master',
+        global_role: 'master',
+        ativo: true,
+        failed_login_attempts: 0,
+        lock_until: null,
+      };
+    },
+    async saveLoginPreAuthUserStateData({ user }) {
+      return user;
+    },
+  };
+
+  const { evaluateLoginPreAuthGateService } = await importFresh(SERVICE_FILE, 'master-default-lockout');
+
+  const firstWrongPassword = await evaluateLoginPreAuthGateService({ email: 'master@gestor.test', senha: 'senha-incorreta' });
+  assert.equal(firstWrongPassword.ok, false);
+  assert.equal(firstWrongPassword.code, 'senha');
+  assert.equal(firstWrongPassword.restantes, 4);
+  assert.deepEqual(firstWrongPassword.headers, {
+    'X-Account-Attempts-Used': '1',
+    'X-Account-Attempts-Remaining': '4',
+    'X-Account-Attempts-Limit': '5',
+  });
+
+  globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_DATA_FACADE_STATE__ = {
+    async loadLoginPreAuthUserData() {
+      return {
+        _id: '507f1f77bcf86cd799439922',
+        email: 'master@gestor.test',
+        senha: 'hash-salvo',
+        role: 'master',
+        global_role: 'master',
+        ativo: true,
+        failed_login_attempts: 4,
+        lock_until: null,
+      };
+    },
+    async saveLoginPreAuthUserStateData({ user }) {
+      return user;
+    },
+  };
+
+  const blockedMaster = await evaluateLoginPreAuthGateService({ email: 'master@gestor.test', senha: 'senha-incorreta' });
+  assert.equal(blockedMaster.ok, false);
+  assert.equal(blockedMaster.code, 'bloqueado');
+  assert.equal(blockedMaster.restantes, undefined);
+  assert.equal(typeof blockedMaster.headers['Retry-After'], 'number');
+
+  process.env.MASTER_BYPASS_LOCKOUT = 'true';
+  globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_DATA_FACADE_STATE__ = {
+    async loadLoginPreAuthUserData() {
+      return {
+        _id: '507f1f77bcf86cd799439923',
+        email: 'master@gestor.test',
+        senha: 'hash-salvo',
+        role: 'master',
+        global_role: 'master',
+        ativo: true,
+        failed_login_attempts: 4,
+        lock_until: null,
+      };
+    },
+    async saveLoginPreAuthUserStateData({ user }) {
+      return user;
+    },
+  };
+
+  const bypassWrongPassword = await evaluateLoginPreAuthGateService({ email: 'master@gestor.test', senha: 'senha-incorreta' });
+  assert.equal(bypassWrongPassword.ok, false);
+  assert.equal(bypassWrongPassword.code, 'senha');
+  assert.equal(bypassWrongPassword.restantes, undefined);
+  assert.deepEqual(bypassWrongPassword.headers, {
+    'X-Account-Attempts-Used': '5',
+    'X-Account-Attempts-Limit': '5',
+  });
+
+  globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_BCRYPT_STATE__ = {
+    compare: async () => true,
+  };
+  globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_DATA_FACADE_STATE__ = {
+    async loadLoginPreAuthUserData() {
+      return {
+        _id: '507f1f77bcf86cd799439924',
+        email: 'master@gestor.test',
+        senha: 'hash-salvo',
+        role: 'master',
+        global_role: 'master',
+        ativo: true,
+        failed_login_attempts: 3,
+        lock_until: new Date(Date.now() + 60_000),
+      };
+    },
+    async saveLoginPreAuthUserStateData({ user }) {
+      return user;
+    },
+  };
+
+  const bypassSuccess = await evaluateLoginPreAuthGateService({ email: 'master@gestor.test', senha: 'senha-correta' });
+  assert.equal(bypassSuccess.ok, true);
+  assert.equal(bypassSuccess.user.failed_login_attempts, 0);
+  assert.equal(bypassSuccess.user.lock_until, null);
+
+  restoreEnv('LOGIN_FAILED_DELAY_BASE_MS', prevBaseDelay);
+  restoreEnv('LOGIN_FAILED_DELAY_MAX_MS', prevMaxDelay);
+  restoreEnv('LOGIN_MAX_ATTEMPTS', prevMaxAttempts);
+  restoreEnv('LOGIN_LOCK_MINUTES', prevLockMinutes);
+  restoreEnv('MASTER_BYPASS_LOCKOUT', prevMasterBypassLockout);
 });
