@@ -1,8 +1,9 @@
 // (migrado) Rotas de auth
 import express from 'express';
 import { getAuthContext, login, logout, renderResetPassword, postResetPassword, postEsqueciSenha, primeiroAcessoPost, listarEmailsPorCPF, selectAuthUnit, switchAuthUnit } from '#modules/gestor/app/controllers/authController.js';
-import { gestorLoginHttpLimiter } from '#modules/gestor/app/middlewares/rateLimit.js';
+import { createGestorLoginHttpLimiter } from '#modules/gestor/app/middlewares/rateLimit.js';
 const router = express.Router();
+const gestorLoginHttpLimiter = createGestorLoginHttpLimiter();
 // Métricas simples de adoção de rotas prefixadas vs raiz
 router.use((req,res,next)=> {
 	try {

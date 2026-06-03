@@ -12,6 +12,22 @@ import {
 	rateLimitHandler
 } from '#core/middlewares/rateLimit.js';
 
+const gestorLoginRateLimitAppIds = new WeakMap();
+let nextGestorLoginRateLimitAppId = 0;
+
+function createNextGestorLoginRateLimitAppId() {
+	nextGestorLoginRateLimitAppId += 1;
+	return `app-${nextGestorLoginRateLimitAppId}`;
+}
+
+function resolveGestorLoginRateLimitOwner(app) {
+	let current = app;
+	while (current && current.parent) {
+		current = current.parent;
+	}
+	return current || app;
+}
+
 function parsePositiveIntEnv(value, fallback) {
 	const parsed = Number.parseInt(String(value ?? ''), 10);
 	return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
@@ -24,13 +40,32 @@ function isJsonLoginRequest(req) {
 	return false;
 }
 
-function isSuccessfulLoginResponse(req, res) {
-	const statusCode = Number(res.statusCode || 0);
-	if (statusCode >= 200 && statusCode < 300) return true;
-	const location = String(res.getHeader?.('location') || '').toLowerCase();
-	if (!location) return false;
-	if (!location.includes('/login')) return true;
-	return location.includes('?step=select');
+function getGestorLoginRateLimitAppId(app) {
+	const owner = resolveGestorLoginRateLimitOwner(app);
+	if (!owner || (typeof owner !== 'function' && typeof owner !== 'object')) {
+		return 'global';
+	}
+
+	const existingAppId = gestorLoginRateLimitAppIds.get(owner);
+	if (existingAppId) return existingAppId;
+
+	const appId = createNextGestorLoginRateLimitAppId();
+	gestorLoginRateLimitAppIds.set(owner, appId);
+	return appId;
+}
+
+export function resetGestorLoginHttpLimiterNamespace(app) {
+	const owner = resolveGestorLoginRateLimitOwner(app);
+	if (!owner || (typeof owner !== 'function' && typeof owner !== 'object')) return null;
+	const appId = createNextGestorLoginRateLimitAppId();
+	gestorLoginRateLimitAppIds.set(owner, appId);
+	return appId;
+}
+
+function buildGestorLoginRateLimitKey(req) {
+	const appId = getGestorLoginRateLimitAppId(req?.app);
+	const ip = String(req?.ip || req?.headers?.['x-forwarded-for'] || 'unknown');
+	return `${appId}:${ip}`;
 }
 
 export function createGestorLoginHttpLimiter(opts = {}) {
@@ -40,8 +75,8 @@ export function createGestorLoginHttpLimiter(opts = {}) {
 	return createLoginLimiter({
 		windowMs,
 		max,
-		skipSuccessfulRequests: true,
-		requestWasSuccessful: isSuccessfulLoginResponse,
+		skipSuccessfulRequests: false,
+		keyGenerator: buildGestorLoginRateLimitKey,
 		handler(req, res) {
 			if (isJsonLoginRequest(req)) {
 				return res.status(429).json({
@@ -56,8 +91,6 @@ export function createGestorLoginHttpLimiter(opts = {}) {
 		...opts
 	});
 }
-
-export const gestorLoginHttpLimiter = createGestorLoginHttpLimiter();
 
 export {
 	loginLimiter,

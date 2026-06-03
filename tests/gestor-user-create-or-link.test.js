@@ -6,6 +6,7 @@ import request from 'supertest';
 
 import { createServer } from '../src/server/createServer.js';
 import { disconnectMongo } from '../src/core/db/connect.js';
+import { resetGestorLoginHttpLimiterNamespace } from '../src/modules/gestor/app/middlewares/rateLimit.js';
 import Funcionario from '../src/core/models/Funcionario.js';
 import Modulo from '../src/core/models/modulo.js';
 import Unidade from '../src/core/models/unidade.js';
@@ -119,6 +120,7 @@ before(async () => {
 
 beforeEach(async () => {
   await mongoose.connection.db.dropDatabase();
+  resetGestorLoginHttpLimiterNamespace(app);
   process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = '1';
   app.locals.gestorAuthContextFeatureFlags = {
     gestor_auth_context_resolver: true,

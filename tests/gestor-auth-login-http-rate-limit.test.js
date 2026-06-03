@@ -88,7 +88,6 @@ beforeEach(() => {
 
 test('POST /gestor/login bloqueia HTML após o limite e não chama o controller bloqueado', async () => {
   const app = await createApp();
-  globalThis.__GESTOR_LOGIN_HTTP_RATE_LIMIT_STATE__.mode = 'html-failure';
 
   const first = await request(app)
     .post('/gestor/login')
@@ -112,9 +111,9 @@ test('POST /gestor/login bloqueia HTML após o limite e não chama o controller 
     .send({ email: 'terceiro@exemplo.test', senha: 'Senha@123', modulo: 'gestor' });
 
   assert.equal(first.status, 303);
-  assert.equal(first.headers.location, '/gestor/login?erro=credenciais');
+  assert.equal(first.headers.location, '/gestor/dashboard');
   assert.equal(second.status, 303);
-  assert.equal(second.headers.location, '/gestor/login?erro=credenciais');
+  assert.equal(second.headers.location, '/gestor/dashboard');
   assert.equal(blocked.status, 303);
   assert.equal(blocked.headers.location, '/gestor/login?erro=muitas_tentativas');
   assert.equal(globalThis.__GESTOR_LOGIN_HTTP_RATE_LIMIT_STATE__.calls.length, 2);
@@ -122,7 +121,6 @@ test('POST /gestor/login bloqueia HTML após o limite e não chama o controller 
 
 test('POST /gestor/login retorna 429 JSON genérico após o limite e preserva chamadas anteriores', async () => {
   const app = await createApp();
-  globalThis.__GESTOR_LOGIN_HTTP_RATE_LIMIT_STATE__.mode = 'json-failure';
 
   const first = await request(app)
     .post('/gestor/login')
@@ -142,43 +140,45 @@ test('POST /gestor/login retorna 429 JSON genérico após o limite e preserva ch
     .set('X-Forwarded-For', '198.51.100.11')
     .send({ email: 'json3@exemplo.test', senha: 'Senha@123', modulo: 'gestor' });
 
-  assert.equal(first.status, 401);
-  assert.deepEqual(first.body, { success: false, error: 'INVALID_CREDENTIALS' });
-  assert.equal(second.status, 401);
-  assert.deepEqual(second.body, { success: false, error: 'INVALID_CREDENTIALS' });
+  assert.equal(first.status, 200);
+  assert.deepEqual(first.body, { success: true, ok: true });
+  assert.equal(second.status, 200);
+  assert.deepEqual(second.body, { success: true, ok: true });
   assert.equal(blocked.status, 429);
   assert.deepEqual(blocked.body, { success: false, error: 'TOO_MANY_LOGIN_ATTEMPTS' });
   assert.equal(globalThis.__GESTOR_LOGIN_HTTP_RATE_LIMIT_STATE__.calls.length, 2);
 });
 
-test('POST /gestor/login não bloqueia logins bem-sucedidos mesmo acima do volume de falhas permitido', async () => {
-  const app = await createApp();
+test('POST /gestor/login não compartilha contagem entre apps distintos no mesmo processo', async () => {
+  const appA = await createApp();
+  const appB = await createApp();
 
-  const responses = await Promise.all([
-    request(app)
-      .post('/gestor/login')
-      .set('Accept', 'text/html')
-      .set('X-Forwarded-For', '198.51.100.12')
-      .type('form')
-      .send({ email: 'ok1@exemplo.test', senha: 'Senha@123', modulo: 'gestor' }),
-    request(app)
-      .post('/gestor/login')
-      .set('Accept', 'text/html')
-      .set('X-Forwarded-For', '198.51.100.12')
-      .type('form')
-      .send({ email: 'ok2@exemplo.test', senha: 'Senha@123', modulo: 'gestor' }),
-    request(app)
-      .post('/gestor/login')
-      .set('Accept', 'text/html')
-      .set('X-Forwarded-For', '198.51.100.12')
-      .type('form')
-      .send({ email: 'ok3@exemplo.test', senha: 'Senha@123', modulo: 'gestor' }),
-  ]);
+  const firstFromAppA = await request(appA)
+    .post('/gestor/login')
+    .set('Accept', 'text/html')
+    .set('X-Forwarded-For', '198.51.100.12')
+    .type('form')
+    .send({ email: 'appa1@exemplo.test', senha: 'Senha@123', modulo: 'gestor' });
 
-  for (const response of responses) {
-    assert.equal(response.status, 303);
-    assert.equal(response.headers.location, '/gestor/dashboard');
-  }
+  const secondFromAppA = await request(appA)
+    .post('/gestor/login')
+    .set('Accept', 'text/html')
+    .set('X-Forwarded-For', '198.51.100.12')
+    .type('form')
+    .send({ email: 'appa2@exemplo.test', senha: 'Senha@123', modulo: 'gestor' });
 
+  const firstFromAppB = await request(appB)
+    .post('/gestor/login')
+    .set('Accept', 'text/html')
+    .set('X-Forwarded-For', '198.51.100.12')
+    .type('form')
+    .send({ email: 'appb1@exemplo.test', senha: 'Senha@123', modulo: 'gestor' });
+
+  assert.equal(firstFromAppA.status, 303);
+  assert.equal(firstFromAppA.headers.location, '/gestor/dashboard');
+  assert.equal(secondFromAppA.status, 303);
+  assert.equal(secondFromAppA.headers.location, '/gestor/dashboard');
+  assert.equal(firstFromAppB.status, 303);
+  assert.equal(firstFromAppB.headers.location, '/gestor/dashboard');
   assert.equal(globalThis.__GESTOR_LOGIN_HTTP_RATE_LIMIT_STATE__.calls.length, 3);
 });
