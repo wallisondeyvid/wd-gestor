@@ -5,11 +5,20 @@ import path from 'node:path';
 import { registerHooks } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import request from 'supertest';
+import mongoose from 'mongoose';
+
+import { connectMongo, disconnectMongo } from '../src/core/db/connect.js';
+import { resetGestorLoginHttpLimiterNamespace } from '../src/modules/gestor/app/middlewares/rateLimit.js';
 
 const AUTH_ROUTE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/routes/auth.js');
 const AUTH_CONTROLLER_MOCK_URL = 'mock:gestor-auth-login-http-rate-limit-controller';
 
 let authRouterPromise;
+let collectionSequence = 0;
+
+process.env.MONGO_MEMORY = '1';
+process.env.LOGIN_HTTP_RATE_LIMIT_WINDOW_MS = '600000';
+process.env.LOGIN_HTTP_RATE_LIMIT_MAX = '2';
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
@@ -60,8 +69,6 @@ function importFresh(filePath, token) {
 
 async function loadAuthRouter() {
   if (!authRouterPromise) {
-    process.env.LOGIN_HTTP_RATE_LIMIT_WINDOW_MS = '600000';
-    process.env.LOGIN_HTTP_RATE_LIMIT_MAX = '2';
     authRouterPromise = importFresh(AUTH_ROUTE_PATH, 'gestor-login-http-rate-limit')
       .then((module) => module.default);
   }
@@ -74,11 +81,15 @@ async function createApp() {
   app.set('trust proxy', 1);
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
+  collectionSequence += 1;
+  app.locals.gestorLoginHttpLimiterCollectionName = `loginratelimits_test_${collectionSequence}`;
   app.use('/gestor', await loadAuthRouter());
+  resetGestorLoginHttpLimiterNamespace(app);
   return app;
 }
 
 before(async () => {
+  await connectMongo();
   await loadAuthRouter();
 });
 
@@ -88,6 +99,7 @@ beforeEach(() => {
 
 test('POST /gestor/login bloqueia HTML após o limite e não chama o controller bloqueado', async () => {
   const app = await createApp();
+  globalThis.__GESTOR_LOGIN_HTTP_RATE_LIMIT_STATE__.mode = 'html-failure';
 
   const first = await request(app)
     .post('/gestor/login')
@@ -111,16 +123,30 @@ test('POST /gestor/login bloqueia HTML após o limite e não chama o controller 
     .send({ email: 'terceiro@exemplo.test', senha: 'Senha@123', modulo: 'gestor' });
 
   assert.equal(first.status, 303);
-  assert.equal(first.headers.location, '/gestor/dashboard');
+  assert.equal(first.headers.location, '/gestor/login?erro=credenciais');
   assert.equal(second.status, 303);
-  assert.equal(second.headers.location, '/gestor/dashboard');
+  assert.equal(second.headers.location, '/gestor/login?erro=credenciais');
   assert.equal(blocked.status, 303);
   assert.equal(blocked.headers.location, '/gestor/login?erro=muitas_tentativas');
   assert.equal(globalThis.__GESTOR_LOGIN_HTTP_RATE_LIMIT_STATE__.calls.length, 2);
+
+  const savedState = await mongoose.connection.db
+    .collection(app.locals.gestorLoginHttpLimiterCollectionName)
+    .findOne({}, { projection: { _id: 0, key: 1, count: 1, windowStart: 1, expiresAt: 1, createdAt: 1, updatedAt: 1 } });
+
+  assert.equal(typeof savedState?.key, 'string');
+  assert.ok(savedState.key.startsWith(`${app.locals.gestorLoginHttpLimiterNamespace}:`));
+  assert.equal(savedState.key.includes('198.51.100.10'), false);
+  assert.equal(savedState.count, 3);
+  assert.ok(savedState.windowStart instanceof Date);
+  assert.ok(savedState.expiresAt instanceof Date);
+  assert.ok(savedState.createdAt instanceof Date);
+  assert.ok(savedState.updatedAt instanceof Date);
 });
 
 test('POST /gestor/login retorna 429 JSON genérico após o limite e preserva chamadas anteriores', async () => {
   const app = await createApp();
+  globalThis.__GESTOR_LOGIN_HTTP_RATE_LIMIT_STATE__.mode = 'json-failure';
 
   const first = await request(app)
     .post('/gestor/login')
@@ -140,18 +166,19 @@ test('POST /gestor/login retorna 429 JSON genérico após o limite e preserva ch
     .set('X-Forwarded-For', '198.51.100.11')
     .send({ email: 'json3@exemplo.test', senha: 'Senha@123', modulo: 'gestor' });
 
-  assert.equal(first.status, 200);
-  assert.deepEqual(first.body, { success: true, ok: true });
-  assert.equal(second.status, 200);
-  assert.deepEqual(second.body, { success: true, ok: true });
+  assert.equal(first.status, 401);
+  assert.deepEqual(first.body, { success: false, error: 'INVALID_CREDENTIALS' });
+  assert.equal(second.status, 401);
+  assert.deepEqual(second.body, { success: false, error: 'INVALID_CREDENTIALS' });
   assert.equal(blocked.status, 429);
   assert.deepEqual(blocked.body, { success: false, error: 'TOO_MANY_LOGIN_ATTEMPTS' });
   assert.equal(globalThis.__GESTOR_LOGIN_HTTP_RATE_LIMIT_STATE__.calls.length, 2);
 });
 
-test('POST /gestor/login não compartilha contagem entre apps distintos no mesmo processo', async () => {
+test('POST /gestor/login permite isolar estado entre harnesses por coleção/namespace distintos', async () => {
   const appA = await createApp();
   const appB = await createApp();
+  globalThis.__GESTOR_LOGIN_HTTP_RATE_LIMIT_STATE__.mode = 'html-failure';
 
   const firstFromAppA = await request(appA)
     .post('/gestor/login')
@@ -175,10 +202,16 @@ test('POST /gestor/login não compartilha contagem entre apps distintos no mesmo
     .send({ email: 'appb1@exemplo.test', senha: 'Senha@123', modulo: 'gestor' });
 
   assert.equal(firstFromAppA.status, 303);
-  assert.equal(firstFromAppA.headers.location, '/gestor/dashboard');
+  assert.equal(firstFromAppA.headers.location, '/gestor/login?erro=credenciais');
   assert.equal(secondFromAppA.status, 303);
-  assert.equal(secondFromAppA.headers.location, '/gestor/dashboard');
+  assert.equal(secondFromAppA.headers.location, '/gestor/login?erro=credenciais');
   assert.equal(firstFromAppB.status, 303);
-  assert.equal(firstFromAppB.headers.location, '/gestor/dashboard');
+  assert.equal(firstFromAppB.headers.location, '/gestor/login?erro=credenciais');
   assert.equal(globalThis.__GESTOR_LOGIN_HTTP_RATE_LIMIT_STATE__.calls.length, 3);
+  assert.notEqual(appA.locals.gestorLoginHttpLimiterCollectionName, appB.locals.gestorLoginHttpLimiterCollectionName);
+  assert.notEqual(appA.locals.gestorLoginHttpLimiterNamespace, appB.locals.gestorLoginHttpLimiterNamespace);
+});
+
+test.after(async () => {
+  await disconnectMongo({ stopMemoryServer: true });
 });
