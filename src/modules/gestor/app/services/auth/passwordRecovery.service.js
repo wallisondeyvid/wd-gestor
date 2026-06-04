@@ -155,9 +155,7 @@ export async function resetPasswordByTokenService({ token, senha } = {}) {
     });
   }
 
-  const userId = typeof resolvePasswordResetUserId === 'function'
-    ? resolvePasswordResetUserId(user)
-    : user?._id || user?.user_id || user?.userId || null;
+  const userId = resolvePasswordResetUserId(user) || user?._id || user?.user_id || user?.userId || null;
   if (!userId) {
     return buildResetPasswordErrorResult({
       title: 'Usuário não encontrado',
@@ -266,12 +264,21 @@ export async function requestPasswordRecoveryService({ cpf, email, emailConfirm 
   let failedCount = 0;
   let skippedCount = 0;
   const appBase = resolveAppUrl();
+  const recoveryTokensByUserId = new Map();
   for (const user of eligibleUsers) {
-    const token = crypto.randomBytes(32).toString('hex');
-    const expira = new Date(Date.now() + 30 * 60 * 1000);
-    await createPasswordRecoveryTokenData({ userId: user._id, token, expiresAt: expira });
+    const userId = String(user?._id || '');
+    if (!userId) continue;
 
-    const link = `${appBase.replace(/\/$/, '')}/gestor/reset-password/${token}`;
+    let recoveryToken = recoveryTokensByUserId.get(userId);
+    if (!recoveryToken) {
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+      await createPasswordRecoveryTokenData({ userId: user._id, rawToken, expiresAt });
+      recoveryToken = { rawToken, expiresAt };
+      recoveryTokensByUserId.set(userId, recoveryToken);
+    }
+
+    const link = `${appBase.replace(/\/$/, '')}/gestor/reset-password/${recoveryToken.rawToken}`;
     let html = '';
     let text = '';
     try {

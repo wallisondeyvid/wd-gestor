@@ -28,8 +28,8 @@ export async function loadRecoveryUsersByCpfData({ cpfDigits }) {
   return usuarios;
 }
 
-export async function createPasswordRecoveryTokenData({ userId, token, expiresAt }) {
-  const tokenHash = hashPasswordRecoveryToken(token);
+export async function createPasswordRecoveryTokenData({ userId, rawToken, expiresAt }) {
+  const tokenHash = hashPasswordRecoveryToken(rawToken);
 
   await deletePasswordResetsByUserIdRepo({
     unitScope: GLOBAL_SCOPE,

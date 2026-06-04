@@ -348,6 +348,10 @@ test('reset execution tenant-aware: token valido sem userId nao deve chamar comp
     'function isPasswordResetInvalidOrExpired(passwordReset)',
     { Date },
   );
+  const resolvePasswordResetUserId = buildFunction(
+    SERVICE_SOURCE,
+    'function resolvePasswordResetUserId(passwordReset)',
+  );
   const resetPasswordByTokenService = buildFunction(
     SERVICE_SOURCE,
     'export async function resetPasswordByTokenService({ token, senha } = {})',
@@ -361,6 +365,7 @@ test('reset execution tenant-aware: token valido sem userId nao deve chamar comp
       },
       buildResetPasswordErrorResult,
       isPasswordResetInvalidOrExpired,
+      resolvePasswordResetUserId,
       loadPasswordResetExecutionData: async (args) => {
         callLog.push(['loadPasswordResetExecutionData', toPlainJson(args)]);
         return {
@@ -402,6 +407,10 @@ test('reset execution tenant-aware: token valido com userId chama hash antes de 
     'function isPasswordResetInvalidOrExpired(passwordReset)',
     { Date },
   );
+  const resolvePasswordResetUserId = buildFunction(
+    SERVICE_SOURCE,
+    'function resolvePasswordResetUserId(passwordReset)',
+  );
   const resetPasswordByTokenService = buildFunction(
     SERVICE_SOURCE,
     'export async function resetPasswordByTokenService({ token, senha } = {})',
@@ -415,6 +424,7 @@ test('reset execution tenant-aware: token valido com userId chama hash antes de 
       },
       buildResetPasswordErrorResult,
       isPasswordResetInvalidOrExpired,
+      resolvePasswordResetUserId,
       loadPasswordResetExecutionData: async (args) => {
         callLog.push(['loadPasswordResetExecutionData', toPlainJson(args)]);
         return {

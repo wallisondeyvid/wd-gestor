@@ -53,7 +53,7 @@ test('recovery request tenant-aware: a facade congela busca direta por CPF antes
   );
   const createPasswordRecoveryTokenDataBlock = extractFunction(
     FACADE_SOURCE,
-    'export async function createPasswordRecoveryTokenData({ userId, token, expiresAt })',
+    'export async function createPasswordRecoveryTokenData({ userId, rawToken, expiresAt })',
   );
 
   assert.match(loadRecoveryUsersByCpfDataBlock, /findUsersByCpfRepo\s*\(\{\s*unitScope:\s*GLOBAL_SCOPE,\s*cpf:\s*cpfDigits\s*\}\)/);
@@ -70,7 +70,7 @@ test('recovery request tenant-aware: a facade congela busca direta por CPF antes
   assert.ok(funcionarioLookupIndex > directLookupIndex, 'O fallback por funcionario deve ocorrer depois da busca direta.');
   assert.ok(linkedUsersLookupIndex > funcionarioLookupIndex, 'A busca por usuario via funcionario_id deve ocorrer depois da busca por funcionarios.');
 
-  assert.match(createPasswordRecoveryTokenDataBlock, /const tokenHash = hashPasswordRecoveryToken\(token\)/);
+  assert.match(createPasswordRecoveryTokenDataBlock, /const tokenHash = hashPasswordRecoveryToken\(rawToken\)/);
   assert.match(createPasswordRecoveryTokenDataBlock, /await deletePasswordResetsByUserIdRepo\(/);
   assert.match(createPasswordRecoveryTokenDataBlock, /createPasswordResetRepo\s*\(\{\s*unitScope:\s*GLOBAL_SCOPE,/);
   assert.match(createPasswordRecoveryTokenDataBlock, /user_id:\s*userId/);
@@ -178,7 +178,7 @@ test('recovery request tenant-aware: createPasswordRecoveryTokenData delega cria
   const callLog = [];
   const createPasswordRecoveryTokenData = buildFunction(
     FACADE_SOURCE,
-    'export async function createPasswordRecoveryTokenData({ userId, token, expiresAt })',
+    'export async function createPasswordRecoveryTokenData({ userId, rawToken, expiresAt })',
     {
       GLOBAL_SCOPE: { type: 'global', unidadeId: null },
       hashPasswordRecoveryToken: (token) => `sha256:${token}`,
@@ -194,7 +194,7 @@ test('recovery request tenant-aware: createPasswordRecoveryTokenData delega cria
   );
 
   const expiresAt = '2026-05-15T12:34:56.000Z';
-  const result = await createPasswordRecoveryTokenData({ userId: 'user-9', token: 'token-x', expiresAt });
+  const result = await createPasswordRecoveryTokenData({ userId: 'user-9', rawToken: 'token-x', expiresAt });
 
   assert.deepEqual(toPlainJson(result), { acknowledged: true, insertedId: 'reset-1' });
   assert.deepEqual(callLog, [
@@ -334,8 +334,8 @@ test('recovery request tenant-aware: multiplos usuarios elegiveis geram envios s
       },
       resolveAppUrl: () => 'http://localhost:3000',
       resetPasswordTemplate: (nome, link) => ({ html: `<a href="${link}">${nome}</a>`, text: nome }),
-      createPasswordRecoveryTokenData: async ({ userId, token, expiresAt }) => {
-        callLog.push(['createPasswordRecoveryTokenData', { userId, token, expiresAt: String(expiresAt) }]);
+      createPasswordRecoveryTokenData: async ({ userId, rawToken, expiresAt }) => {
+        callLog.push(['createPasswordRecoveryTokenData', { userId, rawToken, expiresAt: String(expiresAt) }]);
         return { acknowledged: true };
       },
       crypto: {
@@ -361,9 +361,9 @@ test('recovery request tenant-aware: multiplos usuarios elegiveis geram envios s
     },
   });
   assert.deepEqual(callLog, [
-    ['createPasswordRecoveryTokenData', { userId: 'user-1', token: 'token-user-1', expiresAt: String(callLog[0]?.[1]?.expiresAt || '') }],
+    ['createPasswordRecoveryTokenData', { userId: 'user-1', rawToken: 'token-user-1', expiresAt: String(callLog[0]?.[1]?.expiresAt || '') }],
     ['sendMail', { to: 'ana@example.com', subject: 'Redefinição de Senha' }],
-    ['createPasswordRecoveryTokenData', { userId: 'user-2', token: 'token-user-2', expiresAt: String(callLog[2]?.[1]?.expiresAt || '') }],
+    ['createPasswordRecoveryTokenData', { userId: 'user-2', rawToken: 'token-user-2', expiresAt: String(callLog[2]?.[1]?.expiresAt || '') }],
     ['sendMail', { to: 'bruno@example.com', subject: 'Redefinição de Senha' }],
   ]);
   const rawLogs = JSON.stringify(logs);
@@ -375,7 +375,7 @@ test('recovery request tenant-aware: novo pedido invalida tokens antigos do mesm
   const callLog = [];
   const createPasswordRecoveryTokenData = buildFunction(
     FACADE_SOURCE,
-    'export async function createPasswordRecoveryTokenData({ userId, token, expiresAt })',
+    'export async function createPasswordRecoveryTokenData({ userId, rawToken, expiresAt })',
     {
       GLOBAL_SCOPE: { type: 'global', unidadeId: null },
       hashPasswordRecoveryToken: (token) => `sha256:${token}`,
@@ -390,7 +390,7 @@ test('recovery request tenant-aware: novo pedido invalida tokens antigos do mesm
     },
   );
 
-  await createPasswordRecoveryTokenData({ userId: 'user-1', token: 'raw-token', expiresAt: '2026-05-15T12:34:56.000Z' });
+  await createPasswordRecoveryTokenData({ userId: 'user-1', rawToken: 'raw-token', expiresAt: '2026-05-15T12:34:56.000Z' });
 
   assert.deepEqual(callLog, [
     ['deletePasswordResetsByUserIdRepo', { unitScope: { type: 'global', unidadeId: null }, userId: 'user-1' }],
