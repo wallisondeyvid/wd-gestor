@@ -1,9 +1,11 @@
 import {
   createPasswordResetRepo,
+  deletePasswordResetsByUserIdRepo,
   findFuncionariosByCpfSelectRepo,
   findUsersByCpfRepo,
   findUsersByFuncionarioIdsRepo,
 } from '#modules/gestor/app/repositories/AuthRepository.js';
+import { hashPasswordRecoveryToken } from '#modules/gestor/app/data-access/auth/passwordRecoveryTokenHash.js';
 
 const GLOBAL_SCOPE = { type: 'global', unidadeId: null };
 
@@ -27,11 +29,18 @@ export async function loadRecoveryUsersByCpfData({ cpfDigits }) {
 }
 
 export async function createPasswordRecoveryTokenData({ userId, token, expiresAt }) {
+  const tokenHash = hashPasswordRecoveryToken(token);
+
+  await deletePasswordResetsByUserIdRepo({
+    unitScope: GLOBAL_SCOPE,
+    userId,
+  });
+
   return createPasswordResetRepo({
     unitScope: GLOBAL_SCOPE,
     payload: {
       user_id: userId,
-      token,
+      token: tokenHash,
       expiresAt,
     },
   });

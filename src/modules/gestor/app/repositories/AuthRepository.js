@@ -210,6 +210,16 @@ export async function createPasswordResetRepo({ unitScope, payload }) {
   return PasswordResetModel.create(payload);
 }
 
+export async function deletePasswordResetsByUserIdRepo({ unitScope, userId }) {
+  const PasswordResetModel = resolveModel({
+    name: PasswordReset.modelName || 'PasswordReset',
+    schema: PasswordReset.schema,
+    unitScope,
+  });
+
+  return PasswordResetModel.deleteMany({ user_id: userId });
+}
+
 export async function deletePasswordResetByIdRepo({ unitScope, id }) {
   const PasswordResetModel = resolveModel({
     name: PasswordReset.modelName || 'PasswordReset',

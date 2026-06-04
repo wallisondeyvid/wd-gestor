@@ -2,11 +2,13 @@ import {
   findPasswordResetByTokenRepo,
   findUserByIdSelectRepo,
 } from '#modules/gestor/app/repositories/AuthRepository.js';
+import { hashPasswordRecoveryToken } from '#modules/gestor/app/data-access/auth/passwordRecoveryTokenHash.js';
 
 const GLOBAL_SCOPE = { type: 'global', unidadeId: null };
 
 export async function loadPasswordResetTokenData({ token }) {
-  return findPasswordResetByTokenRepo({ unitScope: GLOBAL_SCOPE, token });
+  const tokenHash = hashPasswordRecoveryToken(token);
+  return findPasswordResetByTokenRepo({ unitScope: GLOBAL_SCOPE, token: tokenHash });
 }
 
 export async function loadPasswordResetUserNameData({ userId }) {

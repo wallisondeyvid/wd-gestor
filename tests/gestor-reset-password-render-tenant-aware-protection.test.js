@@ -56,7 +56,8 @@ test('reset render tenant-aware: facade delega token e lookup auxiliar com GLOBA
     'export async function loadPasswordResetUserNameData({ userId })',
   );
 
-  assert.match(loadPasswordResetTokenDataBlock, /findPasswordResetByTokenRepo\s*\(\{\s*unitScope:\s*GLOBAL_SCOPE,\s*token\s*\}\)/);
+  assert.match(loadPasswordResetTokenDataBlock, /const tokenHash = hashPasswordRecoveryToken\(token\)/);
+  assert.match(loadPasswordResetTokenDataBlock, /findPasswordResetByTokenRepo\s*\(\{\s*unitScope:\s*GLOBAL_SCOPE,\s*token:\s*tokenHash\s*\}\)/);
   assert.match(loadPasswordResetUserNameDataBlock, /findUserByIdSelectRepo\s*\(\{\s*unitScope:\s*GLOBAL_SCOPE,\s*id:\s*userId,\s*select:\s*'nome email'\s*\}\)/);
 
   assert.doesNotMatch(loadPasswordResetTokenDataBlock, /mongoose\.connect|createConnection|supertest|#server\//i);
@@ -106,6 +107,7 @@ test('reset render tenant-aware: token valido permite lookup auxiliar por userId
     'export async function loadResetPasswordRenderModelService({ token } = {})',
     {
       Date,
+      hashPasswordRecoveryToken: (token) => `sha256:${token}`,
       buildResetPasswordErrorResult,
       isPasswordResetInvalidOrExpired,
       resolvePasswordResetUserId,
@@ -161,6 +163,7 @@ test('reset render tenant-aware: token invalido ou ausente nao dispara lookup au
     'export async function loadResetPasswordRenderModelService({ token } = {})',
     {
       Date,
+      hashPasswordRecoveryToken: (token) => `sha256:${token}`,
       buildResetPasswordErrorResult,
       isPasswordResetInvalidOrExpired,
       resolvePasswordResetUserId,
@@ -211,6 +214,7 @@ test('reset render tenant-aware: token expirado nao dispara lookup auxiliar por 
     'export async function loadResetPasswordRenderModelService({ token } = {})',
     {
       Date,
+      hashPasswordRecoveryToken: (token) => `sha256:${token}`,
       buildResetPasswordErrorResult,
       isPasswordResetInvalidOrExpired,
       resolvePasswordResetUserId,
@@ -265,6 +269,7 @@ test('reset render tenant-aware: token valido sem usuario encontrado preserva re
     'export async function loadResetPasswordRenderModelService({ token } = {})',
     {
       Date,
+      hashPasswordRecoveryToken: (token) => `sha256:${token}`,
       buildResetPasswordErrorResult,
       isPasswordResetInvalidOrExpired,
       resolvePasswordResetUserId,

@@ -70,9 +70,11 @@ test('recovery request tenant-aware: a facade congela busca direta por CPF antes
   assert.ok(funcionarioLookupIndex > directLookupIndex, 'O fallback por funcionario deve ocorrer depois da busca direta.');
   assert.ok(linkedUsersLookupIndex > funcionarioLookupIndex, 'A busca por usuario via funcionario_id deve ocorrer depois da busca por funcionarios.');
 
+  assert.match(createPasswordRecoveryTokenDataBlock, /const tokenHash = hashPasswordRecoveryToken\(token\)/);
+  assert.match(createPasswordRecoveryTokenDataBlock, /await deletePasswordResetsByUserIdRepo\(/);
   assert.match(createPasswordRecoveryTokenDataBlock, /createPasswordResetRepo\s*\(\{\s*unitScope:\s*GLOBAL_SCOPE,/);
   assert.match(createPasswordRecoveryTokenDataBlock, /user_id:\s*userId/);
-  assert.match(createPasswordRecoveryTokenDataBlock, /token,/);
+  assert.match(createPasswordRecoveryTokenDataBlock, /token:\s*tokenHash/);
   assert.match(createPasswordRecoveryTokenDataBlock, /expiresAt,/);
 
   assert.doesNotMatch(loadRecoveryUsersByCpfDataBlock, /mongoose\.connect|createConnection|supertest|#server\//i);
@@ -179,8 +181,13 @@ test('recovery request tenant-aware: createPasswordRecoveryTokenData delega cria
     'export async function createPasswordRecoveryTokenData({ userId, token, expiresAt })',
     {
       GLOBAL_SCOPE: { type: 'global', unidadeId: null },
+      hashPasswordRecoveryToken: (token) => `sha256:${token}`,
+      deletePasswordResetsByUserIdRepo: async (args) => {
+        callLog.push(['deletePasswordResetsByUserIdRepo', toPlainJson(args)]);
+        return { acknowledged: true, deletedCount: 2 };
+      },
       createPasswordResetRepo: async (args) => {
-        callLog.push(toPlainJson(args));
+        callLog.push(['createPasswordResetRepo', toPlainJson(args)]);
         return { acknowledged: true, insertedId: 'reset-1' };
       },
     },
@@ -191,14 +198,15 @@ test('recovery request tenant-aware: createPasswordRecoveryTokenData delega cria
 
   assert.deepEqual(toPlainJson(result), { acknowledged: true, insertedId: 'reset-1' });
   assert.deepEqual(callLog, [
-    {
+    ['deletePasswordResetsByUserIdRepo', { unitScope: { type: 'global', unidadeId: null }, userId: 'user-9' }],
+    ['createPasswordResetRepo', {
       unitScope: { type: 'global', unidadeId: null },
       payload: {
         user_id: 'user-9',
-        token: 'token-x',
+        token: 'sha256:token-x',
         expiresAt,
       },
-    },
+    }],
   ]);
 });
 
@@ -361,6 +369,40 @@ test('recovery request tenant-aware: multiplos usuarios elegiveis geram envios s
   const rawLogs = JSON.stringify(logs);
   assert.doesNotMatch(rawLogs, /token-user-1|token-user-2|reset-password\//);
   assert.doesNotMatch(JSON.stringify(result.body), /debugLink|ana@example.com|bruno@example.com/);
+});
+
+test('recovery request tenant-aware: novo pedido invalida tokens antigos do mesmo usuario antes de salvar o novo hash', async () => {
+  const callLog = [];
+  const createPasswordRecoveryTokenData = buildFunction(
+    FACADE_SOURCE,
+    'export async function createPasswordRecoveryTokenData({ userId, token, expiresAt })',
+    {
+      GLOBAL_SCOPE: { type: 'global', unidadeId: null },
+      hashPasswordRecoveryToken: (token) => `sha256:${token}`,
+      deletePasswordResetsByUserIdRepo: async (args) => {
+        callLog.push(['deletePasswordResetsByUserIdRepo', toPlainJson(args)]);
+        return { deletedCount: 1 };
+      },
+      createPasswordResetRepo: async (args) => {
+        callLog.push(['createPasswordResetRepo', toPlainJson(args)]);
+        return { insertedId: 'reset-new' };
+      },
+    },
+  );
+
+  await createPasswordRecoveryTokenData({ userId: 'user-1', token: 'raw-token', expiresAt: '2026-05-15T12:34:56.000Z' });
+
+  assert.deepEqual(callLog, [
+    ['deletePasswordResetsByUserIdRepo', { unitScope: { type: 'global', unidadeId: null }, userId: 'user-1' }],
+    ['createPasswordResetRepo', {
+      unitScope: { type: 'global', unidadeId: null },
+      payload: {
+        user_id: 'user-1',
+        token: 'sha256:raw-token',
+        expiresAt: '2026-05-15T12:34:56.000Z',
+      },
+    }],
+  ]);
 });
 
 test('recovery request tenant-aware: service nao mantem payload publico de debug nem logs legados com link', () => {
