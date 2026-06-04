@@ -4,8 +4,13 @@
 document.addEventListener('DOMContentLoaded', () => {
 	const cpfInput = document.getElementById('cpf');
 	const form = document.getElementById('esqueciSenhaForm');
+	if (!cpfInput || !form) return;
 	const submitBtn = form.querySelector('button[type="submit"]');
 	const originalBtnText = submitBtn.innerHTML;
+	const requestSection = document.getElementById('recoveryRequestSection');
+	const confirmationSection = document.getElementById('recoveryConfirmationSection');
+	const helpSection = document.getElementById('recoveryHelpSection');
+	const confirmationMessage = document.getElementById('recoveryConfirmationMessage');
 
 	// Máscara CPF
 	cpfInput.addEventListener('input', (e) => {
@@ -25,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!validarCPF(cpfDigits)) return showAlert('CPF inválido.', 'danger');
 
 		await solicitarReset({ cpf: cpfInput.value });
-	}
+	});
 
 	async function solicitarReset(payload) {
 		toggleLoading(true, 'Enviando...');
@@ -33,12 +38,16 @@ document.addEventListener('DOMContentLoaded', () => {
 			const bp = (window._BASE_PATH && typeof window._BASE_PATH === 'string') ? window._BASE_PATH : '/gestor';
 			const resp = await fetch(`${bp}/esqueci-senha`, {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: {
+					'Content-Type': 'application/json',
+					'Accept': 'application/json',
+					'X-Requested-With': 'XMLHttpRequest'
+				},
 				body: JSON.stringify(payload)
 			});
 			const data = await resp.json();
 			if (data.success) {
-				showAlert(data.message, 'success');
+				showConfirmationState(data.message);
 				form.reset();
 			} else {
 				showAlert(data.message || 'Falha.', 'danger');
@@ -48,6 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
 			showAlert('Erro na solicitação.', 'danger');
 		} finally {
 			toggleLoading(false);
+		}
+	}
+
+	function showConfirmationState(message) {
+		document.querySelectorAll('.alert.dynamic-alert').forEach(a=>a.remove());
+		if (typeof message === 'string' && message && confirmationMessage) {
+			confirmationMessage.textContent = message;
+		}
+		if (requestSection) requestSection.classList.add('d-none');
+		if (helpSection) helpSection.classList.add('d-none');
+		if (confirmationSection) {
+			confirmationSection.classList.remove('d-none');
+			confirmationSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
 		}
 	}
 

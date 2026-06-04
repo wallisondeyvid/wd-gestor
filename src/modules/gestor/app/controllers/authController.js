@@ -573,16 +573,46 @@ export async function postResetPassword(req, res) {
 }
 
 export async function postEsqueciSenha(req, res) {
+  const basePath = req.baseUrl || '/gestor';
+  const wantsJson = Boolean(
+    req.xhr
+      || req.is?.('application/json')
+      || String(req.get?.('x-requested-with') || '').toLowerCase() === 'xmlhttprequest'
+      || String(req.get?.('accept') || '').toLowerCase().includes('application/json')
+  );
+
   try {
     const result = await requestPasswordRecoveryService({
       cpf: req.body?.cpf,
       email: req.body?.email,
       emailConfirm: req.body?.emailConfirm,
     });
-    return res.status(result.status).json(result.body);
+
+    if (wantsJson) {
+      return res.status(result.status).json(result.body);
+    }
+
+    if (result.status >= 200 && result.status < 300) {
+      return res.redirect(303, `${basePath}/esquecisenha?status=recebida`);
+    }
+
+    return res.status(result.status).render('esquecisenha', {
+      basePath,
+      solicitacaoRecebida: false,
+      mensagemErro: result.body?.message || 'Não foi possível concluir a solicitação. Tente novamente.',
+    });
   } catch (e) {
     console.error('[postEsqueciSenha] erro:', e.message);
-    return res.status(500).json({ success: false, message: 'Erro interno.' });
+
+    if (wantsJson) {
+      return res.status(500).json({ success: false, message: 'Erro interno.' });
+    }
+
+    return res.status(500).render('esquecisenha', {
+      basePath,
+      solicitacaoRecebida: false,
+      mensagemErro: 'Não foi possível concluir a solicitação. Tente novamente.',
+    });
   }
 }
 

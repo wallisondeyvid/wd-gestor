@@ -14,6 +14,11 @@
   <% const _moduleLabel = typeof moduleLabel !== 'undefined' ? moduleLabel : 'WDGestor'; %>
   <% // Garantir _basePath definido antes de qualquer uso (fallback /gestor)
     const _basePath = (typeof basePath === 'string' && basePath && basePath !== '/') ? basePath : '/gestor'; %>
+  <% const _solicitacaoRecebida = solicitacaoRecebida === true; %>
+  <% const _recoveryMessage = typeof recoveryMessage === 'string' && recoveryMessage
+    ? recoveryMessage
+    : 'Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.'; %>
+  <% const _mensagemErro = typeof mensagemErro === 'string' && mensagemErro ? mensagemErro : null; %>
   <%- include('partials/basepath-var') %>
   <title>Esqueci Minha Senha - <%= _moduleLabel %></title>
   <%- include('partials/favicon') %>
@@ -44,37 +49,60 @@
           <p class="text-muted m-0">Esqueci Minha Senha - <%= _moduleLabel %></p>
         </div>
 
+        <% if (_mensagemErro) { %>
+          <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i><%= _mensagemErro %>
+          </div>
+        <% } %>
+
         <!-- Botão de informação (popover) -->
-        <div class="d-flex justify-content-end mb-3">
+        <div class="d-flex justify-content-end mb-3 <%= _solicitacaoRecebida ? 'd-none' : '' %>" id="recoveryHelpSection">
           <button type="button" id="infoCpfBtn" class="btn btn-sm btn-outline-info" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom" title="Ajuda" data-bs-content="Informe seu CPF para solicitar a redefinição de senha. Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.">
             <i class="bi bi-info-circle me-1"></i> Ajuda
           </button>
         </div>
 
-        <!-- Formulário para solicitar senha -->
-  <form action="<%= _basePath %>/esquecisenha" method="POST" id="esqueciSenhaForm">
-          <div class="mb-4">
-            <label for="cpf" class="form-label fw-medium">
-              <i class="bi bi-person-vcard me-2"></i>CPF
-            </label>
-            <input type="text" class="form-control form-control-lg" id="cpf" name="cpf" required
-                   placeholder="000.000.000-00" maxlength="14">
-            <div class="form-text">Digite apenas números, pontos e traço serão adicionados automaticamente.</div>
-          </div>
+        <section id="recoveryRequestSection" class="<%= _solicitacaoRecebida ? 'd-none' : '' %>">
+          <form action="<%= _basePath %>/esquecisenha" method="POST" id="esqueciSenhaForm" novalidate>
+            <div class="mb-4">
+              <label for="cpf" class="form-label fw-medium">
+                <i class="bi bi-person-vcard me-2"></i>CPF
+              </label>
+              <input type="text" class="form-control form-control-lg" id="cpf" name="cpf" required
+                     placeholder="000.000.000-00" maxlength="14" autocomplete="off" inputmode="numeric">
+              <div class="form-text">Digite apenas números, pontos e traço serão adicionados automaticamente.</div>
+            </div>
 
-          <div class="d-grid">
-            <button type="submit" class="btn btn-primary btn-lg">
-              <i class="bi bi-envelope-arrow-up me-2"></i>Solicitar Alteração de Senha
-            </button>
-          </div>
-        </form>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-envelope-arrow-up me-2"></i>Solicitar Alteração de Senha
+              </button>
+            </div>
+          </form>
 
-        <!-- Links de navegação -->
-        <div class="text-center mt-4">
-          <a href="<%= _basePath %>/login" class="text-decoration-none">
-            <i class="bi bi-arrow-left me-1"></i>Voltar ao Login
-          </a>
-        </div>
+          <div class="text-center mt-4">
+            <a href="<%= _basePath %>/login" class="text-decoration-none">
+              <i class="bi bi-arrow-left me-1"></i>Voltar ao Login
+            </a>
+          </div>
+        </section>
+
+        <section id="recoveryConfirmationSection" class="<%= _solicitacaoRecebida ? '' : 'd-none' %>" aria-live="polite">
+          <div class="border rounded-4 p-4 bg-light-subtle text-center">
+            <div class="mb-3">
+              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle text-success" style="width: 64px; height: 64px;">
+                <i class="bi bi-check-circle fs-2"></i>
+              </span>
+            </div>
+            <h2 class="h4 mb-3">Solicitação recebida</h2>
+            <p class="text-muted mb-2" id="recoveryConfirmationMessage"><%= _recoveryMessage %></p>
+            <p class="small text-muted mb-4">Verifique sua caixa de entrada e também a pasta de spam.</p>
+            <div class="d-grid gap-2">
+              <a href="<%= _basePath %>/login" class="btn btn-primary">Voltar ao Login</a>
+              <a href="<%= _basePath %>/esquecisenha" class="btn btn-outline-secondary" id="recoveryNewRequestLink">Fazer nova solicitação</a>
+            </div>
+          </div>
+        </section>
 
       </div>
     </div>

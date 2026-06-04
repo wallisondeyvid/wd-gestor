@@ -265,7 +265,20 @@ export function paginaPrimeiroAcesso(req, res) {
   try { res.set('X-Public-Page', 'primeiroacesso'); } catch {}
   return res.render('primeiroacesso', { mensagem, basePath });
 }
-export function paginaEsqueciSenha(req, res) { const basePath = deriveBasePath(req); return res.render('esquecisenha', { basePath }); }
+export function paginaEsqueciSenha(req, res) {
+  const basePath = deriveBasePath(req);
+  const status = String(req.query?.status || '').toLowerCase();
+  const solicitacaoRecebida = status === 'recebida';
+  const recoveryMessage = solicitacaoRecebida
+    ? 'Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.'
+    : null;
+
+  return res.render('esquecisenha', {
+    basePath,
+    solicitacaoRecebida,
+    recoveryMessage,
+  });
+}
 export function paginaErro(req, res) { const message = req.query.message || 'Ocorreu um erro desconhecido.'; return res.render('erro', { errorMessage: decodeURIComponent(message) }); }
 
 export async function paginaUsuarios(req, res, next) {

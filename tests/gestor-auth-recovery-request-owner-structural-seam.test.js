@@ -100,6 +100,9 @@ function makeRes() {
   return {
     statusCode: 200,
     body: null,
+    view: null,
+    locals: null,
+    redirectedTo: null,
     status(code) {
       this.statusCode = code;
       return this;
@@ -108,22 +111,61 @@ function makeRes() {
       this.body = payload;
       return this;
     },
+    render(view, locals) {
+      this.view = view;
+      this.locals = locals;
+      return this;
+    },
+    redirect(statusOrUrl, maybeUrl) {
+      if (typeof maybeUrl === 'string') {
+        this.statusCode = statusOrUrl;
+        this.redirectedTo = maybeUrl;
+      } else {
+        this.redirectedTo = statusOrUrl;
+      }
+      return this;
+    },
   };
 }
 
 function loadDelegatedOwners() {
   const script = new vm.Script(`({
     async postEsqueciSenha(req, res, deps) {
+      const basePath = req.baseUrl || '/gestor';
+      const wantsJson = Boolean(
+        req.xhr
+          || req.is?.('application/json')
+          || String(req.get?.('x-requested-with') || '').toLowerCase() === 'xmlhttprequest'
+          || String(req.get?.('accept') || '').toLowerCase().includes('application/json')
+      );
+
       try {
         const result = await deps.requestPasswordRecoveryService({
           cpf: req.body?.cpf,
           email: req.body?.email,
           emailConfirm: req.body?.emailConfirm,
         });
-        return res.status(result.status).json(result.body);
+        if (wantsJson) {
+          return res.status(result.status).json(result.body);
+        }
+        if (result.status >= 200 && result.status < 300) {
+          return res.redirect(303, basePath + '/esquecisenha?status=recebida');
+        }
+        return res.status(result.status).render('esquecisenha', {
+          basePath,
+          solicitacaoRecebida: false,
+          mensagemErro: result.body?.message || 'Não foi possível concluir a solicitação. Tente novamente.',
+        });
       } catch (e) {
         deps.logError('[postEsqueciSenha] erro:', e?.message || e);
-        return res.status(500).json({ success: false, message: 'Erro interno.' });
+        if (wantsJson) {
+          return res.status(500).json({ success: false, message: 'Erro interno.' });
+        }
+        return res.status(500).render('esquecisenha', {
+          basePath,
+          solicitacaoRecebida: false,
+          mensagemErro: 'Não foi possível concluir a solicitação. Tente novamente.',
+        });
       }
     },
 
@@ -159,7 +201,11 @@ test('recovery/reset: seam minima futura recebe apenas o payload de recovery e p
   const owners = loadDelegatedOwners();
   const callLog = [];
 
-  const reqPost = { body: { cpf: '123.456.789-00' } };
+  const reqPost = {
+    body: { cpf: '123.456.789-00' },
+    is: (type) => type === 'application/json',
+    get: (header) => header.toLowerCase() === 'accept' ? 'application/json' : '',
+  };
   const resPost = makeRes();
 
   await owners.postEsqueciSenha(reqPost, resPost, {
@@ -198,4 +244,54 @@ test('recovery/reset: seam minima futura recebe apenas o payload de recovery e p
   assert.deepEqual(JSON.parse(JSON.stringify(resPost.body)), { success: true, message: 'Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.' });
   assert.equal(resList.statusCode, 200);
   assert.deepEqual(JSON.parse(JSON.stringify(resList.body)), { success: true, message: 'Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.' });
+});
+
+test('recovery/reset: POST HTML tradicional redireciona para confirmacao amigavel em vez de exibir JSON cru', async () => {
+  const owners = loadDelegatedOwners();
+  const res = makeRes();
+
+  await owners.postEsqueciSenha({
+    baseUrl: '/gestor',
+    body: { cpf: '123.456.789-00' },
+    is: () => false,
+    get: () => 'text/html',
+  }, res, {
+    requestPasswordRecoveryService: async () => ({
+      status: 200,
+      body: { success: true, message: 'Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.' },
+    }),
+    listRecoveryEmailsByCpfService: async () => ({ status: 200, body: { success: true } }),
+    logError: () => {},
+  });
+
+  assert.equal(res.statusCode, 303);
+  assert.equal(res.redirectedTo, '/gestor/esquecisenha?status=recebida');
+  assert.equal(res.body, null);
+});
+
+test('recovery/reset: POST HTML tradicional com erro local renderiza HTML em vez de JSON cru', async () => {
+  const owners = loadDelegatedOwners();
+  const res = makeRes();
+
+  await owners.postEsqueciSenha({
+    baseUrl: '/gestor',
+    body: { cpf: '123' },
+    is: () => false,
+    get: () => 'text/html',
+  }, res, {
+    requestPasswordRecoveryService: async () => ({
+      status: 400,
+      body: { success: false, message: 'CPF inválido.' },
+    }),
+    listRecoveryEmailsByCpfService: async () => ({ status: 200, body: { success: true } }),
+    logError: () => {},
+  });
+
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.view, 'esquecisenha');
+  assert.deepEqual(JSON.parse(JSON.stringify(res.locals)), {
+    basePath: '/gestor',
+    solicitacaoRecebida: false,
+    mensagemErro: 'CPF inválido.',
+  });
 });
