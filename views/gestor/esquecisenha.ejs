@@ -14,6 +14,18 @@
   <% const _moduleLabel = typeof moduleLabel !== 'undefined' ? moduleLabel : 'WDGestor'; %>
   <% // Garantir _basePath definido antes de qualquer uso (fallback /gestor)
     const _basePath = (typeof basePath === 'string' && basePath && basePath !== '/') ? basePath : '/gestor'; %>
+  <% const _moduleSegment = _basePath.replace(/^\/+/, '').split('/')[0] || 'gestor'; %>
+  <% const _moduleBadgeMap = { gestor: 'Gestor', condominios: 'Gestão de Condomínio', escalas: 'Escalas', 'portal-morador': 'Portal do Morador', clinica: 'Clínica' }; %>
+  <% const _normalizedModuleLabel = String(_moduleLabel || '').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); %>
+  <% const _resolvedModuleName = _moduleBadgeMap[_moduleSegment]
+    || (_normalizedModuleLabel === 'wdgestor' || _normalizedModuleLabel === 'gestor' ? 'Gestor' : '')
+    || (_normalizedModuleLabel.includes('condominio') ? 'Gestão de Condomínio' : '')
+    || (_normalizedModuleLabel.includes('escala') ? 'Escalas' : '')
+    || (_normalizedModuleLabel.includes('portal do morador') ? 'Portal do Morador' : '')
+    || (_normalizedModuleLabel.includes('clinica') ? 'Clínica' : '')
+    || _moduleLabel
+    || (_moduleSegment.charAt(0).toUpperCase() + _moduleSegment.slice(1)); %>
+  <% const _badgeLabel = 'Módulo ' + _resolvedModuleName; %>
   <% const _solicitacaoRecebida = solicitacaoRecebida === true; %>
   <% const _recoveryMessage = typeof recoveryMessage === 'string' && recoveryMessage
     ? recoveryMessage
@@ -46,7 +58,7 @@
         <!-- Marca / título -->
         <div class="auth-brand text-center">
           <img src="<%= _basePath %>/images/logoWDGestor.png" alt="<%= _moduleLabel %>" class="brand-logo auth-brand-logo" />
-          <span class="auth-eyebrow auth-brand-badge">MÓDULO GESTOR</span>
+          <span class="auth-eyebrow auth-brand-badge"><%= _badgeLabel %></span>
         </div>
 
         <% if (_mensagemErro) { %>

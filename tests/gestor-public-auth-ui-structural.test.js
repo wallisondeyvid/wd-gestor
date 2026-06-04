@@ -8,6 +8,7 @@ const LOGIN_VIEW_PATH = path.join(process.cwd(), 'views/gestor/logingestor.ejs')
 const RECOVERY_VIEW_PATH = path.join(process.cwd(), 'views/gestor/esquecisenha.ejs');
 const RESET_VIEW_PATH = path.join(process.cwd(), 'views/gestor/reset-password.ejs');
 const RESET_ERROR_VIEW_PATH = path.join(process.cwd(), 'views/gestor/reset-password-error.ejs');
+const RESET_SUCCESS_VIEW_PATH = path.join(process.cwd(), 'views/gestor/reset-password-success.ejs');
 const CONTACT_VIEW_PATH = path.join(process.cwd(), 'views/gestor/contato.ejs');
 const LOGIN_JS_PATH = path.join(process.cwd(), 'public/gestor/js/pages/login.js');
 const RECOVERY_JS_PATH = path.join(process.cwd(), 'public/gestor/js/pages/esquecisenha.js');
@@ -16,9 +17,47 @@ const LOGIN_VIEW_SOURCE = fs.readFileSync(LOGIN_VIEW_PATH, 'utf8');
 const RECOVERY_VIEW_SOURCE = fs.readFileSync(RECOVERY_VIEW_PATH, 'utf8');
 const RESET_VIEW_SOURCE = fs.readFileSync(RESET_VIEW_PATH, 'utf8');
 const RESET_ERROR_VIEW_SOURCE = fs.readFileSync(RESET_ERROR_VIEW_PATH, 'utf8');
+const RESET_SUCCESS_VIEW_SOURCE = fs.readFileSync(RESET_SUCCESS_VIEW_PATH, 'utf8');
 const CONTACT_VIEW_SOURCE = fs.readFileSync(CONTACT_VIEW_PATH, 'utf8');
 const LOGIN_JS_SOURCE = fs.readFileSync(LOGIN_JS_PATH, 'utf8');
 const RECOVERY_JS_SOURCE = fs.readFileSync(RECOVERY_JS_PATH, 'utf8');
+
+test('public auth UI: badge compartilhado usa o módulo correto por rota pública', async () => {
+  const gestorLoginHtml = await ejs.render(LOGIN_VIEW_SOURCE, {
+    basePath: '/gestor',
+    moduleLabel: 'Gestor',
+  }, { filename: LOGIN_VIEW_PATH, async: true });
+
+  const gestorRecoveryHtml = await ejs.render(RECOVERY_VIEW_SOURCE, {
+    basePath: '/gestor',
+    moduleLabel: 'Gestor',
+    solicitacaoRecebida: false,
+    recoveryMessage: null,
+  }, { filename: RECOVERY_VIEW_PATH, async: true });
+
+  const gestorContactHtml = await ejs.render(CONTACT_VIEW_SOURCE, {
+    basePath: '/gestor',
+    moduleLabel: 'Gestor',
+  }, { filename: CONTACT_VIEW_PATH, async: true });
+
+  const condominiosLoginHtml = await ejs.render(LOGIN_VIEW_SOURCE, {
+    basePath: '/condominios',
+    moduleLabel: 'Gestão de Condomínios',
+  }, { filename: LOGIN_VIEW_PATH, async: true });
+
+  const escalasLoginHtml = await ejs.render(LOGIN_VIEW_SOURCE, {
+    basePath: '/escalas',
+    moduleLabel: 'Escalas',
+  }, { filename: LOGIN_VIEW_PATH, async: true });
+
+  assert.match(gestorLoginHtml, /Módulo Gestor/);
+  assert.match(gestorRecoveryHtml, /Módulo Gestor/);
+  assert.match(gestorContactHtml, /Módulo Gestor/);
+  assert.match(condominiosLoginHtml, /Módulo Gestão de Condomínio/);
+  assert.match(escalasLoginHtml, /Módulo Escalas/);
+  assert.doesNotMatch(condominiosLoginHtml, /MÓDULO GESTOR|Módulo Gestor/);
+  assert.doesNotMatch(escalasLoginHtml, /MÓDULO GESTOR|Módulo Gestor/);
+});
 
 test('public auth UI: login mantém atributos básicos de acessibilidade e links públicos do fluxo', async () => {
   const html = await ejs.render(LOGIN_VIEW_SOURCE, {
@@ -47,7 +86,7 @@ test('public auth UI: recuperação mantém CPF-only, confirmação amigável e 
     recoveryMessage: null,
   }, { filename: RECOVERY_VIEW_PATH, async: true });
 
-  assert.match(html, /MÓDULO GESTOR/);
+  assert.match(html, /Módulo Gestor/);
   assert.doesNotMatch(html, /Recuperação de senha/);
   assert.match(html, /name="cpf"/);
   assert.match(html, /inputmode="numeric"/);
@@ -62,11 +101,13 @@ test('public auth UI: recuperação mantém CPF-only, confirmação amigável e 
 
 test('public auth UI: reset renderiza campos esperados com autocomplete new-password e ação principal consistente', async () => {
   const html = await ejs.render(RESET_VIEW_SOURCE, {
-    basePath: '/gestor',
+    basePath: '/escalas',
+    moduleLabel: 'Escalas',
     token: 'token-placeholder',
     userName: 'Ana',
   }, { filename: RESET_VIEW_PATH, async: true });
 
+  assert.match(html, /Módulo Escalas/);
   assert.match(html, /Definir nova senha/);
   assert.match(html, /name="senha"/);
   assert.match(html, /name="confirmarSenha"/);
@@ -91,7 +132,21 @@ test('public auth UI: reset error e contato preservam links públicos consistent
   assert.match(errorHtml, /Link inválido ou expirado/);
   assert.match(errorHtml, /Tentar Novamente/);
   assert.match(errorHtml, /Voltar ao Login/);
-  assert.match(contactHtml, /MÓDULO GESTOR/);
+  assert.match(contactHtml, /Módulo Gestor/);
   assert.doesNotMatch(contactHtml, /Precisa de ajuda\?/);
   assert.match(contactHtml, /Voltar ao Login/);
+});
+
+test('public auth UI: fontes compartilhadas não mantêm badge fixo incorreto', () => {
+  for (const source of [
+    LOGIN_VIEW_SOURCE,
+    RECOVERY_VIEW_SOURCE,
+    CONTACT_VIEW_SOURCE,
+    RESET_VIEW_SOURCE,
+    RESET_ERROR_VIEW_SOURCE,
+    RESET_SUCCESS_VIEW_SOURCE,
+  ]) {
+    assert.doesNotMatch(source, />\s*MÓDULO GESTOR\s*</);
+    assert.doesNotMatch(source, />\s*Módulo Gestor\s*</);
+  }
 });

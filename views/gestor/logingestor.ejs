@@ -6,9 +6,22 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>Login - <%= (typeof moduleLabel==='string' && moduleLabel) ? ('Módulo ' + moduleLabel) : 'Módulo Gestor' %></title>
   <% const _bp = (typeof basePath === 'string' && basePath && basePath !== '/') ? basePath : '/gestor'; %>
   <% const _basePath = _bp; %>
+  <% const _rawModuleLabel = typeof moduleLabel === 'string' ? moduleLabel.trim() : ''; %>
+  <% const _moduleSegment = _basePath.replace(/^\/+/, '').split('/')[0] || 'gestor'; %>
+  <% const _moduleBadgeMap = { gestor: 'Gestor', condominios: 'Gestão de Condomínio', escalas: 'Escalas', 'portal-morador': 'Portal do Morador', clinica: 'Clínica' }; %>
+  <% const _normalizedModuleLabel = _rawModuleLabel.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); %>
+  <% const _resolvedModuleName = _moduleBadgeMap[_moduleSegment]
+    || (_normalizedModuleLabel === 'wdgestor' || _normalizedModuleLabel === 'gestor' ? 'Gestor' : '')
+    || (_normalizedModuleLabel.includes('condominio') ? 'Gestão de Condomínio' : '')
+    || (_normalizedModuleLabel.includes('escala') ? 'Escalas' : '')
+    || (_normalizedModuleLabel.includes('portal do morador') ? 'Portal do Morador' : '')
+    || (_normalizedModuleLabel.includes('clinica') ? 'Clínica' : '')
+    || _rawModuleLabel
+    || (_moduleSegment.charAt(0).toUpperCase() + _moduleSegment.slice(1)); %>
+  <% const _badgeLabel = 'Módulo ' + _resolvedModuleName; %>
+  <title>Login - <%= _rawModuleLabel ? ('Módulo ' + _rawModuleLabel) : 'Módulo Gestor' %></title>
   <%- include('partials/basepath-var') %>
   <link rel="icon" href="<%= _bp %>/favicon.ico?v=2" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="<%= _bp %>/images/logoWDGestor.png?v=4">
@@ -42,7 +55,7 @@
         <!-- Marca / título -->
         <div class="auth-brand text-center">
           <img src="<%= _bp %>/images/logoWDGestor.png" alt="WDGestor" class="brand-logo auth-brand-logo" />
-          <span class="auth-eyebrow auth-brand-badge">MÓDULO GESTOR</span>
+          <span class="auth-eyebrow auth-brand-badge"><%= _badgeLabel %></span>
         </div>
 
         <!-- Alertas -->
