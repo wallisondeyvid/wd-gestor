@@ -122,6 +122,21 @@ export async function createServer(options = {}) {
     hidePoweredBy: true,
     dnsPrefetchControl: { allow: false },
   });
+  const reportOnlyContentSecurityPolicy = helmet.contentSecurityPolicy({
+    useDefaults: false,
+    reportOnly: true,
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+      fontSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'", 'https:'],
+      frameAncestors: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+    },
+  });
   const strictTransportSecurity = helmet.hsts({
     maxAge: 15552000,
     includeSubDomains: true,
@@ -129,6 +144,7 @@ export async function createServer(options = {}) {
   });
 
   app.use(securityHeaders);
+  app.use(reportOnlyContentSecurityPolicy);
   app.use((req, res, next) => {
     if (process.env.NODE_ENV !== 'production' || !req.secure) return next();
     return strictTransportSecurity(req, res, next);

@@ -25,7 +25,7 @@ async function withBuiltServer(nodeEnv, serverOptions, callback) {
   }
 }
 
-test('GET /gestor/login expõe headers de segurança conservadores sem CSP rígida', async () => {
+test('GET /gestor/login expõe headers de segurança conservadores com CSP em report-only', async () => {
   await withBuiltServer('test', async ({ app }) => {
     const res = await request(app)
       .get('/gestor/login')
@@ -39,10 +39,18 @@ test('GET /gestor/login expõe headers de segurança conservadores sem CSP rígi
     assert.equal(res.headers['x-dns-prefetch-control'], 'off');
     assert.equal(res.headers['strict-transport-security'], undefined);
     assert.equal(res.headers['content-security-policy'], undefined);
+
+    const reportOnlyHeader = res.headers['content-security-policy-report-only'];
+    assert.equal(typeof reportOnlyHeader, 'string');
+    assert.match(reportOnlyHeader, /default-src 'self'/);
+    assert.match(reportOnlyHeader, /script-src/);
+    assert.match(reportOnlyHeader, /style-src/);
+    assert.match(reportOnlyHeader, /img-src/);
+    assert.match(reportOnlyHeader, /frame-ancestors 'none'/);
   });
 });
 
-test('GET /gestor/dashboard e rota simples de outro módulo não expõem x-powered-by', async () => {
+test('GET /gestor/dashboard e rota simples de outro módulo mantêm headers de segurança sem CSP bloqueante', async () => {
   await withBuiltServer('test', { skipAuth: true }, async ({ app }) => {
     const gestorRes = await request(app)
       .get('/gestor/dashboard')
@@ -51,6 +59,8 @@ test('GET /gestor/dashboard e rota simples de outro módulo não expõem x-power
     assert.equal(gestorRes.status, 200);
     assert.equal(gestorRes.headers['x-powered-by'], undefined);
     assert.equal(gestorRes.headers['x-frame-options'], 'DENY');
+    assert.equal(gestorRes.headers['content-security-policy'], undefined);
+    assert.equal(typeof gestorRes.headers['content-security-policy-report-only'], 'string');
 
     const clinicaRes = await request(app)
       .get('/clinica/dashboard')
