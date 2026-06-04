@@ -9,9 +9,12 @@
   <% /* Template compartilhado Esqueci Minha Senha.
     Parâmetros opcionais:
     - moduleLabel: Nome exibido do módulo (default 'WDGestor')
+    - moduleName: Alias opcional para o nome exibido do módulo
     - basePath: Prefixo de rota ('' para Gestor, '/escalas' para Escalas)
   */ %>
-  <% const _moduleLabel = typeof moduleLabel !== 'undefined' ? moduleLabel : 'WDGestor'; %>
+  <% const _moduleLabel = typeof moduleLabel !== 'undefined'
+    ? moduleLabel
+    : (typeof moduleName !== 'undefined' ? moduleName : 'WDGestor'); %>
   <% // Garantir _basePath definido antes de qualquer uso (fallback /gestor)
     const _basePath = (typeof basePath === 'string' && basePath && basePath !== '/') ? basePath : '/gestor'; %>
   <% const _moduleSegment = _basePath.replace(/^\/+/, '').split('/')[0] || 'gestor'; %>
@@ -26,11 +29,16 @@
     || _moduleLabel
     || (_moduleSegment.charAt(0).toUpperCase() + _moduleSegment.slice(1)); %>
   <% const _badgeLabel = 'Módulo ' + _resolvedModuleName; %>
-  <% const _solicitacaoRecebida = solicitacaoRecebida === true; %>
+  <% const _solicitacaoRecebida = (typeof solicitacaoRecebida !== 'undefined' && solicitacaoRecebida === true)
+    || (typeof sucesso !== 'undefined' && sucesso === true); %>
   <% const _recoveryMessage = typeof recoveryMessage === 'string' && recoveryMessage
     ? recoveryMessage
     : 'Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.'; %>
-  <% const _mensagemErro = typeof mensagemErro === 'string' && mensagemErro ? mensagemErro : null; %>
+  <% const _recoveryError = typeof recoveryError === 'string' && recoveryError
+    ? recoveryError
+    : (typeof mensagemErro === 'string' && mensagemErro
+      ? mensagemErro
+      : (typeof erro === 'string' && erro ? erro : null)); %>
   <%- include('partials/basepath-var') %>
   <title>Esqueci minha senha - <%= _moduleLabel %></title>
   <%- include('partials/favicon') %>
@@ -61,9 +69,9 @@
           <span class="auth-eyebrow auth-brand-badge"><%= _badgeLabel %></span>
         </div>
 
-        <% if (_mensagemErro) { %>
+        <% if (_recoveryError) { %>
           <div class="alert alert-danger" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i><%= _mensagemErro %>
+            <i class="bi bi-exclamation-triangle me-2"></i><%= _recoveryError %>
           </div>
         <% } %>
 

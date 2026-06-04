@@ -82,6 +82,11 @@ test('rotas genericas delegam para as novas seams locais do corredor publico', (
     /app\.post\('\/:seg\/primeiroacesso',[\s\S]*const seg = resolveGenericPublicSegment\(req\.params\.seg\);[\s\S]*if \(!seg\) return next\(\);[\s\S]*return handoffGenericSegmentPrimeiroAcesso\(req, res, next, seg\);[\s\S]*\}\);/,
     'POST /:seg/primeiroacesso deve delegar para resolveGenericPublicSegment e handoffGenericSegmentPrimeiroAcesso',
   );
+  assert.match(
+    SOURCE,
+    /app\.get\('\/:seg\/esquecisenha',\s*async\s*\(req,\s*res,\s*next\)\s*=>\s*\{[\s\S]*const seg = resolveGenericPublicSegment\(req\.params\.seg\);[\s\S]*if \(!seg\) return next\(\);[\s\S]*return renderGenericSegmentEsqueciSenha\(req, res, next, seg\);[\s\S]*\}\);/,
+    'GET /:seg/esquecisenha deve delegar para resolveGenericPublicSegment e renderGenericSegmentEsqueciSenha',
+  );
 });
 
 test('filtro de segmento e bifurcacao portal vs generico permanecem preservados', async () => {

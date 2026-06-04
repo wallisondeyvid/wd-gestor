@@ -703,6 +703,40 @@ export async function createServer(options = {}) {
       }
       return Promise.resolve(genericPrimeiroAcessoPost(req, res)).catch(next);
     }
+    async function renderGenericSegmentEsqueciSenha(req, res, next, seg) {
+      assignGenericSegmentBaseUrl(req, seg);
+      const basePath = '/' + seg;
+      let moduleLabel = seg.charAt(0).toUpperCase() + seg.slice(1);
+      try {
+        const meta = registry
+          .map(m => m.meta || {})
+          .find(mt => (String(mt.basePath || '').replace(/^\//, '') === seg) || (String(mt.name || '') === seg));
+        if (meta?.displayName) moduleLabel = meta.displayName;
+      } catch {}
+
+      const status = String(req?.query?.status || '').toLowerCase();
+      const solicitacaoRecebida = status === 'recebida';
+      const recoveryMessage = solicitacaoRecebida
+        ? 'Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.'
+        : null;
+
+      return res.render('gestor/esquecisenha', {
+        basePath,
+        moduleLabel,
+        solicitacaoRecebida,
+        recoveryMessage,
+      }, (err, html) => {
+        if (err) return next();
+        try {
+          res.set('Content-Type', 'text/html; charset=utf-8');
+          res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+          res.set('Pragma', 'no-cache');
+          res.set('Expires', '0');
+          res.set('X-Server-Direct', 'recovery-generico');
+        } catch {}
+        return res.status(200).send(html);
+      });
+    }
     function renderDirectGestorLogin(req, res, next) {
       const isLogin = true;
       const queryStr = (req.originalUrl && req.originalUrl.includes('?')) ? req.originalUrl.slice(req.originalUrl.indexOf('?') + 1) : '';
@@ -730,6 +764,13 @@ export async function createServer(options = {}) {
         const seg = resolveGenericPublicSegment(req.params.seg);
         if (!seg) return next();
         return renderGenericSegmentLogin(req, res, next, seg);
+      } catch (e) { return next(); }
+    });
+    app.get('/:seg/esquecisenha', async (req, res, next) => {
+      try {
+        const seg = resolveGenericPublicSegment(req.params.seg);
+        if (!seg) return next();
+        return renderGenericSegmentEsqueciSenha(req, res, next, seg);
       } catch (e) { return next(); }
     });
   } catch(_e) { /* noop */ }

@@ -17,6 +17,36 @@ test('gestor esqueci senha UI: tela publica pede apenas CPF e nao exibe confirma
   assert.doesNotMatch(VIEW_SOURCE, /emailSelecionado|emailConfirm|Confirmação de e-mail/i);
 });
 
+test('gestor esqueci senha UI: view tolera locals ausentes ou legados sem quebrar e usa basePath correto', async () => {
+  const html = await ejs.render(VIEW_SOURCE, {
+    basePath: '/condominios',
+    moduleLabel: 'Gestão de Condomínio',
+  }, { filename: VIEW_PATH, async: true });
+
+  assert.match(html, /Módulo Gestão de Condomínio/);
+  assert.match(html, /href="\/condominios\/login"/);
+  assert.match(html, /href="\/condominios\/esquecisenha"/);
+  assert.doesNotMatch(html, /ReferenceError|debugLink|name="email"|token|hash/i);
+});
+
+test('gestor esqueci senha UI: view aceita flags legadas de sucesso e erro sem depender de nomes novos', async () => {
+  const successHtml = await ejs.render(VIEW_SOURCE, {
+    basePath: '/escalas',
+    moduleLabel: 'Escalas',
+    sucesso: true,
+  }, { filename: VIEW_PATH, async: true });
+
+  const errorHtml = await ejs.render(VIEW_SOURCE, {
+    basePath: '/escalas',
+    moduleLabel: 'Escalas',
+    erro: 'Erro inesperado',
+  }, { filename: VIEW_PATH, async: true });
+
+  assert.match(successHtml, /Solicitação recebida/);
+  assert.match(successHtml, /href="\/escalas\/login"/);
+  assert.match(errorHtml, /Erro inesperado/);
+});
+
 test('gestor esqueci senha UI: view renderiza estado de confirmacao amigavel quando solicitacao foi recebida', async () => {
   const html = await ejs.render(VIEW_SOURCE, {
     basePath: '/gestor',
