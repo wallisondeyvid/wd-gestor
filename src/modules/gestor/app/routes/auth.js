@@ -1,9 +1,21 @@
 // (migrado) Rotas de auth
 import express from 'express';
 import { getAuthContext, login, logout, renderResetPassword, postResetPassword, postEsqueciSenha, primeiroAcessoPost, listarEmailsPorCPF, selectAuthUnit, switchAuthUnit } from '#modules/gestor/app/controllers/authController.js';
-import { createGestorLoginHttpLimiter } from '#modules/gestor/app/middlewares/rateLimit.js';
+import {
+	createGestorLoginHttpLimiter,
+	createGestorRecoveryEmailsCpfHttpLimiter,
+	createGestorRecoveryEmailsIpHttpLimiter,
+	createGestorRecoveryRequestCpfHttpLimiter,
+	createGestorRecoveryRequestIpHttpLimiter,
+	createGestorResetPasswordHttpLimiter,
+} from '#modules/gestor/app/middlewares/rateLimit.js';
 const router = express.Router();
 const gestorLoginHttpLimiter = createGestorLoginHttpLimiter();
+const gestorRecoveryRequestIpLimiter = createGestorRecoveryRequestIpHttpLimiter();
+const gestorRecoveryRequestCpfLimiter = createGestorRecoveryRequestCpfHttpLimiter();
+const gestorRecoveryEmailsIpLimiter = createGestorRecoveryEmailsIpHttpLimiter();
+const gestorRecoveryEmailsCpfLimiter = createGestorRecoveryEmailsCpfHttpLimiter();
+const gestorResetPasswordHttpLimiter = createGestorResetPasswordHttpLimiter();
 // Métricas simples de adoção de rotas prefixadas vs raiz
 router.use((req,res,next)=> {
 	try {
@@ -26,11 +38,11 @@ router.post('/login', gestorLoginHttpLimiter, login);
 router.get('/logout', logout);
 // Reset password no sub-app Gestor: o redirect sem prefixo pertence ao app raiz.
 router.get('/reset-password/:token', renderResetPassword);
-router.post('/reset-password', postResetPassword);
+router.post('/reset-password', gestorResetPasswordHttpLimiter, postResetPassword);
 // Recovery request no sub-app Gestor: o redirecionamento sem prefixo pertence ao app raiz.
-router.post('/esqueci-senha', postEsqueciSenha);
-router.post('/esquecisenha', postEsqueciSenha);
+router.post('/esqueci-senha', gestorRecoveryRequestIpLimiter, gestorRecoveryRequestCpfLimiter, postEsqueciSenha);
+router.post('/esquecisenha', gestorRecoveryRequestIpLimiter, gestorRecoveryRequestCpfLimiter, postEsqueciSenha);
 // Listagem de emails por CPF no sub-app Gestor: o redirecionamento sem prefixo pertence ao app raiz.
-router.get('/api/recover/emails', listarEmailsPorCPF);
+router.get('/api/recover/emails', gestorRecoveryEmailsIpLimiter, gestorRecoveryEmailsCpfLimiter, listarEmailsPorCPF);
 router.post('/primeiroacesso', primeiroAcessoPost);
 export default router;
