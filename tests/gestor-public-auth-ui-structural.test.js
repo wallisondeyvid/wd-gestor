@@ -47,7 +47,8 @@ test('public auth UI: recuperação mantém CPF-only, confirmação amigável e 
     recoveryMessage: null,
   }, { filename: RECOVERY_VIEW_PATH, async: true });
 
-  assert.match(html, /Recuperação de senha/);
+  assert.match(html, /MÓDULO GESTOR/);
+  assert.doesNotMatch(html, /Recuperação de senha/);
   assert.match(html, /name="cpf"/);
   assert.match(html, /inputmode="numeric"/);
   assert.match(html, /autocomplete="off"/);
@@ -90,6 +91,7 @@ test('public auth UI: reset error e contato preservam links públicos consistent
   assert.match(errorHtml, /Link inválido ou expirado/);
   assert.match(errorHtml, /Tentar Novamente/);
   assert.match(errorHtml, /Voltar ao Login/);
-  assert.match(contactHtml, /Precisa de ajuda\?/);
+  assert.match(contactHtml, /MÓDULO GESTOR/);
+  assert.doesNotMatch(contactHtml, /Precisa de ajuda\?/);
   assert.match(contactHtml, /Voltar ao Login/);
 });
