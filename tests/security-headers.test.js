@@ -4,15 +4,17 @@ import request from 'supertest';
 
 import { createServer } from '../src/server/createServer.js';
 
-async function withBuiltServer(nodeEnv, callback) {
+async function withBuiltServer(nodeEnv, serverOptions, callback) {
+  const effectiveServerOptions = typeof serverOptions === 'function' ? {} : (serverOptions || {});
+  const effectiveCallback = typeof serverOptions === 'function' ? serverOptions : callback;
   const previousNodeEnv = process.env.NODE_ENV;
   process.env.NODE_ENV = nodeEnv;
 
-  const built = await createServer({ skipDb: true, deferErrorHandlers: true });
+  const built = await createServer({ skipDb: true, deferErrorHandlers: true, ...effectiveServerOptions });
   await Promise.resolve(built.registerErrorHandlers());
 
   try {
-    return await callback(built);
+    return await effectiveCallback(built);
   } finally {
     process.env.NODE_ENV = previousNodeEnv;
     try {
@@ -37,6 +39,26 @@ test('GET /gestor/login expõe headers de segurança conservadores sem CSP rígi
     assert.equal(res.headers['x-dns-prefetch-control'], 'off');
     assert.equal(res.headers['strict-transport-security'], undefined);
     assert.equal(res.headers['content-security-policy'], undefined);
+  });
+});
+
+test('GET /gestor/dashboard e rota simples de outro módulo não expõem x-powered-by', async () => {
+  await withBuiltServer('test', { skipAuth: true }, async ({ app }) => {
+    const gestorRes = await request(app)
+      .get('/gestor/dashboard')
+      .set('Accept', 'text/html');
+
+    assert.equal(gestorRes.status, 200);
+    assert.equal(gestorRes.headers['x-powered-by'], undefined);
+    assert.equal(gestorRes.headers['x-frame-options'], 'DENY');
+
+    const clinicaRes = await request(app)
+      .get('/clinica/dashboard')
+      .set('Accept', 'text/html');
+
+    assert.equal(clinicaRes.status, 200);
+    assert.equal(clinicaRes.headers['x-powered-by'], undefined);
+    assert.equal(clinicaRes.headers['x-content-type-options'], 'nosniff');
   });
 });
 

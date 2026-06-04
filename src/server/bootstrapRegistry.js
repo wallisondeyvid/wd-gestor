@@ -1,5 +1,20 @@
 import { randomUUID } from 'crypto';
 
+const SUBAPP_X_POWERED_BY_DISABLED_FLAG = '__wdSubAppXPoweredByDisabled__';
+
+function disableSubAppPoweredByHeader(appLike) {
+  if (!appLike || typeof appLike.disable !== 'function') return;
+  if (appLike[SUBAPP_X_POWERED_BY_DISABLED_FLAG]) return;
+
+  appLike.disable('x-powered-by');
+  Object.defineProperty(appLike, SUBAPP_X_POWERED_BY_DISABLED_FLAG, {
+    value: true,
+    configurable: true,
+    enumerable: false,
+    writable: false,
+  });
+}
+
 async function importIsolatedApp(moduleAppPath) {
   const moduleUrl = new URL(moduleAppPath, import.meta.url);
   moduleUrl.searchParams.set('instance', `${Date.now()}-${randomUUID()}`);
@@ -59,6 +74,8 @@ export function mountBootstrapRegistry({
   for (const mod of registry) {
     const meta = mod.meta || { name: 'unknown', basePath: '/' };
     const built = mod.buildModule({ config });
+
+    disableSubAppPoweredByHeader(built);
 
     try {
       if (built && built.locals) {
