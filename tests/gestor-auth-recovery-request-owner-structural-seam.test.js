@@ -159,7 +159,7 @@ test('recovery/reset: seam minima futura recebe apenas o payload de recovery e p
   const owners = loadDelegatedOwners();
   const callLog = [];
 
-  const reqPost = { body: { cpf: '123.456.789-00', email: 'x@exemplo.com', emailConfirm: 'x@exemplo.com' } };
+  const reqPost = { body: { cpf: '123.456.789-00' } };
   const resPost = makeRes();
 
   await owners.postEsqueciSenha(reqPost, resPost, {
@@ -167,7 +167,7 @@ test('recovery/reset: seam minima futura recebe apenas o payload de recovery e p
       callLog.push(['requestPasswordRecoveryService', JSON.parse(JSON.stringify(input))]);
       return {
         status: 200,
-        body: { success: true, message: 'ok' },
+        body: { success: true, message: 'Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.' },
       };
     },
     listRecoveryEmailsByCpfService: async () => ({ status: 200, body: { success: true } }),
@@ -182,20 +182,20 @@ test('recovery/reset: seam minima futura recebe apenas o payload de recovery e p
     listRecoveryEmailsByCpfService: async (input) => {
       callLog.push(['listRecoveryEmailsByCpfService', JSON.parse(JSON.stringify(input))]);
       return {
-        status: 404,
-        body: { success: false, message: 'Nenhum usuário com este CPF.' },
+        status: 200,
+        body: { success: true, message: 'Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.' },
       };
     },
     logError: (...args) => callLog.push(['logError', args]),
   });
 
   assert.deepEqual(callLog, [
-    ['requestPasswordRecoveryService', { cpf: '123.456.789-00', email: 'x@exemplo.com', emailConfirm: 'x@exemplo.com' }],
+    ['requestPasswordRecoveryService', { cpf: '123.456.789-00' }],
     ['listRecoveryEmailsByCpfService', { cpf: '12345678900' }],
   ]);
 
   assert.equal(resPost.statusCode, 200);
-  assert.deepEqual(JSON.parse(JSON.stringify(resPost.body)), { success: true, message: 'ok' });
-  assert.equal(resList.statusCode, 404);
-  assert.deepEqual(JSON.parse(JSON.stringify(resList.body)), { success: false, message: 'Nenhum usuário com este CPF.' });
+  assert.deepEqual(JSON.parse(JSON.stringify(resPost.body)), { success: true, message: 'Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.' });
+  assert.equal(resList.statusCode, 200);
+  assert.deepEqual(JSON.parse(JSON.stringify(resList.body)), { success: true, message: 'Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.' });
 });

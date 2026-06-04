@@ -38,6 +38,46 @@ function maskEmail(email) {
   return first + '*'.repeat(local.length - 2) + last + '@' + domain;
 }
 
+function maskCpf(cpf) {
+  const digits = String(cpf || '').replace(/\D/g, '');
+  if (digits.length !== 11) return '***';
+  return `${digits.slice(0, 3)}.***.***-${digits.slice(-2)}`;
+}
+
+function isValidRecoveryEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
+}
+
+function isEligibleRecoveryUser(user) {
+  const email = String(user?.email || '').trim();
+  if (!isValidRecoveryEmail(email)) return false;
+  if (Object.prototype.hasOwnProperty.call(user || {}, 'ativo') && user.ativo === false) return false;
+  return true;
+}
+
+function buildGenericPasswordRecoveryResponse() {
+  return {
+    status: 200,
+    body: {
+      success: true,
+      message: 'Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.',
+    },
+  };
+}
+
+function buildPasswordRecoveryLogMeta({ cpfDigits, eligibleCount, queuedCount, failedCount, skippedCount, maskedEmail, reason }) {
+  const meta = {
+    cpf: maskCpf(cpfDigits),
+    eligibleCount,
+  };
+  if (typeof queuedCount === 'number') meta.queuedCount = queuedCount;
+  if (typeof failedCount === 'number') meta.failedCount = failedCount;
+  if (typeof skippedCount === 'number') meta.skippedCount = skippedCount;
+  if (maskedEmail) meta.email = maskedEmail;
+  if (reason) meta.reason = reason;
+  return meta;
+}
+
 async function loadRecoveryUsersByCpf(cpfDigits) {
   return loadRecoveryUsersByCpfData({ cpfDigits });
 }
@@ -153,16 +193,7 @@ export async function listRecoveryEmailsByCpfService({ cpf } = {}) {
     return { status: 400, body: { success: false, message: 'CPF inválido.' } };
   }
 
-  const usuarios = await loadRecoveryUsersByCpf(cpfDigits);
-  if (!usuarios.length) {
-    return { status: 404, body: { success: false, message: 'Nenhum usuário com este CPF.' } };
-  }
-
-  const masked = usuarios.map((user) => ({ email: maskEmail(user.email), original: user.email }));
-  return {
-    status: 200,
-    body: { success: true, quantidade: usuarios.length, emails: masked },
-  };
+  return buildGenericPasswordRecoveryResponse();
 }
 
 export async function requestPasswordRecoveryService({ cpf, email, emailConfirm } = {}) {
@@ -174,67 +205,37 @@ export async function requestPasswordRecoveryService({ cpf, email, emailConfirm 
   }
 
   const usuarios = await loadRecoveryUsersByCpf(cpfDigits);
-  if (!usuarios.length) {
-    return { status: 404, body: { success: false, message: 'Nenhum usuário com este CPF.' } };
+  const eligibleUsers = usuarios
+    .filter((user) => isEligibleRecoveryUser(user))
+    .reduce((acc, user) => {
+      const key = `${String(user?._id || '')}:${String(user?.email || '').trim().toLowerCase()}`;
+      if (!key || acc.seen.has(key)) return acc;
+      acc.seen.add(key);
+      acc.items.push(user);
+      return acc;
+    }, { seen: new Set(), items: [] })
+    .items;
+
+  console.info('password recovery requested', buildPasswordRecoveryLogMeta({
+    cpfDigits,
+    eligibleCount: eligibleUsers.length,
+  }));
+
+  if (!eligibleUsers.length) {
+    console.info('password recovery mail skipped', buildPasswordRecoveryLogMeta({
+      cpfDigits,
+      eligibleCount: 0,
+      skippedCount: 1,
+      reason: 'no-eligible-users',
+    }));
+    return buildGenericPasswordRecoveryResponse();
   }
-
-  if (usuarios.length > 1 && !email) {
-    return {
-      status: 200,
-      body: {
-        success: false,
-        reason: 'multiple-users',
-        maskedEmails: usuarios.map((user) => maskEmail(user.email)),
-      },
-    };
-  }
-
-  const chosenEmail = email || (usuarios.length === 1 ? usuarios[0].email : null);
-  if (!chosenEmail) return { status: 400, body: { success: false, message: 'E-mail requerido.' } };
-  if (emailConfirm && chosenEmail.toLowerCase() !== emailConfirm.toLowerCase()) {
-    return { status: 400, body: { success: false, message: 'Confirmação de e-mail não confere.' } };
-  }
-
-  const user = usuarios.find((item) => item.email.toLowerCase() === chosenEmail.toLowerCase());
-  if (!user) {
-    return { status: 404, body: { success: false, message: 'E-mail não associado a este CPF.' } };
-  }
-
-  const token = crypto.randomBytes(32).toString('hex');
-  const expira = new Date(Date.now() + 30 * 60 * 1000);
-  await createPasswordRecoveryTokenData({ userId: user._id, token, expiresAt: expira });
-
-  const appBase = resolveAppUrl();
-  const link = `${appBase.replace(/\/$/, '')}/gestor/reset-password/${token}`;
-
-  let html = '';
-  let text = '';
-  try {
-    const tplResult = resetPasswordTemplate(user.nome || 'Usuário', link);
-    if (typeof tplResult === 'string') {
-      html = tplResult;
-    } else if (tplResult && typeof tplResult === 'object') {
-      html = tplResult.html || tplResult.HTML || tplResult.body || '';
-      text = tplResult.text || tplResult.TEXT || '';
-      if (!html) html = `<p>Redefina sua senha: <a href="${link}">${link}</a></p>`;
-    } else {
-      html = `<p>Redefina sua senha: <a href="${link}">${link}</a></p>`;
-    }
-  } catch (tplErr) {
-    console.warn('[postEsqueciSenha] falha ao montar template, usando fallback:', tplErr.message);
-    html = `<p>Redefina sua senha: <a href="${link}">${link}</a></p>`;
-  }
-
-  console.info('[postEsqueciSenha] template montado', { hasHtml: !!html, htmlLength: html.length, hasText: !!text });
 
   const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
   const smtpPort = Number(process.env.SMTP_PORT) || 587;
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
   const haveCreds = !!(smtpUser && smtpPass);
-  if (!haveCreds) {
-    console.warn('[postEsqueciSenha] SMTP_USER/SMTP_PASS ausentes. Envio real será pulado.');
-  }
   const smtpSecure = String(process.env.SMTP_SECURE || '').toLowerCase() === 'true';
   const ignoreTLS = String(process.env.SMTP_IGNORE_TLS || '').toLowerCase() === 'true';
   const requireTLS = String(process.env.SMTP_REQUIRE_TLS || '').toLowerCase() === 'true';
@@ -248,16 +249,59 @@ export async function requestPasswordRecoveryService({ cpf, email, emailConfirm 
     requireTLS,
   });
 
-  let debugError = null;
-  let debugLink = link;
   if (haveCreds) {
     try {
-      try {
-        await transporter.verify();
-        console.info('[postEsqueciSenha] SMTP verificado', { host: smtpHost, port: smtpPort, secure: smtpSecure, user: smtpUser });
-      } catch (verErr) {
-        console.warn('[postEsqueciSenha] Falha verify SMTP (prosseguindo):', verErr.message);
+      await transporter.verify();
+    } catch {
+      console.warn('password recovery mail skipped', buildPasswordRecoveryLogMeta({
+        cpfDigits,
+        eligibleCount: eligibleUsers.length,
+        skippedCount: eligibleUsers.length,
+        reason: 'smtp-verify-failed',
+      }));
+    }
+  }
+
+  let queuedCount = 0;
+  let failedCount = 0;
+  let skippedCount = 0;
+  const appBase = resolveAppUrl();
+  for (const user of eligibleUsers) {
+    const token = crypto.randomBytes(32).toString('hex');
+    const expira = new Date(Date.now() + 30 * 60 * 1000);
+    await createPasswordRecoveryTokenData({ userId: user._id, token, expiresAt: expira });
+
+    const link = `${appBase.replace(/\/$/, '')}/gestor/reset-password/${token}`;
+    let html = '';
+    let text = '';
+    try {
+      const tplResult = resetPasswordTemplate(user.nome || 'Usuário', link);
+      if (typeof tplResult === 'string') {
+        html = tplResult;
+      } else if (tplResult && typeof tplResult === 'object') {
+        html = tplResult.html || tplResult.HTML || tplResult.body || '';
+        text = tplResult.text || tplResult.TEXT || '';
+        if (!html) html = `<p>Redefina sua senha pelo link recebido por e-mail.</p>`;
+      } else {
+        html = `<p>Redefina sua senha pelo link recebido por e-mail.</p>`;
       }
+    } catch {
+      html = `<p>Redefina sua senha pelo link recebido por e-mail.</p>`;
+    }
+
+    if (!haveCreds) {
+      skippedCount += 1;
+      console.info('password recovery mail skipped', buildPasswordRecoveryLogMeta({
+        cpfDigits,
+        eligibleCount: eligibleUsers.length,
+        skippedCount,
+        maskedEmail: maskEmail(user.email),
+        reason: 'smtp-missing-credentials',
+      }));
+      continue;
+    }
+
+    try {
       const mailOptions = {
         from: process.env.MAIL_FROM || smtpUser || 'no-reply@wdgestor.local',
         to: user.email,
@@ -265,32 +309,26 @@ export async function requestPasswordRecoveryService({ cpf, email, emailConfirm 
         html,
       };
       if (text) mailOptions.text = text;
-      const sendResult = await transporter.sendMail(mailOptions);
-      console.info('[postEsqueciSenha] email enviado', {
-        messageId: sendResult.messageId,
-        accepted: sendResult.accepted,
-        rejected: sendResult.rejected,
-      });
-    } catch (sendErr) {
-      debugError = sendErr.message;
-      console.warn('[postEsqueciSenha] Falha ao enviar email:', sendErr.message);
-      console.info('[postEsqueciSenha] Link de redefinição:', link);
-      console.info('[postEsqueciSenha] HTML (fallback log)\n---INICIO---\n' + html + '\n---FIM---');
+      await transporter.sendMail(mailOptions);
+      queuedCount += 1;
+      console.info('password recovery mail queued', buildPasswordRecoveryLogMeta({
+        cpfDigits,
+        eligibleCount: eligibleUsers.length,
+        queuedCount,
+        maskedEmail: maskEmail(user.email),
+      }));
+    } catch {
+      failedCount += 1;
+      console.warn('password recovery mail failed', buildPasswordRecoveryLogMeta({
+        cpfDigits,
+        eligibleCount: eligibleUsers.length,
+        failedCount,
+        maskedEmail: maskEmail(user.email),
+      }));
     }
-  } else {
-    console.info('[postEsqueciSenha] (modo sem credenciais) Link de redefinição:', link);
   }
 
-  const payload = {
-    success: true,
-    message: 'Se o e-mail existir e estiver ativo, você receberá instruções em alguns instantes.',
-  };
-  if (process.env.NODE_ENV !== 'production') {
-    payload.debugLink = debugLink;
-    if (debugError) payload.debugError = debugError;
-  }
-
-  return { status: 200, body: payload };
+  return buildGenericPasswordRecoveryResponse();
 }
 
 export default {

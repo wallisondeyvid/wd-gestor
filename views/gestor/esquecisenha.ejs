@@ -46,7 +46,7 @@
 
         <!-- Botão de informação (popover) -->
         <div class="d-flex justify-content-end mb-3">
-          <button type="button" id="infoCpfBtn" class="btn btn-sm btn-outline-info" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom" title="Ajuda" data-bs-content="Informe seu CPF para solicitar a redefinição de senha. Se houver mais de um usuário com este CPF, também será solicitado o e-mail.">
+          <button type="button" id="infoCpfBtn" class="btn btn-sm btn-outline-info" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom" title="Ajuda" data-bs-content="Informe seu CPF para solicitar a redefinição de senha. Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.">
             <i class="bi bi-info-circle me-1"></i> Ajuda
           </button>
         </div>
@@ -60,14 +60,6 @@
             <input type="text" class="form-control form-control-lg" id="cpf" name="cpf" required
                    placeholder="000.000.000-00" maxlength="14">
             <div class="form-text">Digite apenas números, pontos e traço serão adicionados automaticamente.</div>
-          </div>
-
-          <div class="mb-3 d-none" id="emailGroup">
-            <label for="email" class="form-label fw-medium">
-              <i class="bi bi-envelope me-2"></i>E-mail
-            </label>
-            <input type="email" class="form-control form-control-lg" id="email" name="email" placeholder="seuemail@dominio.com">
-            <div class="form-text" id="emailHint">Após selecionar um e-mail listado acima, digite-o exatamente aqui para confirmação.</div>
           </div>
 
           <div class="d-grid">

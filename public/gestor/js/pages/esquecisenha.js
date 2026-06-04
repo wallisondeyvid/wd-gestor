@@ -6,12 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	const form = document.getElementById('esqueciSenhaForm');
 	const submitBtn = form.querySelector('button[type="submit"]');
 	const originalBtnText = submitBtn.innerHTML;
-	const emailGroup = document.getElementById('emailGroup');
-	const emailInput = document.getElementById('email');
-	const emailHint = document.getElementById('emailHint');
-
-	// Elemento dinâmico para lista de e-mails
-	let listaWrapper = null;
 
 	// Máscara CPF
 	cpfInput.addEventListener('input', (e) => {
@@ -25,74 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
 	form.addEventListener('submit', async (ev) => {
 		ev.preventDefault();
 		const cpfDigits = cpfInput.value.replace(/\D/g,'');
-		const emailConfirm = (emailInput?.value || '').trim();
 
 		if (!cpfDigits) return showAlert('Informe o CPF.', 'danger');
 		if (cpfDigits.length !== 11) return showAlert('CPF deve ter 11 dígitos.', 'danger');
 		if (!validarCPF(cpfDigits)) return showAlert('CPF inválido.', 'danger');
 
-		// Se ainda não carregamos a lista de e-mails, primeiro chama endpoint de descoberta
-		if (!listaWrapper) {
-			await carregarEmails(cpfDigits);
-			return; // usuário depois submete novamente escolhendo
-		}
-
-		const selecionado = listaWrapper.querySelector('input[type="radio"][name="emailSelecionado"]:checked');
-		if (!selecionado) return showAlert('Selecione um e-mail.', 'warning');
-		const emailSelecionado = selecionado.value;
-		if (!emailConfirm) return showAlert('Confirme o e-mail digitando no campo abaixo.', 'warning');
-		if (emailConfirm.toLowerCase() !== emailSelecionado.toLowerCase()) return showAlert('Confirmação não corresponde ao e-mail selecionado.', 'danger');
-
-		// Envia solicitação final
-		await solicitarReset({ cpf: cpfInput.value, email: emailSelecionado, emailConfirm });
-	});
-
-	async function carregarEmails(cpfDigits) {
-		toggleLoading(true, 'Consultando...');
-		try {
-			const bp = (window._BASE_PATH && typeof window._BASE_PATH === 'string') ? window._BASE_PATH : '/gestor';
-			const resp = await fetch(`${bp}/api/recover/emails?cpf=${encodeURIComponent(cpfDigits)}`);
-			const data = await resp.json();
-			if (!data.success) {
-				showAlert(data.message || 'Não foi possível consultar.', 'danger');
-				return;
-			}
-			if (data.quantidade === 1) {
-				// Apenas um email: criar automaticamente wrapper com um radio já selecionado
-				criarListaEmails([{ email: data.emails[0].original, masked: data.emails[0].email }]);
-				showAlert('Confirmar e-mail para enviar redefinição.', 'info');
-			} else {
-				criarListaEmails(data.emails.map(e => ({ email: e.original, masked: e.email })));
-				showAlert('Selecione o e-mail correspondente e confirme digitando abaixo.', 'info');
-			}
-			emailGroup?.classList.remove('d-none');
-			emailInput.placeholder = 'Digite novamente o e-mail escolhido';
-		} catch (e) {
-			console.error(e);
-			showAlert('Erro consultando e-mails.', 'danger');
-		} finally {
-			toggleLoading(false);
-		}
-	}
-
-	function criarListaEmails(lista) {
-		if (listaWrapper) listaWrapper.remove();
-		listaWrapper = document.createElement('div');
-		listaWrapper.className = 'mb-3 border rounded p-3 bg-light';
-		const title = document.createElement('div');
-		title.className = 'fw-medium mb-2';
-		title.textContent = 'E-mails encontrados:';
-		listaWrapper.appendChild(title);
-		lista.forEach((item, idx) => {
-			const id = 'emailOpt'+idx;
-			const div = document.createElement('div');
-			div.className = 'form-check';
-			div.innerHTML = `
-				<input class="form-check-input" type="radio" name="emailSelecionado" id="${id}" value="${item.email}" ${idx===0?'checked':''}>
-				<label class="form-check-label" for="${id}">${mask(item.email)}</label>`;
-			listaWrapper.appendChild(div);
-		});
-		form.insertBefore(listaWrapper, form.querySelector('.d-grid'));
+		await solicitarReset({ cpf: cpfInput.value });
 	}
 
 	async function solicitarReset(payload) {
@@ -108,9 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (data.success) {
 				showAlert(data.message, 'success');
 				form.reset();
-				if (listaWrapper) { listaWrapper.remove(); listaWrapper = null; }
-				emailGroup.classList.add('d-none');
-				emailInput.value = '';
 			} else {
 				showAlert(data.message || 'Falha.', 'danger');
 			}
@@ -150,13 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		let resto=(soma*10)%11; if(resto===10||resto===11) resto=0; if(resto!==parseInt(cpf.substring(9,10))) return false;
 		soma=0; for (let i=1;i<=10;i++) soma+=parseInt(cpf.substring(i-1,i))*(12-i);
 		resto=(soma*10)%11; if(resto===10||resto===11) resto=0; if(resto!==parseInt(cpf.substring(10,11))) return false; return true;
-	}
-
-	function mask(email) { // Reproduz mesmo padrão backend
-		if(!email || !email.includes('@')) return '***';
-		const [local,domain]=email.split('@');
-		if(local.length<=2) return local[0]+'***@'+domain;
-		return local[0]+'*'.repeat(local.length-2)+local[local.length-1]+'@'+domain;
 	}
 
 	// Ajustes de fundo
