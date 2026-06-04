@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Validação do formulário (robusta para diferentes ids/nomes)
   const form = document.querySelector('form');
   if (form) {
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalSubmitHtml = submitBtn ? submitBtn.innerHTML : '';
+    const loadingLabel = submitBtn?.getAttribute('data-loading-label') || 'Entrando...';
     form.addEventListener('submit', (event) => {
       const emailEl = document.getElementById('email')
         || document.getElementById('usuario')
@@ -21,7 +24,21 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!emailVal || !senhaVal) {
         event.preventDefault();
         alert('Por favor, preencha ambos os campos: E-mail e Senha.');
+        return;
       }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.setAttribute('aria-busy', 'true');
+        submitBtn.innerHTML = `<span class="auth-submit-spinner"><i class="bi bi-hourglass-split"></i>${loadingLabel}</span>`;
+      }
+    });
+
+    window.addEventListener('pageshow', () => {
+      if (!submitBtn) return;
+      submitBtn.disabled = false;
+      submitBtn.removeAttribute('aria-busy');
+      submitBtn.innerHTML = originalSubmitHtml;
     });
   }
 

@@ -28,13 +28,15 @@
 <body class="login-bg">
 
   <main class="min-vh-100 d-flex align-items-center justify-content-center px-3">
-    <div class="login-card card shadow-lg border-0">
+    <div class="login-card auth-card-shell card shadow-lg border-0">
       <div class="card-body p-4 p-sm-5">
 
         <!-- Marca / título -->
         <div class="text-center mb-4">
           <img src="<%= _basePath %>/images/logoWDGestor.png" alt="<%= _moduleLabel %>" class="brand-logo mb-2" />
-          <p class="text-muted m-0">Contato - <%= _moduleLabel %></p>
+          <span class="auth-eyebrow"><i class="bi bi-headset"></i>Módulo Gestor</span>
+          <h1 class="auth-card-title">Precisa de ajuda?</h1>
+          <p class="auth-subtitle mb-0">Use os canais abaixo para falar com a equipe responsável pelo acesso ao sistema.</p>
         </div>
 
         <!-- Informações de contato -->
@@ -54,7 +56,7 @@
         </div>
 
         <!-- Mensagem -->
-        <div class="alert alert-info" role="alert">
+        <div class="alert alert-info auth-panel-soft" role="alert">
           <i class="bi bi-info-circle me-2"></i>
           Para solicitar acesso à plataforma, entre em contato conosco através dos canais acima.
           Nossa equipe terá prazer em ajudá-lo!

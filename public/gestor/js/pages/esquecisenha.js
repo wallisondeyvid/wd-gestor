@@ -76,9 +76,11 @@ document.addEventListener('DOMContentLoaded', () => {
 	function toggleLoading(state, text) {
 		if (state) {
 			submitBtn.disabled = true;
+			submitBtn.setAttribute('aria-busy', 'true');
 			submitBtn.innerHTML = `<i class="bi bi-hourglass-split me-2"></i>${text || 'Processando...'}`;
 		} else {
 			submitBtn.disabled = false;
+			submitBtn.removeAttribute('aria-busy');
 			submitBtn.innerHTML = originalBtnText;
 		}
 	}

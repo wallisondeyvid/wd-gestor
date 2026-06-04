@@ -95,7 +95,7 @@ test('recovery runtime: GET com token cru recem-gerado encontra o reset e hash n
   const getRawRes = await request(app).get(`/gestor/reset-password/${rawToken}`);
 
   assert.equal(getRawRes.status, 200);
-  assert.match(getRawRes.text, /Redefinição de Senha/);
+  assert.match(getRawRes.text, /Definir nova senha/);
   assert.match(getRawRes.text, /Ana/);
   assert.match(getRawRes.text, /name="token" value="raw-token-runtime-1"/);
   assert.doesNotMatch(getRawRes.text, /Erro ao validar token/);
@@ -181,6 +181,6 @@ test('recovery runtime: token antigo e invalidado quando novo pedido e feito, ma
 
   const newRes = await request(app).get(`/gestor/reset-password/${newRawToken}`);
   assert.equal(newRes.status, 200);
-  assert.match(newRes.text, /Redefinição de Senha/);
+  assert.match(newRes.text, /Definir nova senha/);
   assert.doesNotMatch(newRes.text, /Erro ao validar token/);
 });

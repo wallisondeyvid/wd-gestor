@@ -36,13 +36,15 @@
   <div id="toast-area" class="position-fixed top-0 end-0 p-3" style="z-index:1080; width: 380px; max-width: 100%;"></div>
 
   <main class="min-vh-100 d-flex align-items-center justify-content-center px-3">
-    <div class="login-card card shadow-lg border-0">
+    <div class="login-card auth-card-shell card shadow-lg border-0">
       <div class="card-body p-4 p-sm-5">
 
         <!-- Marca / título -->
         <div class="text-center mb-4">
           <img src="<%= _bp %>/images/logoWDGestor.png" alt="WDGestor" class="brand-logo mb-2" />
-          <p class="text-muted m-0">Módulo <%= (typeof moduleLabel==='string' && moduleLabel) ? moduleLabel : 'Gestor' %></p>
+          <span class="auth-eyebrow"><i class="bi bi-shield-lock"></i>Módulo Gestor</span>
+          <h1 class="auth-card-title">Entrar</h1>
+          <p class="auth-subtitle mb-0">Acesse sua conta para continuar no ambiente público do WDGestor.</p>
         </div>
 
         <!-- Alertas -->
@@ -55,7 +57,7 @@
 
         <div id="loginFormSection">
           <!-- Form -->
-          <form id="loginForm" action="<%= _basePath %>/login" method="POST" novalidate>
+          <form id="loginForm" class="auth-form" action="<%= _basePath %>/login" method="POST" novalidate>
             <!-- Garante roteamento correto do módulo no backend -->
             <input type="hidden" name="modulo" value="<%= _bp.replace(/^\//,'') %>" />
             <div class="mb-3">
@@ -104,7 +106,7 @@
             </div>
 
             <div class="d-grid">
-              <button type="submit" class="btn btn-primary btn-lg">Entrar</button>
+              <button type="submit" class="btn btn-primary btn-lg" data-loading-label="Entrando...">Entrar</button>
             </div>
 
             <div class="text-center mt-3">

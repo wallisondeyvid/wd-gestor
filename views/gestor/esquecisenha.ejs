@@ -20,7 +20,7 @@
     : 'Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.'; %>
   <% const _mensagemErro = typeof mensagemErro === 'string' && mensagemErro ? mensagemErro : null; %>
   <%- include('partials/basepath-var') %>
-  <title>Esqueci Minha Senha - <%= _moduleLabel %></title>
+  <title>Recuperação de senha - <%= _moduleLabel %></title>
   <%- include('partials/favicon') %>
 
   <!-- Bootstrap -->
@@ -40,13 +40,15 @@
 <body class="login-bg">
 
   <main class="min-vh-100 d-flex align-items-center justify-content-center px-3">
-    <div class="login-card card shadow-lg border-0">
+    <div class="login-card auth-card-shell card shadow-lg border-0">
       <div class="card-body p-4 p-sm-5">
 
         <!-- Marca / título -->
         <div class="text-center mb-4">
           <img src="<%= _basePath %>/images/logoWDGestor.png" alt="<%= _moduleLabel %>" class="brand-logo mb-2" />
-          <p class="text-muted m-0">Esqueci Minha Senha - <%= _moduleLabel %></p>
+          <span class="auth-eyebrow"><i class="bi bi-envelope-lock"></i>Módulo Gestor</span>
+          <h1 class="auth-card-title">Recuperação de senha</h1>
+          <p class="auth-subtitle mb-0">Informe seu CPF para receber as instruções de redefinição, se houver um cadastro compatível.</p>
         </div>
 
         <% if (_mensagemErro) { %>
@@ -63,41 +65,41 @@
         </div>
 
         <section id="recoveryRequestSection" class="<%= _solicitacaoRecebida ? 'd-none' : '' %>">
-          <form action="<%= _basePath %>/esquecisenha" method="POST" id="esqueciSenhaForm" novalidate>
+          <form action="<%= _basePath %>/esquecisenha" method="POST" id="esqueciSenhaForm" class="auth-form" novalidate>
             <div class="mb-4">
               <label for="cpf" class="form-label fw-medium">
                 <i class="bi bi-person-vcard me-2"></i>CPF
               </label>
               <input type="text" class="form-control form-control-lg" id="cpf" name="cpf" required
-                     placeholder="000.000.000-00" maxlength="14" autocomplete="off" inputmode="numeric">
-              <div class="form-text">Digite apenas números, pontos e traço serão adicionados automaticamente.</div>
+                     placeholder="000.000.000-00" maxlength="14" autocomplete="off" inputmode="numeric" aria-describedby="cpfHelp" autofocus>
+              <div class="form-text" id="cpfHelp">Digite apenas os números. A formatação será aplicada automaticamente.</div>
             </div>
 
             <div class="d-grid">
-              <button type="submit" class="btn btn-primary btn-lg">
-                <i class="bi bi-envelope-arrow-up me-2"></i>Solicitar Alteração de Senha
+              <button type="submit" class="btn btn-primary btn-lg" data-loading-label="Enviando solicitação...">
+                <i class="bi bi-envelope-arrow-up me-2"></i>Solicitar recuperação
               </button>
             </div>
           </form>
 
-          <div class="text-center mt-4">
-            <a href="<%= _basePath %>/login" class="text-decoration-none">
+          <div class="auth-link-row">
+            <a href="<%= _basePath %>/login" class="auth-link">
               <i class="bi bi-arrow-left me-1"></i>Voltar ao Login
             </a>
           </div>
         </section>
 
         <section id="recoveryConfirmationSection" class="<%= _solicitacaoRecebida ? '' : 'd-none' %>" aria-live="polite">
-          <div class="border rounded-4 p-4 bg-light-subtle text-center">
+          <div class="auth-panel-soft p-4 text-center">
             <div class="mb-3">
-              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle text-success" style="width: 64px; height: 64px;">
+              <span class="auth-status-icon is-success">
                 <i class="bi bi-check-circle fs-2"></i>
               </span>
             </div>
             <h2 class="h4 mb-3">Solicitação recebida</h2>
             <p class="text-muted mb-2" id="recoveryConfirmationMessage"><%= _recoveryMessage %></p>
             <p class="small text-muted mb-4">Verifique sua caixa de entrada e também a pasta de spam.</p>
-            <div class="d-grid gap-2">
+            <div class="auth-actions">
               <a href="<%= _basePath %>/login" class="btn btn-primary">Voltar ao Login</a>
               <a href="<%= _basePath %>/esquecisenha" class="btn btn-outline-secondary" id="recoveryNewRequestLink">Fazer nova solicitação</a>
             </div>
