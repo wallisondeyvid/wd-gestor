@@ -29,9 +29,17 @@ function isPrivilegedGestorRequest(req) {
 }
 
 function hasCanonicalActiveUnitContext(req) {
+	const authContext = req?.session?.gestorAuthContext || null;
+	if (authContext?.source === 'auth-context-v1') {
+		return Boolean(
+			authContext?.active_unidade_id
+			|| authContext?.activeUnidadeId
+			|| authContext?.activeContext?.unidadeId
+		);
+	}
+
 	return Boolean(
-		req?.session?.gestorAuthContext?.active_unidade_id
-		|| req?.user?.unidade_id
+		req?.user?.unidade_id
 		|| req?.session?.user?.unidade_id
 	);
 }

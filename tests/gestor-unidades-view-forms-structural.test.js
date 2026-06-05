@@ -40,7 +40,7 @@ test('unidades.ejs mantém cadastroUnidadeForm como form principal e isola forms
   const html = await renderUnidadesView();
 
   const formIds = [...html.matchAll(/<form\b[^>]*id="([^"]+)"[^>]*>/gi)].map((match) => match[1]);
-  assert.deepEqual(formIds, ['cadastroUnidadeForm', 'formAlterarSenha']);
+  assert.deepEqual(formIds, ['cadastroUnidadeForm']);
 
   const cadastro = findFormOpenTagBounds(html, 'cadastroUnidadeForm');
   const cadastroClose = html.indexOf('</form>', cadastro.openEnd);
@@ -53,8 +53,8 @@ test('unidades.ejs mantém cadastroUnidadeForm como form principal e isola forms
   assert.match(cadastroInnerHtml, /<button type="submit" id="btnSubmitUnidade"/i);
   assert.ok(cadastroInnerHtml.includes(submitTag));
 
-  const formAlterarSenha = findFormOpenTagBounds(html, 'formAlterarSenha');
-  assert.ok(formAlterarSenha.openStart > cadastroClose, 'formAlterarSenha deve ficar fora do cadastro principal');
+  assert.match(html, /<div\b[^>]*id="formAlterarSenha"[^>]*role="form"/i);
+  assert.equal(html.indexOf('id="formAlterarSenha"') > cadastroClose, true);
 
   const modalIds = [
     'modalPerfil',

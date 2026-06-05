@@ -312,7 +312,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	// Prevenir submit do formulário de alteração de senha
 	const form = document.getElementById('formAlterarSenha');
 	if (form) {
-		form.addEventListener('submit', (e) => {
+		form.addEventListener('keydown', (e) => {
+			if (e.key !== 'Enter' || e.shiftKey) return;
 			e.preventDefault();
 			salvarNovaSenha();
 		});

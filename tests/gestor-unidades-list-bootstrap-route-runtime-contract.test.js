@@ -82,7 +82,7 @@ registerHooks({
 				shortCircuit: true,
 				source: [
 					'export default function requireLogin(req, res, next) {',
-					'  if (req.user) return next();',
+					'  if (req.user || req.session?.user) return next();',
 					'  return res.status(401).json({ success: false, error: "UNAUTHORIZED" });',
 					'}',
 				].join('\n'),
@@ -95,13 +95,31 @@ registerHooks({
 				shortCircuit: true,
 				source: [
 					'const state = globalThis.__GESTOR_UNIDADES_LIST_BOOTSTRAP_ROUTE_STATE__;',
+					'function normalizeId(value) {',
+					'  if (value === null || value === undefined) return null;',
+					'  const normalized = String(value).trim();',
+					'  return normalized || null;',
+					'}',
 					'function normalizeRole(value) {',
 					'  const role = String(value || "").trim().toLowerCase();',
 					'  return role || null;',
 					'}',
+					'function isCanonicalAuthContext(authContext) {',
+					'  return authContext?.source === "auth-context-v1";',
+					'}',
 					'function isPrivilegedRole(value) {',
 					'  const role = normalizeRole(value);',
 					'  return role === "master" || role === "admin";',
+					'}',
+					'function resolveRequestUnidadeId(req) {',
+					'  return normalizeId(',
+					'    req.params?.unidadeId',
+					'    || req.params?.id',
+					'    || req.query?.unidadeId',
+					'    || req.query?.unidade_id',
+					'    || req.body?.unidadeId',
+					'    || req.body?.unidade_id',
+					'  );',
 					'}',
 					'export function isPrivilegedGestorContext({ user = null, authContext = null, sessionUser = null } = {}) {',
 					'  if (user?.isMaster === true) return true;',
@@ -121,6 +139,18 @@ registerHooks({
 					'    authContext?.global_role,',
 					'  ].some(isPrivilegedRole);',
 					'}',
+					'function resolveLegacyUnidadeId(req, authContext) {',
+					'  const requestUnidadeId = resolveRequestUnidadeId(req);',
+					'  const privileged = isPrivilegedGestorContext({',
+					'    user: req.user || null,',
+					'    sessionUser: req.session?.user || null,',
+					'    authContext,',
+					'  });',
+					'  if (isCanonicalAuthContext(authContext)) {',
+					'    return privileged ? requestUnidadeId : null;',
+					'  }',
+					'  return requestUnidadeId;',
+					'}',
 					'export function requireUnitScope(req, res, next) {',
 					'  state.requireUnitScopeCalls.push({',
 					'    method: req.method,',
@@ -128,15 +158,13 @@ registerHooks({
 					'    user: req.user || null,',
 					'    params: { ...(req.params || {}) },',
 					'  });',
-					'  const unidadeId = req.session?.gestorAuthContext?.active_unidade_id',
-					'    || req.user?.unidade_id',
-					'    || req.params?.unidadeId',
-					'    || req.params?.id',
-					'    || req.query?.unidadeId',
-					'    || req.query?.unidade_id',
-					'    || req.body?.unidadeId',
-					'    || req.body?.unidade_id',
-					'    || null;',
+					'  const authContext = req.session?.gestorAuthContext || null;',
+					'  const unidadeId = normalizeId(',
+					'    authContext?.active_unidade_id',
+					'    || authContext?.activeUnidadeId',
+					'    || authContext?.activeContext?.unidadeId',
+					'    || resolveLegacyUnidadeId(req, authContext)',
+					'  );',
 					'  if (!unidadeId) {',
 					'    return res.status(400).json({ success: false, error: "UNIDADE_ID_REQUIRED" });',
 					'  }',
@@ -156,13 +184,16 @@ function resetState() {
 	state.controllerCalls = [];
 }
 
-async function buildApp({ user = null, gestorAuthContext = null } = {}) {
+async function buildApp({ user = null, sessionUser = null, gestorAuthContext = null } = {}) {
 	const { default: router } = await import(`${ROUTE_MODULE_URL}?case=${Date.now()}-${Math.random()}`);
 	const app = express();
 	app.use(express.json());
 	app.use((req, _res, next) => {
 		req.user = user;
-		req.session = gestorAuthContext ? { gestorAuthContext } : {};
+		req.session = {
+			...(sessionUser ? { user: sessionUser } : {}),
+			...(gestorAuthContext ? { gestorAuthContext } : {}),
+		};
 		next();
 	});
 	app.use(router);
@@ -278,6 +309,23 @@ test('POST /api/unidades permite create global para admin sem unidade ativa', as
 	assert.equal(response.status, 200);
 	assert.equal(response.body.handler, 'createUnidade');
 	assert.equal(response.body.userRole, 'admin');
+	assert.equal(response.body.unitScope, null);
+	assert.equal(state.requireUnitScopeCalls.length, 0);
+	assert.equal(state.controllerCalls.length, 1);
+	assert.equal(state.controllerCalls[0].name, 'createUnidade');
+	assert.equal(state.controllerCalls[0].method, 'POST');
+});
+
+test('POST /api/unidades preserva branch global com auth-context canônico sem unidade ativa mesmo com unidade legada residual', async () => {
+	const app = await buildApp({
+		user: { role: 'admin', isMaster: false, unidade_id: 'legacy-user-unit' },
+		sessionUser: { role: 'admin', global_role: 'admin', unidade_id: 'legacy-session-unit' },
+		gestorAuthContext: { source: 'auth-context-v1', global_role: 'admin' },
+	});
+	const response = await request(app).post('/api/unidades').send({ nome: 'Nova unidade' });
+
+	assert.equal(response.status, 200, JSON.stringify(response.body));
+	assert.equal(response.body.handler, 'createUnidade');
 	assert.equal(response.body.unitScope, null);
 	assert.equal(state.requireUnitScopeCalls.length, 0);
 	assert.equal(state.controllerCalls.length, 1);

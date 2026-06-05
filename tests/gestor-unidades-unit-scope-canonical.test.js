@@ -160,6 +160,7 @@ before(async () => {
     const unidadePrincipalId = String(req.query?.unidadePrincipalId || '').trim();
     const authContextUnitId = String(req.query?.authContextUnitId || '').trim();
     const authContextPrincipalId = String(req.query?.authContextPrincipalId || authContextUnitId || '').trim();
+    const authContextSource = String(req.query?.authContextSource || '').trim();
     const funcionarioId = String(req.query?.funcionarioId || '').trim();
     const globalRole = String(req.query?.globalRole || '').trim().toLowerCase();
 
@@ -175,11 +176,11 @@ before(async () => {
       ...(globalRole ? { global_role: globalRole } : {}),
     };
 
-    if (authContextUnitId) {
+    if (authContextUnitId || authContextSource === 'auth-context-v1') {
       req.session.gestorAuthContext = {
-        source: 'auth-context-v1',
-        active_unidade_id: authContextUnitId,
-        active_unidade_principal_id: authContextPrincipalId,
+        source: authContextSource || 'auth-context-v1',
+        ...(authContextUnitId ? { active_unidade_id: authContextUnitId } : {}),
+        ...(authContextPrincipalId ? { active_unidade_principal_id: authContextPrincipalId } : {}),
         needs_selection: false,
         ...(globalRole ? { global_role: globalRole } : {}),
       };
@@ -400,6 +401,46 @@ test('GET /gestor/unidades com admin apenas por global_role sem unidade ativa re
   assert.match(res.text, new RegExp(unidadePrincipalC.nome));
 });
 
+test('GET /gestor/unidades entrega o HTML final real com apenas um form no DOM principal', async () => {
+  const unidadePrincipalA = await createUnit({ nome: `Principal HTML Final A ${nextSequence()}` });
+  await createUnit({
+    nome: `Filial HTML Final B ${nextSequence()}`,
+    principalUnitId: unidadePrincipalA._id,
+  });
+
+  const user = await createUser({
+    email: buildUniqueEmail('unidades-html-final-admin'),
+    nome: 'Admin HTML Final',
+    role: 'admin',
+    globalRole: 'admin',
+  });
+
+  const agent = request.agent(app);
+
+  await seedSession(agent, {
+    email: user.email,
+    role: 'admin',
+    globalRole: 'admin',
+    authContextSource: 'auth-context-v1',
+  });
+
+  const res = await agent
+    .get('/gestor/unidades')
+    .set('Accept', 'text/html')
+    .set('Connection', 'close');
+
+  assert.equal(res.status, 200);
+  assert.match(res.headers['content-type'] || '', /text\/html/i);
+
+  const formIds = [...String(res.text || '').matchAll(/<form\b[^>]*id="([^"]+)"[^>]*>/gi)].map((match) => match[1]);
+  assert.deepEqual(formIds, ['cadastroUnidadeForm']);
+  assert.match(String(res.text || ''), /<div\b[^>]*id="formAlterarSenha"[^>]*role="form"/i);
+
+  for (const modalId of ['modalPerfil', 'modalAlterarSenha', 'modalBanco', 'modalCnaePrincipal', 'modalNaturezaJuridica']) {
+    assert.match(String(res.text || ''), new RegExp(`id="${modalId}"`));
+  }
+});
+
 test('POST /gestor/api/unidades com admin global sem unidade ativa nao exige unidadeId e cria subunidade valida', async () => {
   const moduloGestor = await ensureGestorModulo();
   const unidadePrincipalA = await createUnit({ nome: `Principal Admin Global Create ${nextSequence()}` });
@@ -449,6 +490,109 @@ test('POST /gestor/api/unidades com admin global sem unidade ativa nao exige uni
   const created = await Unidade.findById(createdId).lean();
   assert.ok(created);
   assert.equal(String(created.unidade_principal_id), String(unidadePrincipalA._id));
+});
+
+test('POST /gestor/api/unidades com payload do frontend e auth-context global admin nao retorna UNIDADE_ID_REQUIRED', async () => {
+  const moduloGestor = await ensureGestorModulo();
+  const unidadePrincipalA = await createUnit({ nome: `Principal Front Payload ${nextSequence()}` });
+  await Unidade.updateOne({ _id: unidadePrincipalA._id }, { $set: { cnpj: '98765432000109' } });
+
+  const user = await createUser({
+    email: buildUniqueEmail('unidades-front-payload-admin'),
+    nome: 'Admin Front Payload',
+    role: 'admin',
+    globalRole: 'admin',
+  });
+
+  await User.updateOne({ _id: user._id }, {
+    $set: {
+      modulosAcessiveis: [moduloGestor._id],
+    },
+  });
+
+  const agent = request.agent(app);
+  await seedSession(agent, {
+    email: user.email,
+    role: 'admin',
+    globalRole: 'admin',
+    authContextSource: 'auth-context-v1',
+  });
+
+  const res = await agent
+    .post('/gestor/api/unidades')
+    .set('Accept', 'application/json')
+    .set('Connection', 'close')
+    .send({
+      nomeFantasia: `Filial Front Payload ${nextSequence()}`,
+      razaoSocial: `Filial Front Payload LTDA ${nextSequence()}`,
+      cnpj: '',
+      cpf: '',
+      pessoaTipo: 'pj',
+      cep: '',
+      logradouro: '',
+      numero: '',
+      complemento: '',
+      bairro: '',
+      cidade: '',
+      estado: '',
+      inscricaoEstadual: '',
+      inscricaoMunicipal: '',
+      cnaePrincipal: '',
+      cnaesSecundarios: [],
+      regimeTributario: '',
+      naturezaJuridica: '',
+      dataAbertura: '',
+      emailPrincipal: buildUniqueEmail('front-payload-unidade'),
+      telefonePrincipal: '',
+      telefoneSecundario: '',
+      agencia: '',
+      contaCorrente: '',
+      pixChave: '',
+      tipoPix: '',
+      modulosAcessiveis: [],
+      subunidade: 'true',
+      unidadePrincipal: String(unidadePrincipalA._id),
+      principal: 'false',
+      apiBancaria: {},
+      logo: null,
+    });
+
+  assert.equal(res.status, 201, JSON.stringify(res.body));
+  assert.notEqual(res.body?.error, 'UNIDADE_ID_REQUIRED');
+  assert.ok(String(res.body?.data?._id || res.body?.id || res.body?._id || ''));
+});
+
+test('POST /gestor/api/unidades com payload do frontend e diretor sem unidade ativa continua bloqueado por UNIDADE_ID_REQUIRED', async () => {
+  const user = await createUser({
+    email: buildUniqueEmail('unidades-front-payload-diretor'),
+    nome: 'Diretor Front Payload',
+    role: 'diretor',
+  });
+
+  const agent = request.agent(app);
+
+  await seedSession(agent, {
+    email: user.email,
+    role: 'diretor',
+    authContextSource: 'auth-context-v1',
+  });
+
+  const res = await agent
+    .post('/gestor/api/unidades')
+    .set('Accept', 'application/json')
+    .set('Connection', 'close')
+    .send({
+      nomeFantasia: `Filial Diretor Bloqueado ${nextSequence()}`,
+      razaoSocial: `Filial Diretor Bloqueado LTDA ${nextSequence()}`,
+      pessoaTipo: 'pj',
+      subunidade: 'true',
+      principal: 'false',
+      unidadePrincipal: '',
+      modulosAcessiveis: [],
+    });
+
+  assert.equal(res.status, 400, JSON.stringify(res.body));
+  assert.equal(res.body?.error, 'UNIDADE_ID_REQUIRED');
 });
 
 test('GET /gestor/unidades com admin legado e req.user.unidade_id sem unidade explicita na request preserva o branch global', async () => {
