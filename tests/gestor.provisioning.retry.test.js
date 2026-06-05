@@ -71,6 +71,8 @@ const MODULE_SEEDS = Object.freeze({
   condominio: { nome: 'Gestao de Condominio', url_base: '/condominios', status: 'ativo' },
   clinica: { nome: 'Clinica', url_base: '/clinica', status: 'ativo' },
   escalas: { nome: 'Escalas', url_base: '/escalas', status: 'ativo' },
+  gestor: { nome: 'Gestor', url_base: '/gestor', status: 'ativo' },
+  'portal-morador': { nome: 'Portal do Morador', url_base: '/portal-morador', status: 'ativo' },
 });
 
 let app;
@@ -328,6 +330,44 @@ async function seedRetryFixture({
   };
 }
 
+async function seedLegacyPersistedEventsFixture() {
+  const fixture = await seedRetryFixture({ enabledModuleKeys: ['gestor', 'portal-morador'] });
+  const now = new Date('2026-06-05T10:56:50.000Z');
+  const legacyEvents = [
+    {
+      unidadeId: fixture.unidadeId,
+      dbName: `wdgestor_unit_${fixture.unidadeId}`,
+      eventType: 'module_bootstrap_unmapped',
+      scope: 'module',
+      moduleKey: 'gestor',
+      status: 'error',
+      message: 'Modulo sem bootstrap registrado: Gestor',
+      reason: 'bootstrap_handler_not_mapped',
+      operation: 'ensure',
+      metadata: { requestedModule: 'Gestor' },
+      snapshotVersion: 'unit-tenant-v1',
+      createdAt: now,
+    },
+    {
+      unidadeId: fixture.unidadeId,
+      dbName: `wdgestor_unit_${fixture.unidadeId}`,
+      eventType: 'module_bootstrap_unmapped',
+      scope: 'module',
+      moduleKey: null,
+      status: 'error',
+      message: 'Modulo sem bootstrap registrado: Portal do Morador',
+      reason: 'bootstrap_handler_not_mapped',
+      operation: 'ensure',
+      metadata: { requestedModule: 'Portal do Morador' },
+      snapshotVersion: 'unit-tenant-v1',
+      createdAt: new Date('2026-06-05T10:56:49.000Z'),
+    },
+  ];
+
+  await mongoose.connection.db.collection(GLOBAL_EVENTS_COLLECTION).insertMany(legacyEvents);
+  return fixture;
+}
+
 before(async () => {
   const built = await createServer({ skipDb: false });
   app = built.app;
@@ -563,6 +603,65 @@ test('retry global legado sem modulosRetry continua funcionando e reprocessa mod
       && eventDoc?.moduleKey === 'clinica'
     )),
     'deve registrar bootstrap de modulo clinica no fluxo global'
+  );
+});
+
+test('eventos legados persistidos permanecem como auditoria e retry global gera eventos novos corrigidos no topo', async () => {
+  await clearProvisioningFixtures();
+  const fixture = await seedLegacyPersistedEventsFixture();
+
+  const res = await retryRequest(fixture.unidadeId).send({});
+  assert.equal(res.status, 200);
+  assert.equal(res.body?.success, true);
+
+  const historyRes = await provisioningEventsRequest(fixture.unidadeId);
+  assert.equal(historyRes.status, 200);
+  assert.equal(historyRes.body?.success, true);
+  assert.equal(res.body?.data?.snapshot?.status, 'ready');
+  assert.equal(res.body?.data?.snapshot?.ready, true);
+
+  const events = historyRes.body?.data?.events || [];
+  assertEventsSortedByNewestFirst(events);
+
+  const legacyGestorIndex = events.findIndex((eventDoc) => eventDoc?.message === 'Modulo sem bootstrap registrado: Gestor');
+  const legacyPortalIndex = events.findIndex((eventDoc) => eventDoc?.message === 'Modulo sem bootstrap registrado: Portal do Morador');
+  assert.ok(legacyGestorIndex >= 0, 'evento legado de Gestor deve permanecer na trilha');
+  assert.ok(legacyPortalIndex >= 0, 'evento legado de Portal do Morador deve permanecer na trilha');
+
+  const newerGestorIndex = events.findIndex((eventDoc) => (
+    eventDoc?.eventType === 'module_bootstrap_skipped'
+    && eventDoc?.moduleKey === 'gestor'
+    && eventDoc?.operation === 'ensure'
+  ));
+  const newerPortalIndex = events.findIndex((eventDoc) => (
+    eventDoc?.eventType === 'module_bootstrap_skipped'
+    && eventDoc?.moduleKey === 'portal-morador'
+    && eventDoc?.operation === 'ensure'
+  ));
+
+  assert.ok(newerGestorIndex >= 0, 'retry deve gerar evento novo corrigido para Gestor');
+  assert.ok(newerPortalIndex >= 0, 'retry deve gerar evento novo corrigido para Portal do Morador');
+  assert.ok(newerGestorIndex < legacyGestorIndex, 'evento novo de Gestor deve aparecer antes do legado');
+  assert.ok(newerPortalIndex < legacyPortalIndex, 'evento novo de Portal deve aparecer antes do legado');
+
+  const newerGestorEvent = events[newerGestorIndex];
+  const newerPortalEvent = events[newerPortalIndex];
+  assert.notEqual(newerGestorEvent?.status, 'error');
+  assert.notEqual(newerPortalEvent?.status, 'error');
+  assert.equal(newerPortalEvent?.moduleKey, 'portal-morador');
+
+  assert.ok(
+    events.some((eventDoc) => eventDoc?.eventType === 'unit_retry_succeeded' && eventDoc?.operation === 'retry_global'),
+    'retry global deve registrar sucesso quando nao ha erro real obrigatorio remanescente'
+  );
+  assert.ok(
+    !events.some((eventDoc) => (
+      eventDoc?.eventType === 'module_bootstrap_unmapped'
+      && eventDoc?.operation === 'ensure'
+      && (eventDoc?.moduleKey === 'gestor' || String(eventDoc?.metadata?.requestedModule || '').includes('Portal do Morador'))
+      && new Date(eventDoc?.createdAt).getTime() > new Date('2026-06-05T10:56:50.000Z').getTime()
+    )),
+    'retry nao deve gerar novo module_bootstrap_unmapped error para Gestor ou Portal'
   );
 });
 

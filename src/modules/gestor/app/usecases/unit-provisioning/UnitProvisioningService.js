@@ -741,6 +741,13 @@ function buildPersistedModuleStatusesFromBootstrap({
     : (Array.isArray(safeBootstrap.resolvedModuleKeys) ? safeBootstrap.resolvedModuleKeys : []);
   const unknownModules = Array.isArray(safeBootstrap.unknownModules) ? safeBootstrap.unknownModules : [];
   const executed = Array.isArray(safeBootstrap.executed) ? safeBootstrap.executed : [];
+  const noBootstrapRequiredModuleKeys = new Set(
+    Array.isArray(safeBootstrap.noBootstrapRequiredModuleKeys)
+      ? safeBootstrap.noBootstrapRequiredModuleKeys
+        .map((moduleKey) => resolveCanonicalModuleKey(moduleKey) || normalizeNullableText(moduleKey))
+        .filter(Boolean)
+      : []
+  );
 
   const executedByKey = new Map();
   for (const execution of executed) {
@@ -758,12 +765,12 @@ function buildPersistedModuleStatusesFromBootstrap({
     const execution = executedByKey.get(moduleKey);
     const moduleStatus = execution
       ? (execution?.ok === false ? MODULE_STATUS.ERROR : MODULE_STATUS.READY)
-      : MODULE_STATUS.PENDING;
+      : (noBootstrapRequiredModuleKeys.has(moduleKey) ? MODULE_STATUS.READY : MODULE_STATUS.PENDING);
     const reason = execution
       ? (execution?.ok === false
         ? normalizeNullableText(execution?.reason || execution?.errorMessage) || MODULE_STATUS_REASON.ERROR
         : MODULE_STATUS_REASON.READY)
-      : 'bootstrap_not_executed';
+      : (noBootstrapRequiredModuleKeys.has(moduleKey) ? MODULE_STATUS_REASON.NOT_REQUIRED : 'bootstrap_not_executed');
 
     entries.push({
       moduleKey,

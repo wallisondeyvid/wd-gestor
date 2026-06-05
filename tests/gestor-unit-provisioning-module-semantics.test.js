@@ -97,3 +97,10 @@ test('historico do modal usa requestedModule legado quando moduleKey esta ausent
   assert.match(container.innerHTML, /Portal do Morador/);
   assert.match(container.innerHTML, /--/);
 });
+
+test('retry do modal recarrega o historico persistido apos sucesso', () => {
+  assert.match(
+    MODAL_SOURCE,
+    /const historyContext = modalRoot\.__provisioningHistoryContext;[\s\S]*historyContext && typeof historyContext\.refreshHistorico === 'function'[\s\S]*await historyContext\.refreshHistorico\(\);/,
+  );
+});

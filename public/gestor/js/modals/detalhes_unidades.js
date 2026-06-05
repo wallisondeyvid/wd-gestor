@@ -498,6 +498,10 @@
 				});
 
 				state.retrying = false;
+				const historyContext = modalRoot.__provisioningHistoryContext;
+				if (historyContext && typeof historyContext.refreshHistorico === 'function') {
+					await historyContext.refreshHistorico();
+				}
 				await carregarStatus({ successMessage: 'Provisioning reprocessado com sucesso.' });
 			} catch (error) {
 				if (!isContextoAtivo()) return;
