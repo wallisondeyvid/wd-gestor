@@ -310,6 +310,26 @@ test('POST canônico do widget create normaliza tipo e infere módulo por preced
     const creatorUser = await createTestUser({ role: 'user', marker });
     const creatorAgent = await seedAuthenticatedAgent(app, creatorUser, { unidadeId: FEEDBACK_UNIT_A });
 
+    for (const [inputTipo, expectedTipo] of [['bug', 'erro'], ['duvida', 'outro'], ['critica', 'outro']]) {
+      const aliasRes = await creatorAgent
+        .post(CANONICAL_CREATE_ENDPOINT)
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .send({
+          mensagem: `create com alias ${inputTipo}`,
+          tipo: inputTipo,
+          contexto: {
+            url: '/gestor/unidades',
+            timezone: 'America/Sao_Paulo',
+          },
+        });
+
+      expectApiSuccessEnvelope(aliasRes, 200);
+      assert.equal(aliasRes.body?.data?.tipo, expectedTipo);
+      assert.equal(aliasRes.body?.data?.origem?.modulo, 'gestor');
+      assert.equal(aliasRes.body?.data?.origem?.path, '/gestor/unidades');
+    }
+
     const withModule = await creatorAgent
       .post(CANONICAL_CREATE_ENDPOINT)
       .set('Accept', 'application/json')

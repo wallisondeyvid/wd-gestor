@@ -60,8 +60,14 @@ function seedFeedbackAdminUnitScopeFromAuthContext(req, _res, next) {
 function normalizeTipo(v){
   const s = String(v || '').trim().toLowerCase();
   if (!s) return 'outro';
-  if (['sugestao','erro','elogio','outro'].includes(s)) return s;
-  return s.slice(0, 32);
+  const aliases = {
+    bug: 'erro',
+    duvida: 'outro',
+    critica: 'outro',
+  };
+  const normalized = aliases[s] || s;
+  if (['sugestao','erro','elogio','outro'].includes(normalized)) return normalized;
+  return normalized.slice(0, 32);
 }
 function normalizeStatus(v){
   const s = String(v || '').trim().toLowerCase().replaceAll(' ', '_');

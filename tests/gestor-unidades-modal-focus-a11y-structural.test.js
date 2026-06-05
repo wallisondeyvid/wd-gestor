@@ -19,6 +19,7 @@ const SCRIPT_SOURCES = {
   cnaeSecundario: fs.readFileSync(path.join(process.cwd(), 'public/gestor/js/modals/cnae_secundario.js'), 'utf8'),
   banco: fs.readFileSync(path.join(process.cwd(), 'public/gestor/js/modals/banco.js'), 'utf8'),
   modulos: fs.readFileSync(path.join(process.cwd(), 'public/gestor/js/modals/selecionar_modulos.js'), 'utf8'),
+  perfilModular: fs.readFileSync(path.join(process.cwd(), 'public/js/perfil-modulo.js'), 'utf8'),
 };
 
 test('Unidades carrega o helper de fechamento foco-seguro antes dos modais', () => {
@@ -59,4 +60,14 @@ test('modal de Banco usa o helper ao confirmar', () => {
 test('modal de Modulos usa o helper ao salvar', () => {
   assert.match(SCRIPT_SOURCES.modulos, /wdgModalFocusSafe\?\.install\?\.\(modalEl, \{/);
   assert.match(SCRIPT_SOURCES.modulos, /focusSafe\.hide\(\)/);
+});
+
+test('perfil modular usa o helper de foco seguro nos modais de perfil e senha', () => {
+  assert.match(SCRIPT_SOURCES.perfilModular, /function getSafeProfileReturnFocus\(\)\{/);
+  assert.match(SCRIPT_SOURCES.perfilModular, /perfilFocusSafe = installProfileFocusSafe\(modalPerfilEl\);/);
+  assert.match(SCRIPT_SOURCES.perfilModular, /alterarSenhaFocusSafe = installProfileFocusSafe\(modalAlterarSenhaEl\);/);
+  assert.match(SCRIPT_SOURCES.perfilModular, /perfilFocusSafe\?\.rememberReturnFocus\(returnFocusTarget\);/);
+  assert.match(SCRIPT_SOURCES.perfilModular, /alterarSenhaFocusSafe\?\.rememberReturnFocus\(returnFocusTarget\);/);
+  assert.match(SCRIPT_SOURCES.perfilModular, /if \(perfilFocusSafe\) \{[\s\S]*perfilFocusSafe\.hide\(\);[\s\S]*\}/);
+  assert.match(SCRIPT_SOURCES.perfilModular, /alterarSenhaFocusSafe\.hide\(returnFocusTarget\);/);
 });

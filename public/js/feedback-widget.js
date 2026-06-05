@@ -9,6 +9,17 @@
     return resp.json().catch(function () { return {}; });
   }
 
+  function canonicalizeFeedbackType(tipo) {
+    var normalized = String(tipo || '').trim().toLowerCase();
+    if (!normalized) return 'outro';
+    if (normalized === 'bug') return 'erro';
+    if (normalized === 'duvida' || normalized === 'critica') return 'outro';
+    if (normalized === 'sugestao' || normalized === 'erro' || normalized === 'elogio' || normalized === 'outro') {
+      return normalized;
+    }
+    return 'outro';
+  }
+
   function initChat(root) {
     var drawer = root.querySelector('.wdg-feedback-drawer');
     var chat = root.querySelector('[data-chat="1"]');
@@ -1011,7 +1022,7 @@
     function buildMessagePayload() {
       var url = (window && window.location && window.location.href) ? window.location.href : '';
       return {
-        tipo: state.tipo,
+        tipo: canonicalizeFeedbackType(state.tipo),
         mensagem: '',
         contexto: {
           url: url,

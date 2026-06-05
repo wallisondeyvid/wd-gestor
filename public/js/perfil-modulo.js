@@ -159,6 +159,27 @@
   let fotoAtualizada = false;
   let fotoEmEdicao = null;
   let fotoPreviewOriginal = null;
+  let perfilFocusSafe = null;
+  let alterarSenhaFocusSafe = null;
+
+  function getSafeProfileReturnFocus(){
+    return document.querySelector('.nav-wd-profile[data-bs-target="#modalPerfil"]')
+      || document.querySelector('[data-bs-target="#modalPerfil"]')
+      || document.getElementById('navbarAvatarShared')
+      || document.getElementById('navbarAvatar')
+      || document.getElementById('offcanvasAvatar')
+      || document.querySelector('.avatar-img');
+  }
+
+  function installProfileFocusSafe(modalEl){
+    try {
+      return window.wdgModalFocusSafe?.install?.(modalEl, {
+        fallbackReturnFocus: getSafeProfileReturnFocus,
+      }) || null;
+    } catch(_e) {
+      return null;
+    }
+  }
 
   function abrirModalPerfil(){
     const el = document.getElementById('modalPerfil');
@@ -280,7 +301,20 @@
       alert('Erro ao atualizar foto: '+(err.error||'Erro desconhecido'));
     }
   }
-  function alterarSenha(){ const mp=bootstrap.Modal.getInstance(document.getElementById('modalPerfil')); mp?.hide(); const el=document.getElementById('modalAlterarSenha'); if(el) bootstrap.Modal.getOrCreateInstance(el).show(); }
+  function alterarSenha(){
+    const returnFocusTarget = getSafeProfileReturnFocus();
+    const modalPerfilEl = document.getElementById('modalPerfil');
+    const modalAlterarSenhaEl = document.getElementById('modalAlterarSenha');
+    perfilFocusSafe?.rememberReturnFocus(returnFocusTarget);
+    alterarSenhaFocusSafe?.rememberReturnFocus(returnFocusTarget);
+    if (perfilFocusSafe) {
+      perfilFocusSafe.hide();
+    } else {
+      const mp = bootstrap.Modal.getInstance(modalPerfilEl);
+      mp?.hide();
+    }
+    if (modalAlterarSenhaEl) bootstrap.Modal.getOrCreateInstance(modalAlterarSenhaEl).show();
+  }
   function mostrarErro(msg){ if(window.__perfilState){ window.__perfilState.setStatus(msg,'error'); return;} alert(msg); }
 
   document.addEventListener('DOMContentLoaded',()=>{
@@ -288,6 +322,9 @@
     const form=document.getElementById('formAlterarSenha');
     form && form.addEventListener('submit',e=>{ e.preventDefault(); salvarNovaSenha(); });
     const modalPerfilEl=document.getElementById('modalPerfil');
+    const modalAlterarSenhaEl=document.getElementById('modalAlterarSenha');
+    perfilFocusSafe = installProfileFocusSafe(modalPerfilEl);
+    alterarSenhaFocusSafe = installProfileFocusSafe(modalAlterarSenhaEl);
     if(modalPerfilEl){
       modalPerfilEl.addEventListener('show.bs.modal',()=>{ try{ carregarDadosPerfil(); }catch(e){ console.warn(logPrefix,'falha show',e);} });
       modalPerfilEl.addEventListener('hidden.bs.modal',()=>{ if(fotoEmEdicao && fotoPreviewOriginal){ document.getElementById('fotoPerfil').src=fotoPreviewOriginal; fotoEmEdicao=null; fotoPreviewOriginal=null; document.getElementById('btnAlterarFoto')?.classList.remove('d-none'); document.getElementById('grupoConfirmarFoto')?.classList.add('d-none'); }
@@ -313,7 +350,15 @@
       const payload=await resp.json().catch(()=>({}));
       if(!resp.ok || payload?.error){ setStatus(payload.error||payload.message||`Erro (${resp.status}) ao alterar senha`,'error'); return; }
       setStatus('Senha alterada com sucesso!','success'); senhaAtualEl.value=''; novaSenhaEl.value=''; confirmarEl.value=''; if(window.currentUser){ window.currentUser.primeiro_acesso=false; window.currentUser.senha_provisoria=false; }
-      setTimeout(()=>{ const modal=bootstrap.Modal.getInstance(document.getElementById('modalAlterarSenha')); modal?.hide(); },800);
+      setTimeout(()=>{
+        const returnFocusTarget = getSafeProfileReturnFocus();
+        if (alterarSenhaFocusSafe) {
+          alterarSenhaFocusSafe.hide(returnFocusTarget);
+          return;
+        }
+        const modal=bootstrap.Modal.getInstance(document.getElementById('modalAlterarSenha'));
+        modal?.hide();
+      },800);
     } catch(err){ console.error(logPrefix,'erro salvarNovaSenha',err); setStatus(err.message||'Falha ao alterar senha','error'); } finally { if(btnSalvar){ btnSalvar.disabled=false; btnSalvar.textContent=btnSalvar.dataset.originalText||'Salvar Senha'; } }
   }
 
