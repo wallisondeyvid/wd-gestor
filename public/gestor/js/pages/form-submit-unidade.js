@@ -20,6 +20,19 @@
 	})();
 
 	const V = window.Validators || {};
+	const DEBUG_UNIDADES = (() => {
+		try {
+			return window.WDG_DEBUG_UNIDADES === true || window.localStorage?.getItem('WDG_DEBUG_UNIDADES') === '1';
+		} catch (_) {
+			return window.WDG_DEBUG_UNIDADES === true;
+		}
+	})();
+
+	function debugLog(message, payload){
+		if (!DEBUG_UNIDADES) return;
+		if (arguments.length > 1) console.debug(message, payload);
+		else console.debug(message);
+	}
 
 	function sanitizeApiBancariaForLog(apiBancaria){
 		if (!apiBancaria || typeof apiBancaria !== 'object') return apiBancaria;
@@ -33,6 +46,9 @@
 	function sanitizePayloadForLog(payload){
 		if (!payload || typeof payload !== 'object') return payload;
 		const safe = { ...payload };
+		['nomeFantasia','razaoSocial','cpf','cnpj','endereco','inscricaoEstadual','inscricaoMunicipal','cnaePrincipal','cnaeSecundarios','emailPrincipal','emailFiscal','telefoneFixo','telefoneCelular','site','banco','agencia','contaCorrente','pixChave'].forEach((key) => {
+			if (key in safe && safe[key]) safe[key] = '[REDACTED]';
+		});
 		if (safe.apiBancaria) safe.apiBancaria = sanitizeApiBancariaForLog(safe.apiBancaria);
 		return safe;
 	}
@@ -142,15 +158,14 @@
 
 			// Validação do tipo de pessoa (e usar isso para validar CNPJ/CPF corretamente)
 			const pessoaTipo = document.querySelector('input[name="pessoaTipo"]:checked')?.value;
-			console.log('[FRONTEND] pessoaTipo capturado:', pessoaTipo);
-			console.log('[FRONTEND] Todos radio buttons pessoaTipo:', Array.from(document.querySelectorAll('input[name="pessoaTipo"]')).map(r => ({id: r.id, value: r.value, checked: r.checked})));
+			debugLog('[unidades:submit] pessoaTipo capturado', { pessoaTipo });
       
 			// Tentar uma abordagem alternativa
 			const pessoaTipoAlt = document.querySelector('input[name="pessoaTipo"]:checked');
-			console.log('[FRONTEND] Elemento checked encontrado:', pessoaTipoAlt);
+			debugLog('[unidades:submit] radio pessoaTipo encontrado', { found: Boolean(pessoaTipoAlt) });
       
 			if (!pessoaTipo || !['pf', 'pj'].includes(pessoaTipo)) {
-				console.error('[FRONTEND] pessoaTipo inválido:', pessoaTipo);
+				debugLog('[unidades:submit] pessoaTipo inválido', { pessoaTipo });
 				alert('Tipo de pessoa deve ser Pessoa Física (PF) ou Pessoa Jurídica (PJ).');
 				return false;
 			}
@@ -211,14 +226,14 @@
 			// Garantir preservação da logo no update (se backend não preservar automaticamente)
 			const logoAtual = document.getElementById('logoAtual')?.value || '';
 			if (logoAtual) payload.logo = logoAtual;
-			console.log('[FRONTEND] Payload construído:', sanitizePayloadForLog(payload));
+			debugLog('[unidades:submit] payload sanitizado', sanitizePayloadForLog(payload));
 			if(!isEdit) payload.principal=String(isMatriz);
 			const agenciaNumero=val('agenciaNumero').trim(); const agenciaDV=val('agenciaDV').trim(); const contaNumero=val('contaNumero').trim(); const contaDV=val('contaDV').trim();
 			function validaAg(num,dv){ if(!num && !dv) return ''; if(!/^\d{1,5}$/.test(num)) return 'Número da agência inválido (1-5 dígitos).'; if(dv && !/^[0-9Xx]{1,2}$/.test(dv)) return 'DV da agência inválido.'; return null; }
 			function validaCc(num,dv){ if(!num && !dv) return ''; if(!/^\d{1,12}$/.test(num)) return 'Número da conta inválido (1-12 dígitos).'; if(dv && !/^[0-9Xx]{1,2}$/.test(dv)) return 'DV da conta inválido.'; return null; }
 			const errAg=validaAg(agenciaNumero,agenciaDV); if(typeof errAg==='string' && errAg){ alert(errAg); return false; } const errCc=validaCc(contaNumero,contaDV); if(typeof errCc==='string' && errCc){ alert(errCc); return false; }
 			payload.agencia = agenciaNumero ? (agenciaDV ? `${agenciaNumero}-${agenciaDV.toUpperCase()}` : agenciaNumero) : ''; payload.contaCorrente = contaNumero ? (contaDV ? `${contaNumero}-${contaDV.toUpperCase()}` : contaNumero) : '';
-			console.debug('[cadastrarUnidade] payload enviado', sanitizePayloadForLog(payload));
+			debugLog('[unidades:submit] request sanitizada', { url: isEdit ? `${BASE}/api/unidades/${unidadeId}` : `${BASE}/api/unidades`, method: isEdit? 'PUT':'POST', payload: sanitizePayloadForLog(payload) });
 			const url = isEdit ? `${BASE}/api/unidades/${unidadeId}` : `${BASE}/api/unidades`;
 			const method=isEdit? 'PUT':'POST';
 			let res, data;
@@ -237,7 +252,7 @@
 			const rawText = await res.text();
 			try { data = rawText? JSON.parse(rawText): {}; } catch(parseErr){ data = { parseError:true, raw: rawText }; }
 			if(!res.ok){
-				console.error('[cadastrarUnidade] Erro resposta', {status:res.status, data});
+				console.error('[cadastrarUnidade] Erro resposta', { status: res.status, message: data?.message || data?.error || null });
 				alert(data.error || data.message || (`Falha ao salvar unidade (HTTP ${res.status}).`));
 				return false;
 			}
@@ -406,20 +421,16 @@
 		} catch(err){ console.error('Falha ao enviar formulário de unidade:',err); alert('Erro inesperado ao salvar a unidade.'); return false; }
 	}
 	function bind(){ 
-		console.log('[form-submit-unidade] bind() chamado');
 		const form=document.getElementById('cadastroUnidadeForm'); 
-		console.log('[form-submit-unidade] Form encontrado:', !!form);
 		if(form) {
 			form.addEventListener('submit', cadastrarUnidade, true);
-			console.log('[form-submit-unidade] Event listener adicionado');
 		}
 	}
 	document.addEventListener('DOMContentLoaded', bind);
 	if (document.readyState !== 'loading') {
-		console.log('[form-submit-unidade] Document already loaded, calling bind');
 		setTimeout(bind,0);
 	}
 	window.cadastrarUnidade = cadastrarUnidade;
-	console.debug('[form-submit-unidade] carregado');
+	debugLog('[unidades:submit] script carregado');
 })();
 

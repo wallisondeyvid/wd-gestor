@@ -13,6 +13,20 @@ document.addEventListener('DOMContentLoaded', () => {
 		return s;
 	}
 
+	const DEBUG_UNIDADES = (() => {
+		try {
+			return window.WDG_DEBUG_UNIDADES === true || window.localStorage?.getItem('WDG_DEBUG_UNIDADES') === '1';
+		} catch (_) {
+			return window.WDG_DEBUG_UNIDADES === true;
+		}
+	})();
+
+	function debugLog(message, payload){
+		if (!DEBUG_UNIDADES) return;
+		if (arguments.length > 1) console.debug(message, payload);
+		else console.debug(message);
+	}
+
 	function sanitizeApiBancariaForLog(apiBancaria){
 		if (!apiBancaria || typeof apiBancaria !== 'object') return apiBancaria;
 		const safe = { ...apiBancaria };
@@ -25,8 +39,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	function sanitizeUnidadeForLog(unidade){
 		if (!unidade || typeof unidade !== 'object') return unidade;
 		const safe = { ...unidade };
+		['nome','nomeFantasia','razaoSocial','cpf','cnpj','endereco','inscricaoEstadual','inscricaoMunicipal','emailPrincipal','emailFiscal','telefoneFixo','telefoneCelular','site','banco','agencia','contaCorrente','pixChave'].forEach((key) => {
+			if (key in safe && safe[key]) safe[key] = '[REDACTED]';
+		});
 		if (safe.apiBancaria) safe.apiBancaria = sanitizeApiBancariaForLog(safe.apiBancaria);
 		return safe;
+	}
+
+	function sanitizePayloadForLog(payload){
+		return sanitizeUnidadeForLog(payload);
 	}
 
 	function askDeleteUnidadeConfirm(unidadeNome){
@@ -1692,7 +1713,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		function preencherCompleto(u){
 			if (!u) return;
-			console.debug('[EDITAR] Payload recebido para preenchimento:', sanitizeUnidadeForLog(u));
+			debugLog('[unidades:editar] payload sanitizado para preenchimento', sanitizeUnidadeForLog(u));
 			setVal('unidadeId', u._id);
 			setVal('nomeFantasia', u.nome);
 			setVal('razaoSocial', u.razaoSocial);
@@ -1726,7 +1747,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			setVal('emailPrincipal', u.emailPrincipal);
 			setVal('emailFiscal', u.emailFiscal);
 			setVal('site', u.site);
-			console.debug('[EDITAR] Dados bancários recebidos:', { banco: u.banco, agencia: u.agencia, contaCorrente: u.contaCorrente });
+			debugLog('[unidades:editar] dados bancarios redigidos');
 			// Fallback: se a API não retornar algum campo, tenta preencher a partir do cache inicial
 			const bancoVal = (u.banco != null && u.banco !== '') ? u.banco : (cache && cache.banco) ? cache.banco : '';
 			const agenciaVal = (u.agencia != null && u.agencia !== '') ? u.agencia : (cache && cache.agencia) ? cache.agencia : '';
@@ -1921,7 +1942,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	// ===================== Submit do formulário =====================
 	window.cadastrarUnidade = async function (e) {
-		console.log('[FRONTEND] Função cadastrarUnidade chamada');
+		debugLog('[unidades:submit-legacy] chamada');
 		try {
 			if (e && typeof e.preventDefault === 'function') e.preventDefault();
 
@@ -1942,9 +1963,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			// CNPJ: validar somente para Pessoa Jurídica
 			if (pessoaTipo === 'pj' && cnpjEl) {
-				console.log('[FRONTEND] Validando CNPJ:', cnpjEl.value);
+				debugLog('[unidades:submit-legacy] validando CNPJ');
 				const ok = validarCNPJValor(cnpjEl.value);
-				console.log('[FRONTEND] CNPJ válido:', ok);
+				debugLog('[unidades:submit-legacy] resultado validacao CNPJ', { ok });
 				if (!ok) { marcarCNPJInvalido(cnpjEl, true); alert('CNPJ inválido'); return false; }
 				// Se filial e um CNPJ foi preenchido, validar base com a Matriz selecionada
 				if (isFilial && cnpjEl.value) {
@@ -1963,7 +1984,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			// CPF (se pessoa física selecionada)
-			console.log('[FRONTEND] pessoaTipo selecionado:', pessoaTipo);
+			debugLog('[unidades:submit-legacy] pessoaTipo selecionado', { pessoaTipo });
 			const cpfEl = byId('cpf');
 			if (pessoaTipo === 'pf' && cpfEl) {
 				const cpfDigits = cpfEl.value.replace(/\D/g, '');
@@ -2068,7 +2089,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const url = isEdit ? apiUnidades(`/${unidadeId}`) : apiUnidades('');
 			const method = isEdit ? 'PUT' : 'POST';
 
-			console.log('[FRONTEND] Enviando requisição:', { url, method, payload });
+			debugLog('[unidades:submit-legacy] request sanitizada', { url, method, payload: sanitizePayloadForLog(payload) });
 
 			const res = await fetch(url, {
 				method,
@@ -2077,11 +2098,11 @@ document.addEventListener('DOMContentLoaded', () => {
 				body: JSON.stringify(payload)
 			});
 
-			console.log('[FRONTEND] Resposta recebida:', { status: res.status, statusText: res.statusText });
+			debugLog('[unidades:submit-legacy] resposta recebida', { status: res.status, statusText: res.statusText });
 			const data = await res.json().catch(() => ({}));
-			console.log('[FRONTEND] Dados da resposta:', data);
+			debugLog('[unidades:submit-legacy] resposta normalizada', { status: res.status, message: data?.message || data?.error || null });
 			if (!res.ok) {
-				console.error('[FRONTEND] Erro na resposta:', { status: res.status, data });
+				console.error('[FRONTEND] Erro na resposta:', { status: res.status, message: data?.message || data?.error || null });
 				alert(data.error || data.message || 'Falha ao salvar unidade.');
 				return false;
 			}
