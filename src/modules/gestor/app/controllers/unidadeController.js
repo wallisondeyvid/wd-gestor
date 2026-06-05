@@ -22,6 +22,13 @@ function isPrivilegedGestorUser(user) {
   return user?.isMaster === true || user?.role === 'master' || user?.role === 'admin';
 }
 
+function buildSafeTokenPreview(token) {
+  const value = String(token || '').trim();
+  if (!value) return null;
+  const visibleChars = Math.min(6, value.length);
+  return `${value.slice(0, visibleChars)}...`;
+}
+
 async function ensureCanAccessUnidade(req, unidadeId) {
   const targetUnitId = normalizeUnitId(unidadeId);
   if (!targetUnitId) return false;
@@ -200,8 +207,11 @@ export async function testarBanco(req, res) {
 
     if (tipo === 'oauth2') {
       const token = await BankPort.getOAuthTokenFromConfig(cfg);
+      const tokenPreview = typeof buildSafeTokenPreview === 'function'
+        ? buildSafeTokenPreview(token)
+        : `${String(token || '').slice(0, 6)}...`;
       detalhe = 'Token OAuth2 obtido com sucesso.';
-      resultado = { tokenPreview: token ? `${token.slice(0, 10)}...` : null };
+      resultado = { tokenPreview };
     } else {
       const path = (req.body?.path || '/');
       const method = (req.body?.method || 'GET');
@@ -212,8 +222,11 @@ export async function testarBanco(req, res) {
 
     return res.json({ ok: true, message: 'Conexão com o banco testada com sucesso.', detalhe, resultado });
   } catch (err) {
-    console.error('[unidades][testarBanco] Erro ao testar conexão bancária:', err);
-    return res.status(400).json({ ok: false, message: err?.message || 'Falha ao testar conexão com o banco.' });
+    console.error('[unidades][testarBanco] Erro ao testar conexão bancária:', {
+      name: err?.name || 'Error',
+      code: err?.code || null,
+    });
+    return res.status(400).json({ ok: false, message: 'Falha ao testar conexão com o banco.' });
   }
 }
 

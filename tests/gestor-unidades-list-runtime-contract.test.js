@@ -234,6 +234,12 @@ test('listUnidades retorna unidades acessiveis com shape exato de data.unidades 
           apiBancaria: {
             apiBaseUrl: 'https://bank.example.test',
             apiOauthScope: 'scope-a',
+            hasApiHeaderValue: false,
+            hasApiQueryParamValue: false,
+            hasApiBasicPassword: false,
+            hasApiOauthClientSecret: false,
+            hasApiMtlsPassword: false,
+            hasApiMtlsCertFile: true,
           },
         },
         {
@@ -257,6 +263,12 @@ test('listUnidades retorna unidades acessiveis com shape exato de data.unidades 
           apiBancaria: {
             apiBaseUrl: 'https://bank.example.test',
             apiOauthScope: 'scope-a',
+            hasApiHeaderValue: false,
+            hasApiQueryParamValue: false,
+            hasApiBasicPassword: false,
+            hasApiOauthClientSecret: false,
+            hasApiMtlsPassword: false,
+            hasApiMtlsCertFile: true,
           },
         },
       ],
@@ -324,6 +336,12 @@ test('listUnidades sanitiza apiBancaria removendo apiMtlsCertFileData da respost
   assert.deepEqual(res.body.data.unidades[0].apiBancaria, {
     apiBaseUrl: 'https://bank.example.test',
     apiMtlsCertFileName: 'certificado.p12',
+    hasApiHeaderValue: false,
+    hasApiQueryParamValue: false,
+    hasApiBasicPassword: false,
+    hasApiOauthClientSecret: false,
+    hasApiMtlsPassword: false,
+    hasApiMtlsCertFile: true,
   });
   assert.equal('apiMtlsCertFileData' in res.body.data.unidades[0].apiBancaria, false);
 });

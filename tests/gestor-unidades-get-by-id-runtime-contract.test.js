@@ -380,6 +380,12 @@ test('getUnidadeById sanitiza apiBancaria removendo apiMtlsCertFileData', async 
   assert.deepEqual(res.body.data.apiBancaria, {
     apiBaseUrl: 'https://bank.example.test',
     apiMtlsCertFileName: 'certificado.p12',
+    hasApiHeaderValue: false,
+    hasApiQueryParamValue: false,
+    hasApiBasicPassword: false,
+    hasApiOauthClientSecret: false,
+    hasApiMtlsPassword: false,
+    hasApiMtlsCertFile: true,
   });
   assert.equal('apiMtlsCertFileData' in res.body.data.apiBancaria, false);
 });

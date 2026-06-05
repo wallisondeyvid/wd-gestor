@@ -166,7 +166,7 @@ test('testarBanco permite alvo do cluster contextual e retorna sucesso no caminh
     ok: true,
     message: 'Conexão com o banco testada com sucesso.',
     detalhe: 'Token OAuth2 obtido com sucesso.',
-    resultado: { tokenPreview: 'abcdefghij...' },
+    resultado: { tokenPreview: 'abcdef...' },
   });
 });
 
@@ -205,7 +205,7 @@ test('testarBanco usa fallback do scopedUnitId quando a busca por cluster retorn
   });
 });
 
-test('testarBanco devolve 400 com a mensagem do erro quando ocorre falha interna induzida', async () => {
+test('testarBanco devolve 400 com mensagem genérica quando ocorre falha interna induzida', async () => {
   const { testarBanco } = loadUnidadeTestarBancoHarness({
     findUnidadeById: async () => ({ _id: 'u-filial', apiBancaria: { apiBaseUrl: 'https://bank.example', tipoAutenticacaoAPI: 'oauth2' } }),
     findUnidadeByIdLean: async () => ({ _id: 'u-matriz', is_principal: true }),
@@ -222,5 +222,5 @@ test('testarBanco devolve 400 com a mensagem do erro quando ocorre falha interna
   await testarBanco({ params: { id: 'u-filial' }, body: {}, unitScope: { unidadeId: 'u-matriz' }, user: { role: 'admin' } }, res);
 
   assert.equal(res.statusCode, 400);
-  assert.deepEqual(res.body, { ok: false, message: 'forced testar-banco failure' });
+  assert.deepEqual(res.body, { ok: false, message: 'Falha ao testar conexão com o banco.' });
 });

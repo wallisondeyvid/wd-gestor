@@ -51,7 +51,7 @@ test('loadPaginaUnidadesBundle preserva os ramos contextual, vazio nao privilegi
   let allUnidadesResponse = [];
   let allModulosResponse = [{ _id: 'mod-master', nome: 'Gestor Premium' }];
   let modulosAtivosResponse = [{ _id: 'mod-ativo', nome: 'Gestor Base' }];
-  let matrizesResponse = [{ _id: 'u-matriz', nome: 'Matriz Fallback', is_principal: true }];
+  let matrizesResponse = [{ _id: 'u-matriz', nome: 'Matriz Fallback', is_principal: true, apiBancaria: {} }];
   let diretoresResponse = [{ _id: 'dir-1', email: 'diretor@example.com' }];
 
   const loadPaginaUnidadesBundle = buildFunction(SERVICE_SOURCE, 'export async function loadPaginaUnidadesBundle', {
@@ -95,6 +95,9 @@ test('loadPaginaUnidadesBundle preserva os ramos contextual, vazio nao privilegi
             _id: 'u-filial',
             nome: 'Filial Norte',
             modulosAcessiveis: 'valor-invalido',
+            apiBancaria: {
+              apiBasicPassword: 'segredo-contextual',
+            },
           },
         ],
         principalUnit: { _id: 'u-principal', nome: 'Matriz Norte' },
@@ -108,6 +111,7 @@ test('loadPaginaUnidadesBundle preserva os ramos contextual, vazio nao privilegi
   assert.equal(result.unidadesFiltradas[0]._id, 'u-filial');
   assert.equal(result.unidadesFiltradas[0].naturezaJuridica, '');
   assert.equal(JSON.stringify(result.unidadesFiltradas[0].modulosAcessiveis), JSON.stringify([]));
+  assert.equal(result.unidadesFiltradas[0].apiBancaria?.hasApiBasicPassword, true);
   assert.equal(result.principalUnits.length, 1);
   assert.equal(result.principalUnits[0]._id, 'u-principal');
   assert.equal(JSON.stringify(result.modulos), JSON.stringify(modulosAtivosResponse));
@@ -151,6 +155,7 @@ test('loadPaginaUnidadesBundle preserva os ramos contextual, vazio nao privilegi
   assert.equal(calls.findAllModulosLean, 1);
   assert.equal(result.unidadesFiltradas.length, 1);
   assert.equal(result.unidadesFiltradas[0]._id, 'u-matriz');
+  assert.equal(result.unidadesFiltradas[0].apiBancaria?.hasApiMtlsCertFile, false);
   assert.equal(JSON.stringify(result.modulos), JSON.stringify(allModulosResponse));
   assert.deepEqual(calls.loadPaginaUnidadesDiretores, ['ctx@example.com', 'empty@example.com', 'master@example.com']);
 });

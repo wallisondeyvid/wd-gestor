@@ -254,6 +254,9 @@ test('updateUnidade retorna sucesso minimo com update escalar observavel e shape
         diretor_usuario_id: 'dir-existente',
         unidade_principal_id: 'u-principal',
         logo: 'https://cdn.example.test/logo-antiga.webp',
+        apiBancaria: {
+          apiBasicPassword: 'segredo-existente',
+        },
       };
     },
     updateUnidadeByIdWithValidators: async (id, updated) => {
@@ -352,7 +355,9 @@ test('updateUnidade retorna sucesso minimo com update escalar observavel e shape
       subunidade: true,
       unidade_principal_id: 'u-principal',
       endereco: { cidade: 'Sao Paulo', uf: 'SP' },
-      apiBancaria: {},
+      apiBancaria: {
+        apiBasicPassword: 'segredo-existente',
+      },
       logo: 'https://cdn.example.test/logo-antiga.webp',
     },
   });
@@ -400,7 +405,14 @@ test('updateUnidade retorna sucesso minimo com update escalar observavel e shape
         subunidade: true,
         unidade_principal_id: 'u-principal',
         endereco: { cidade: 'Sao Paulo', uf: 'SP' },
-        apiBancaria: {},
+        apiBancaria: {
+          hasApiHeaderValue: false,
+          hasApiQueryParamValue: false,
+          hasApiBasicPassword: true,
+          hasApiOauthClientSecret: false,
+          hasApiMtlsPassword: false,
+          hasApiMtlsCertFile: false,
+        },
         logo: 'https://cdn.example.test/logo-antiga.webp',
       },
     },
@@ -415,6 +427,9 @@ test('updateUnidade normaliza apiBancaria de entrada e sanitiza apiMtlsCertFileD
       diretor_usuario_id: null,
       unidade_principal_id: null,
       logo: null,
+      apiBancaria: {
+        apiBasicPassword: 'segredo-antigo',
+      },
     }),
     updateUnidadeByIdWithValidators: async (id, updated) => {
       capturedUpdate = updated;
@@ -471,15 +486,19 @@ test('updateUnidade normaliza apiBancaria de entrada e sanitiza apiMtlsCertFileD
 
   assert.deepEqual(capturedUpdate.apiBancaria, {
     apiBaseUrl: 'https://bank.example.test',
-    tipoAutenticacaoAPI: '',
     apiMtlsCertFileName: 'certificado.p12',
     apiMtlsPassword: 'segredo',
+    apiBasicPassword: 'segredo-antigo',
   });
   assert.deepEqual(res.body.data.unidade.apiBancaria, {
     apiBaseUrl: 'https://bank.example.test',
-    tipoAutenticacaoAPI: '',
     apiMtlsCertFileName: 'certificado.p12',
-    apiMtlsPassword: 'segredo',
+    hasApiHeaderValue: false,
+    hasApiQueryParamValue: false,
+    hasApiBasicPassword: true,
+    hasApiOauthClientSecret: false,
+    hasApiMtlsPassword: true,
+    hasApiMtlsCertFile: true,
   });
   assert.equal('apiMtlsCertFileData' in res.body.data.unidade.apiBancaria, false);
 });

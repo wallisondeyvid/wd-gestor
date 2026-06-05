@@ -231,7 +231,7 @@ test('testarBanco preserva o ramo oauth2 apos autorizacao do service fino', asyn
     ok: true,
     message: 'Conexão com o banco testada com sucesso.',
     detalhe: 'Token OAuth2 obtido com sucesso.',
-    resultado: { tokenPreview: 'abcdefghij...' },
+    resultado: { tokenPreview: 'abcdef...' },
   });
 });
 

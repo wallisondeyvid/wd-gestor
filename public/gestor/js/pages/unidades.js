@@ -13,6 +13,22 @@ document.addEventListener('DOMContentLoaded', () => {
 		return s;
 	}
 
+	function sanitizeApiBancariaForLog(apiBancaria){
+		if (!apiBancaria || typeof apiBancaria !== 'object') return apiBancaria;
+		const safe = { ...apiBancaria };
+		['apiHeaderValue','apiQueryParamValue','apiBasicPassword','apiOauthClientSecret','apiMtlsPassword','apiMtlsCertFileData'].forEach((key) => {
+			if (key in safe) safe[key] = '[REDACTED]';
+		});
+		return safe;
+	}
+
+	function sanitizeUnidadeForLog(unidade){
+		if (!unidade || typeof unidade !== 'object') return unidade;
+		const safe = { ...unidade };
+		if (safe.apiBancaria) safe.apiBancaria = sanitizeApiBancariaForLog(safe.apiBancaria);
+		return safe;
+	}
+
 	function askDeleteUnidadeConfirm(unidadeNome){
 		const modalEl = byId('uDeleteConfirmModal');
 		const nameEl = byId('uDeleteConfirmName');
@@ -1676,7 +1692,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		function preencherCompleto(u){
 			if (!u) return;
-			console.debug('[EDITAR] Payload recebido para preenchimento:', u);
+			console.debug('[EDITAR] Payload recebido para preenchimento:', sanitizeUnidadeForLog(u));
 			setVal('unidadeId', u._id);
 			setVal('nomeFantasia', u.nome);
 			setVal('razaoSocial', u.razaoSocial);

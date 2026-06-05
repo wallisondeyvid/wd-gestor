@@ -103,6 +103,14 @@ const API_BANCARIA_FIELDS = [
   'apiMtlsPassword'
 ];
 
+const API_BANCARIA_SECRET_FLAGS = [
+  ['apiHeaderValue', 'hasApiHeaderValue'],
+  ['apiQueryParamValue', 'hasApiQueryParamValue'],
+  ['apiBasicPassword', 'hasApiBasicPassword'],
+  ['apiOauthClientSecret', 'hasApiOauthClientSecret'],
+  ['apiMtlsPassword', 'hasApiMtlsPassword'],
+];
+
 function sanitizeApiBancariaInput(raw = {}) {
   const source = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
   const output = {};
@@ -127,10 +135,41 @@ function sanitizeApiBancariaInput(raw = {}) {
 function buildApiBancariaForResponse(doc) {
   if (!doc) return {};
   const plain = doc.toObject ? doc.toObject() : { ...doc };
-  if (plain.apiMtlsCertFileData) {
-    delete plain.apiMtlsCertFileData;
+  const safe = {};
+
+  if (plain.tipoAutenticacaoAPI) safe.tipoAutenticacaoAPI = plain.tipoAutenticacaoAPI;
+  if (plain.apiHeaderName) safe.apiHeaderName = plain.apiHeaderName;
+  if (plain.apiQueryParamName) safe.apiQueryParamName = plain.apiQueryParamName;
+  if (plain.apiBasicUser) safe.apiBasicUser = plain.apiBasicUser;
+  if (plain.apiOauthClientId) safe.apiOauthClientId = plain.apiOauthClientId;
+  if (plain.apiOauthScope) safe.apiOauthScope = plain.apiOauthScope;
+  if (plain.apiOauthTokenUrl) safe.apiOauthTokenUrl = plain.apiOauthTokenUrl;
+  if (plain.apiBaseUrl) safe.apiBaseUrl = plain.apiBaseUrl;
+  if (plain.apiTokenUrlGenerica) safe.apiTokenUrlGenerica = plain.apiTokenUrlGenerica;
+  if (plain.apiMtlsCertFileName) safe.apiMtlsCertFileName = plain.apiMtlsCertFileName;
+
+  for (const [field, flag] of API_BANCARIA_SECRET_FLAGS) {
+    safe[flag] = Boolean(plain[field]);
   }
-  return plain;
+
+  safe.hasApiMtlsCertFile = Boolean(plain.apiMtlsCertFileData || plain.apiMtlsCertFileName);
+  return safe;
+}
+
+function mergeApiBancariaForStorage(existingDoc, incoming = {}) {
+  const existingRaw = existingDoc && typeof existingDoc === 'object'
+    ? (existingDoc.toObject ? existingDoc.toObject() : { ...existingDoc })
+    : {};
+  const merged = {
+    ...existingRaw,
+    ...incoming,
+  };
+
+  if (merged.tipoAutenticacaoAPI && !AUTH_MODE_SET.has(merged.tipoAutenticacaoAPI)) {
+    merged.tipoAutenticacaoAPI = '';
+  }
+
+  return sanitizeApiBancariaInput(merged);
 }
 
 function normalizeUnitId(value) {
@@ -657,7 +696,13 @@ export async function updateUnidade(req, res) {
       naturezaJuridica,
     } = req.body;
 
-    const apiBancariaPayload = sanitizeApiBancariaInput(req.body.apiBancaria || {});
+    const mergeApiBancaria = typeof mergeApiBancariaForStorage === 'function'
+      ? mergeApiBancariaForStorage
+      : (_existingDoc, incoming) => incoming;
+    const apiBancariaPayload = mergeApiBancaria(
+      unidadeExistente.apiBancaria,
+      sanitizeApiBancariaInput(req.body.apiBancaria || {}),
+    );
     const resolvedPrincipal = await policyContext.resolveRequestedPrincipalUnitId(
       unidadePrincipal,
       subunidade === 'true' ? unidadeExistente.unidade_principal_id : '',

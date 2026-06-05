@@ -21,6 +21,22 @@
 
 	const V = window.Validators || {};
 
+	function sanitizeApiBancariaForLog(apiBancaria){
+		if (!apiBancaria || typeof apiBancaria !== 'object') return apiBancaria;
+		const safe = { ...apiBancaria };
+		['apiHeaderValue','apiQueryParamValue','apiBasicPassword','apiOauthClientSecret','apiMtlsPassword','apiMtlsCertFileData'].forEach((key) => {
+			if (key in safe) safe[key] = '[REDACTED]';
+		});
+		return safe;
+	}
+
+	function sanitizePayloadForLog(payload){
+		if (!payload || typeof payload !== 'object') return payload;
+		const safe = { ...payload };
+		if (safe.apiBancaria) safe.apiBancaria = sanitizeApiBancariaForLog(safe.apiBancaria);
+		return safe;
+	}
+
 	// Utilitário local: lê arquivo e retorna Data URL (Promise)
 	function readFileAsDataURL(file){
 		return new Promise((resolve, reject) => {
@@ -195,14 +211,14 @@
 			// Garantir preservação da logo no update (se backend não preservar automaticamente)
 			const logoAtual = document.getElementById('logoAtual')?.value || '';
 			if (logoAtual) payload.logo = logoAtual;
-			console.log('[FRONTEND] Payload construído:', payload);
+			console.log('[FRONTEND] Payload construído:', sanitizePayloadForLog(payload));
 			if(!isEdit) payload.principal=String(isMatriz);
 			const agenciaNumero=val('agenciaNumero').trim(); const agenciaDV=val('agenciaDV').trim(); const contaNumero=val('contaNumero').trim(); const contaDV=val('contaDV').trim();
 			function validaAg(num,dv){ if(!num && !dv) return ''; if(!/^\d{1,5}$/.test(num)) return 'Número da agência inválido (1-5 dígitos).'; if(dv && !/^[0-9Xx]{1,2}$/.test(dv)) return 'DV da agência inválido.'; return null; }
 			function validaCc(num,dv){ if(!num && !dv) return ''; if(!/^\d{1,12}$/.test(num)) return 'Número da conta inválido (1-12 dígitos).'; if(dv && !/^[0-9Xx]{1,2}$/.test(dv)) return 'DV da conta inválido.'; return null; }
 			const errAg=validaAg(agenciaNumero,agenciaDV); if(typeof errAg==='string' && errAg){ alert(errAg); return false; } const errCc=validaCc(contaNumero,contaDV); if(typeof errCc==='string' && errCc){ alert(errCc); return false; }
 			payload.agencia = agenciaNumero ? (agenciaDV ? `${agenciaNumero}-${agenciaDV.toUpperCase()}` : agenciaNumero) : ''; payload.contaCorrente = contaNumero ? (contaDV ? `${contaNumero}-${contaDV.toUpperCase()}` : contaNumero) : '';
-			console.debug('[cadastrarUnidade] payload enviado', payload);
+			console.debug('[cadastrarUnidade] payload enviado', sanitizePayloadForLog(payload));
 			const url = isEdit ? `${BASE}/api/unidades/${unidadeId}` : `${BASE}/api/unidades`;
 			const method=isEdit? 'PUT':'POST';
 			let res, data;
