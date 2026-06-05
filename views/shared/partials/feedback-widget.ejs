@@ -118,13 +118,13 @@
         <section class="wdg-feedback-chat" data-chat="1" aria-label="Chat de feedback" hidden>
           <div class="wdg-feedback-chat-log" data-chat-log aria-live="polite" aria-label="Mensagens"></div>
           <div class="wdg-feedback-chat-quick" data-chat-quick aria-label="Respostas rápidas"></div>
-          <form class="wdg-feedback-chat-compose" data-chat-compose autocomplete="off">
+          <div class="wdg-feedback-chat-compose" data-chat-compose role="group" aria-label="Compor mensagem de feedback">
             <input class="wdg-feedback-chat-file" type="file" accept="image/png,image/jpeg,image/webp" data-chat-file>
             <textarea class="wdg-feedback-chat-input" placeholder="Mensagem" data-chat-input rows="1"></textarea>
-            <button class="wdg-feedback-chat-send" type="submit" aria-label="Enviar" data-chat-send>
+            <button class="wdg-feedback-chat-send" type="button" aria-label="Enviar" data-chat-send>
               <img class="wdg-feedback-chat-send-icon" src="<%= __fbBase %>/images/proximo.png?v=<%= __assetVer %>" alt="" width="36" height="36" loading="lazy" decoding="async">
             </button>
-          </form>
+          </div>
         </section>
 
         <!-- TELA: Home / Triagem -->

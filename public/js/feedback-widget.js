@@ -19,10 +19,11 @@
 
     var log = chat.querySelector('[data-chat-log]');
     var quick = chat.querySelector('[data-chat-quick]');
-    var form = chat.querySelector('[data-chat-compose]');
+    var composer = chat.querySelector('[data-chat-compose]');
     var input = chat.querySelector('[data-chat-input]');
     var fileInput = chat.querySelector('[data-chat-file]');
-    if (!log || !quick || !form || !input || !fileInput) return null;
+    var sendButton = chat.querySelector('[data-chat-send]');
+    if (!log || !quick || !composer || !input || !fileInput || !sendButton) return null;
 
     // Fila simples para manter a conversa em ordem
     var uiQueue = Promise.resolve();
@@ -457,7 +458,7 @@
       opts = opts || {};
       input.placeholder = opts.placeholder || 'Mensagem';
       input.disabled = !!opts.disabled;
-      form.querySelector('[data-chat-send]').disabled = !!opts.disabled;
+      sendButton.disabled = !!opts.disabled;
       autoResizeInput();
     }
 
@@ -1519,8 +1520,7 @@
       }
     });
 
-    form.addEventListener('submit', function (ev) {
-      ev.preventDefault();
+    sendButton.addEventListener('click', function () {
       onUserSend(input.value);
     });
 

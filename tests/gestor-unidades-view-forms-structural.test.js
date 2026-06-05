@@ -25,7 +25,49 @@ function buildUniqueEmail(prefix = 'unidades-view-forms') {
 }
 
 function listForms(html) {
-  return [...html.matchAll(/<form\b[^>]*>/gi)].map((match) => match[0]);
+  return [...html.matchAll(/<form\b[^>]*>/gi)].map((match, index) => ({
+    order: index + 1,
+    tag: match[0],
+    index: match.index,
+  }));
+}
+
+function listFormsWithMetadata(html) {
+  const forms = [...html.matchAll(/<form\b[^>]*>/gi)].map((match, index) => {
+    const tag = match[0];
+    const idMatch = tag.match(/\bid="([^"]+)"/i);
+    const classMatch = tag.match(/\bclass="([^"]+)"/i);
+    const id = idMatch ? idMatch[1] : '';
+    const className = classMatch ? classMatch[1] : '';
+    const openIndex = match.index;
+    const closeIndex = html.indexOf('</form>', openIndex);
+    assert.notEqual(closeIndex, -1, `form ${id || className || index + 1} deve ter fechamento`);
+
+    return {
+      order: index + 1,
+      id,
+      className,
+      openIndex,
+      closeIndex,
+      openTag: tag,
+    };
+  });
+
+  return forms.map((form, index) => {
+    const relevantAncestor = html.slice(Math.max(0, form.openIndex - 400), form.openIndex);
+    const previousForm = forms[index - 1];
+    const nestedWithinPrevious = !!(previousForm && form.openIndex < previousForm.closeIndex);
+    let probableOrigin = 'desconhecido';
+    if (form.id === 'cadastroUnidadeForm') probableOrigin = 'views/gestor/unidades.ejs';
+    else if (form.id === 'formAlterarSenha') probableOrigin = 'views/partials/perfil.ejs';
+
+    return {
+      ...form,
+      relevantAncestor,
+      nestedWithinPrevious,
+      probableOrigin,
+    };
+  });
 }
 
 function getFormMarkerIndex(html, marker) {
@@ -168,10 +210,12 @@ test('GET /gestor/unidades entrega HTML final sem form aninhado em cadastroUnida
   const html = response.text;
 
   const formTags = listForms(html);
-  assert.equal(formTags.length, 3);
+  const forms = listFormsWithMetadata(html);
+  assert.equal(formTags.length, 2);
   assert.match(html, /<form\b[^>]*id="cadastroUnidadeForm"/i);
   assert.match(html, /<form\b[^>]*id="formAlterarSenha"/i);
-  assert.match(html, /<form\b[^>]*class="wdg-feedback-chat-compose"/i);
+  assert.doesNotMatch(html, /<form\b[^>]*class="wdg-feedback-chat-compose"/i);
+  assert.match(html, /<div\b[^>]*class="wdg-feedback-chat-compose"[^>]*data-chat-compose/i);
 
   const cadastro = findFormOpenTagBounds(html, 'cadastroUnidadeForm');
   const cadastroClose = html.indexOf('</form>', cadastro.openEnd);
@@ -181,10 +225,25 @@ test('GET /gestor/unidades entrega HTML final sem form aninhado em cadastroUnida
   assert.doesNotMatch(cadastroInnerHtml, /<form\b/i);
 
   const formAlterarSenhaIndex = getFormMarkerIndex(html, 'id="formAlterarSenha"');
-  const feedbackFormIndex = getFormMarkerIndex(html, 'class="wdg-feedback-chat-compose"');
   assert.ok(formAlterarSenhaIndex > cadastroClose, 'formAlterarSenha deve permanecer fora do cadastro principal no HTML final');
-  assert.ok(
-    feedbackFormIndex < cadastro.openStart || feedbackFormIndex > cadastroClose,
-    'o form do feedback deve ser irmão do cadastro principal, nunca filho',
+
+  assert.deepEqual(
+    forms.map(({ order, id, probableOrigin, nestedWithinPrevious }) => ({ order, id, probableOrigin, nestedWithinPrevious })),
+    [
+      { order: 1, id: 'cadastroUnidadeForm', probableOrigin: 'views/gestor/unidades.ejs', nestedWithinPrevious: false },
+      { order: 2, id: 'formAlterarSenha', probableOrigin: 'views/partials/perfil.ejs', nestedWithinPrevious: false },
+    ],
   );
+
+  assert.match(forms[0].relevantAncestor, /<div class="wdg-card-body wdg-form wdg-tight">/i);
+  assert.match(forms[1].relevantAncestor, /<div class="modal-body">/i);
+});
+
+test('feedback widget usa compose sem form nativo e mantém responsabilidade isolada', async () => {
+  const html = await renderUnidadesView();
+
+  assert.doesNotMatch(html, /<form\b[^>]*class="wdg-feedback-chat-compose"/i);
+  assert.match(html, /<div\b[^>]*class="wdg-feedback-chat-compose"[^>]*role="group"[^>]*aria-label="Compor mensagem de feedback"/i);
+  assert.match(html, /<button class="wdg-feedback-chat-send" type="button" aria-label="Enviar" data-chat-send>/i);
+  assert.match(html, /<form\b[^>]*id="formAlterarSenha"/i);
 });
