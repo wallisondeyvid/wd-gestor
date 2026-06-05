@@ -72,7 +72,18 @@ function withLoginAndReadOnlyProvisioningScope(handler) {
 	});
 }
 
-router.post('/api/unidades', withLoginAndRequiredUnitScope(createUnidade));
+function withLoginAndBootstrapUnidadesCreateScope(handler) {
+	return (req, res, next) => requireLogin(req, res, () => {
+		if (isPrivilegedGestorRequest(req) && !hasCanonicalActiveUnitContext(req)) {
+			return handler(req, res, next);
+		}
+
+		normalizeUnidadeIdParam(req);
+		return requireUnitScope(req, res, () => handler(req, res, next));
+	});
+}
+
+router.post('/api/unidades', withLoginAndBootstrapUnidadesCreateScope(createUnidade));
 // Listagem para hidratação client-side quando SSR vier vazio
 router.get('/api/unidades', withLoginAndBootstrapUnidadesListScope(listUnidades));
 router.put('/api/unidades/:id', withLoginAndRequiredUnitScope(updateUnidade));

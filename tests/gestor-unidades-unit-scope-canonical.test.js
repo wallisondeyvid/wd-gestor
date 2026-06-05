@@ -400,6 +400,57 @@ test('GET /gestor/unidades com admin apenas por global_role sem unidade ativa re
   assert.match(res.text, new RegExp(unidadePrincipalC.nome));
 });
 
+test('POST /gestor/api/unidades com admin global sem unidade ativa nao exige unidadeId e cria subunidade valida', async () => {
+  const moduloGestor = await ensureGestorModulo();
+  const unidadePrincipalA = await createUnit({ nome: `Principal Admin Global Create ${nextSequence()}` });
+  await Unidade.updateOne({ _id: unidadePrincipalA._id }, { $set: { cnpj: '12345678000195' } });
+
+  const user = await createUser({
+    email: buildUniqueEmail('unidades-admin-global-create'),
+    nome: 'Admin Global Create',
+    role: 'admin',
+    globalRole: 'admin',
+  });
+
+  await User.updateOne({ _id: user._id }, {
+    $set: {
+      modulosAcessiveis: [moduloGestor._id],
+    },
+  });
+
+  const agent = request.agent(app);
+  await seedSession(agent, {
+    email: user.email,
+    role: 'admin',
+    globalRole: 'admin',
+  });
+
+  const res = await agent
+    .post('/gestor/api/unidades')
+    .set('Accept', 'application/json')
+    .set('Connection', 'close')
+    .send({
+      nomeFantasia: `Filial Admin Global ${nextSequence()}`,
+      razaoSocial: `Filial Admin Global LTDA ${nextSequence()}`,
+      pessoaTipo: 'pj',
+      principal: 'false',
+      subunidade: 'true',
+      emailPrincipal: buildUniqueEmail('filial-admin-global'),
+      modulosAcessiveis: [],
+      unidadePrincipal: String(unidadePrincipalA._id),
+    });
+
+  assert.equal(res.status, 201, JSON.stringify(res.body));
+  assert.notEqual(res.body?.error, 'UNIDADE_ID_REQUIRED');
+
+  const createdId = String(res.body?.data?._id || res.body?.id || res.body?._id || '');
+  assert.ok(createdId);
+
+  const created = await Unidade.findById(createdId).lean();
+  assert.ok(created);
+  assert.equal(String(created.unidade_principal_id), String(unidadePrincipalA._id));
+});
+
 test('GET /gestor/unidades com admin legado e req.user.unidade_id sem unidade explicita na request preserva o branch global', async () => {
   const unidadePrincipalA = await createUnit({ nome: `Principal Admin Legado A ${nextSequence()}` });
   const unidadeFilialB = await createUnit({

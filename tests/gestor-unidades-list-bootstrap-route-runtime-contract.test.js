@@ -257,8 +257,50 @@ test('GET /api/unidades mantem user sem unidade bloqueado por UNIDADE_ID_REQUIRE
 	assert.equal(state.controllerCalls.length, 0);
 });
 
-test('POST /api/unidades continua exigindo unitScope para master sem unidade', async () => {
+test('POST /api/unidades permite create global para master sem unidade ativa', async () => {
 	const app = await buildApp({ user: { role: 'master', isMaster: true } });
+	const response = await request(app).post('/api/unidades').send({ nome: 'Nova unidade' });
+
+	assert.equal(response.status, 200);
+	assert.equal(response.body.handler, 'createUnidade');
+	assert.equal(response.body.userRole, 'master');
+	assert.equal(response.body.unitScope, null);
+	assert.equal(state.requireUnitScopeCalls.length, 0);
+	assert.equal(state.controllerCalls.length, 1);
+	assert.equal(state.controllerCalls[0].name, 'createUnidade');
+	assert.equal(state.controllerCalls[0].method, 'POST');
+});
+
+test('POST /api/unidades permite create global para admin sem unidade ativa', async () => {
+	const app = await buildApp({ user: { role: 'admin', isMaster: false } });
+	const response = await request(app).post('/api/unidades').send({ nome: 'Nova unidade' });
+
+	assert.equal(response.status, 200);
+	assert.equal(response.body.handler, 'createUnidade');
+	assert.equal(response.body.userRole, 'admin');
+	assert.equal(response.body.unitScope, null);
+	assert.equal(state.requireUnitScopeCalls.length, 0);
+	assert.equal(state.controllerCalls.length, 1);
+	assert.equal(state.controllerCalls[0].name, 'createUnidade');
+	assert.equal(state.controllerCalls[0].method, 'POST');
+});
+
+test('POST /api/unidades mantem diretor sem unidade bloqueado por UNIDADE_ID_REQUIRED', async () => {
+	const app = await buildApp({ user: { role: 'diretor', isMaster: false } });
+	const response = await request(app).post('/api/unidades').send({ nome: 'Nova unidade' });
+
+	assert.equal(response.status, 400);
+	assert.deepEqual(response.body, {
+		success: false,
+		error: 'UNIDADE_ID_REQUIRED',
+	});
+	assert.equal(state.requireUnitScopeCalls.length, 1);
+	assert.equal(state.controllerCalls.length, 0);
+	assert.equal(state.requireUnitScopeCalls[0].method, 'POST');
+});
+
+test('POST /api/unidades mantem user sem unidade bloqueado por UNIDADE_ID_REQUIRED', async () => {
+	const app = await buildApp({ user: { role: 'user', isMaster: false } });
 	const response = await request(app).post('/api/unidades').send({ nome: 'Nova unidade' });
 
 	assert.equal(response.status, 400);
