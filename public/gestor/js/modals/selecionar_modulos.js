@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const listaDiv = document.getElementById('listaModulos');
   const btnSalvar = document.getElementById('btnSalvarModulos');
   const selectDestino = document.getElementById('modulosAcessiveis');
+  const focusSafe = window.wdgModalFocusSafe?.install?.(modalEl, {
+    getReturnFocus: () => document.querySelector('[data-bs-target="#modalModulos"]'),
+  }) || null;
 
   function fonteModulos() {
     // Se houver filtro por unidade, usar exatamente os módulos permitidos (mesmo que vazio)
@@ -90,6 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const hiddenFuncoes = document.getElementById('modulos_habilitados');
         if (hiddenFuncoes) hiddenFuncoes.value = marcados.join(',');
       } catch(_) {}
+      if (focusSafe) {
+        focusSafe.hide();
+        return;
+      }
       const inst = bootstrap.Modal.getInstance(modalEl);
       if (inst) inst.hide();
     });

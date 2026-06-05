@@ -71,6 +71,9 @@
     if(!modal) return false;
     if(modal.__bancoInit){ return true; }
     modal.__bancoInit = true;
+    const focusSafe = window.wdgModalFocusSafe?.install?.(modal, {
+      getReturnFocus: () => getTargetInput(),
+    }) || null;
     console.debug('[Modal Banco] Inicializando handlers (modal presente)');
 
     const tbody = $(IDs.tbody), search=$(IDs.search), btnConfirm=$(IDs.confirm), btnClear=$(IDs.clear), chkOutro=$(IDs.outroCheck), outroWrap=$(IDs.outroWrap), outroCod=$(IDs.outroCod), outroNome=$(IDs.outroNome), btnReload=document.getElementById('modalBancoReload');
@@ -96,7 +99,7 @@
     search?.addEventListener('input', e=>filtroDebounced(e.target.value));
     chkOutro?.addEventListener('change', ()=>{ if(chkOutro.checked){ tbody?.querySelectorAll('input[type="radio"][name="bancoOpt"]').forEach(r=>r.checked=false); outroWrap?.classList.remove('d-none'); outroCod?.focus(); } else { outroWrap?.classList.add('d-none'); outroCod&&(outroCod.value=''); outroNome&&(outroNome.value=''); } });
     btnClear?.addEventListener('click', ()=>{ const tgt=getTargetInput(); if(tgt) tgt.value=''; tbody?.querySelectorAll('input[type="radio"][name="bancoOpt"]').forEach(r=>r.checked=false); if(chkOutro) chkOutro.checked=false; outroWrap?.classList.add('d-none'); outroCod&&(outroCod.value=''); outroNome&&(outroNome.value=''); search&&(search.value=''); aplicarFiltro(''); });
-    btnConfirm?.addEventListener('click', ()=>{ const tgt=getTargetInput(); if(!tgt){ console.warn('[Modal Banco] Campo destino não encontrado'); return; } if(chkOutro && chkOutro.checked){ const cod=(outroCod?.value||'').trim(); const nom=(outroNome?.value||'').trim(); if(!cod||!nom){ alert('Informe código e nome do banco.'); return; } tgt.value=`${cod} - ${nom}`; } else { const sel=tbody?.querySelector('input[type="radio"][name="bancoOpt"]:checked'); if(!sel){ alert('Selecione um banco.'); return; } const codigo=sel.getAttribute('data-codigo')||sel.value; const nome=sel.getAttribute('data-nome')||''; tgt.value=`${codigo} - ${nome}`; } (bootstrap.Modal.getInstance(modal)||bootstrap.Modal.getOrCreateInstance(modal)).hide(); tgt.dispatchEvent(new Event('change',{bubbles:true})); });
+    btnConfirm?.addEventListener('click', ()=>{ const tgt=getTargetInput(); if(!tgt){ console.warn('[Modal Banco] Campo destino não encontrado'); return; } if(chkOutro && chkOutro.checked){ const cod=(outroCod?.value||'').trim(); const nom=(outroNome?.value||'').trim(); if(!cod||!nom){ alert('Informe código e nome do banco.'); return; } tgt.value=`${cod} - ${nom}`; } else { const sel=tbody?.querySelector('input[type="radio"][name="bancoOpt"]:checked'); if(!sel){ alert('Selecione um banco.'); return; } const codigo=sel.getAttribute('data-codigo')||sel.value; const nome=sel.getAttribute('data-nome')||''; tgt.value=`${codigo} - ${nome}`; } if(focusSafe){ focusSafe.hide(tgt); } else { (bootstrap.Modal.getInstance(modal)||bootstrap.Modal.getOrCreateInstance(modal)).hide(); } tgt.dispatchEvent(new Event('change',{bubbles:true})); });
 
     if(btnReload){ const isDev=!/prod|www\./i.test(location.host); if(isDev) btnReload.classList.remove('d-none'); btnReload.addEventListener('click', async ()=>{ console.info('[Modal Banco] Recarga manual'); cache=[]; await carregarBancos(); aplicarFiltro(search?.value||''); }); }
 

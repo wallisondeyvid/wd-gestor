@@ -12,6 +12,11 @@
   let cacheNaturezas = [];
   const norm = s => String(s || '').replace(/\D+/g, '');
   function modal(){ const el = document.getElementById(MODAL_ID); if(!el) return null; try { return bootstrap.Modal.getOrCreateInstance(el, { backdrop:true, keyboard:true }); } catch { return null; } }
+  function focusSafeController(){
+    return window.wdgModalFocusSafe?.install?.(document.getElementById(MODAL_ID), {
+      getReturnFocus: () => document.getElementById(INPUT_TARGET_ID) || document.getElementById(BTN_OPEN_ID),
+    }) || null;
+  }
   function sortByCodigo(arr){ return arr.sort((a,b)=>{ const toNum=v=>parseInt(String(v).replace(/\D/g,''),10)||0; return toNum(a.codigo)-toNum(b.codigo); }); }
   function normalize(raw){
     if(!raw) return [];
@@ -49,7 +54,7 @@
   function codigoAtualDoCampo(){ const inputTarget=document.getElementById(INPUT_TARGET_ID); if(!inputTarget) return ''; const ds=inputTarget.dataset?.naturezaCodigo; if(ds) return ds.trim(); const v=(inputTarget.value||'').trim(); if(!v) return ''; const i=v.indexOf(' - '); return (i>-1? v.slice(0,i):v).trim(); }
   function preSelecionar(){ const ul=document.getElementById(LIST_ID); if(!ul) return; const wanted=codigoAtualDoCampo(); if(!wanted) return; let target=null; ul.querySelectorAll('input[name="njOpt"]').forEach(radio=>{ const code=radio.dataset.code||''; if(norm(code)===norm(wanted)) target=radio; }); if(!target){ const f=document.getElementById(SEARCH_ID); if(f&&f.value){ f.value=''; filtrarLista(); target=Array.from(ul.querySelectorAll('input[name="njOpt"]')).find(r=>norm(r.dataset.code||'')===norm(wanted)); } } if(target){ target.checked=true; ul.querySelectorAll('.item-grid').forEach(n=>n.classList.remove('is-selected')); const row=target.closest('item-grid'); if(row){ row.classList?.add('is-selected'); row.scrollIntoView({ block:'center' }); } } }
 
-  async function abrirModal(){ const inst=modal(); if(!inst) return; const lista=await carregarJSON(); renderLista(lista); document.getElementById(SEARCH_ID)?.focus(); inst.show(); }
+  async function abrirModal(){ const inst=modal(); if(!inst) return; focusSafeController()?.rememberReturnFocus(document.activeElement); const lista=await carregarJSON(); renderLista(lista); document.getElementById(SEARCH_ID)?.focus(); inst.show(); }
 
   document.addEventListener('DOMContentLoaded', ()=>{
     document.addEventListener('click', e=>{ const t=e.target.closest(`#${BTN_OPEN_ID}`); if(t) abrirModal(); });
@@ -57,6 +62,7 @@
     if(btnClearForm && inputTarget){ btnClearForm.addEventListener('click', ()=>{ inputTarget.value=''; delete inputTarget.dataset.naturezaCodigo; inputTarget.dispatchEvent(new Event('change',{bubbles:true})); }); }
     const inputSearch=document.getElementById(SEARCH_ID); if(inputSearch) inputSearch.addEventListener('input', filtrarLista);
     const btnModalClear=document.getElementById(BTN_MODAL_CLEAR); if(btnModalClear){ btnModalClear.addEventListener('click', ()=>{ const marcado=document.querySelector(`#${LIST_ID} input[type="radio"]:checked`); if(marcado){ marcado.checked=false; document.querySelectorAll(`#${LIST_ID} .item-grid`).forEach(n=>n.classList.remove('is-selected')); } }); }
-    const btnConfirm=document.getElementById(BTN_CONFIRM_ID); if(btnConfirm && inputTarget){ btnConfirm.addEventListener('click', ()=>{ const marcado=document.querySelector(`#${LIST_ID} input[type="radio"]:checked`); if(!marcado){ alert('Selecione uma Natureza Jurídica.'); return; } inputTarget.value=marcado.value; inputTarget.dataset.naturezaCodigo=marcado.dataset.code||''; inputTarget.dispatchEvent(new Event('change',{bubbles:true})); modal()?.hide(); }); }
+    focusSafeController();
+    const btnConfirm=document.getElementById(BTN_CONFIRM_ID); if(btnConfirm && inputTarget){ btnConfirm.addEventListener('click', ()=>{ const marcado=document.querySelector(`#${LIST_ID} input[type="radio"]:checked`); if(!marcado){ alert('Selecione uma Natureza Jurídica.'); return; } inputTarget.value=marcado.value; inputTarget.dataset.naturezaCodigo=marcado.dataset.code||''; inputTarget.dispatchEvent(new Event('change',{bubbles:true})); const focusSafe = focusSafeController(); if(focusSafe){ focusSafe.hide(inputTarget); return; } modal()?.hide(); }); }
   });
 })();

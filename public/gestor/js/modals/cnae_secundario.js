@@ -10,6 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	const campoDestino       = document.getElementById('cnaeSecundarios');
 	const overlay            = document.getElementById('cnae-loading-overlay');
 	const limiteInfo        = document.getElementById('limiteCnaesSecundarios');
+	const abrirBtn           = document.getElementById('btnPesquisarCnaeSecundario');
+	const focusSafe = window.wdgModalFocusSafe?.install?.(modalEl, {
+		getReturnFocus: () => campoDestino || abrirBtn,
+	}) || null;
 
 	let listaCnaes = [];
 	let baseListaCnaes = [];
@@ -245,6 +249,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				campoDestino.value = selecionados.join(', ');
 				campoDestino.dispatchEvent(new Event('change', { bubbles: true }));
 			}
+			if (focusSafe){
+				focusSafe.hide(campoDestino || abrirBtn);
+				return;
+			}
 			const modal = bootstrap.Modal.getInstance(modalEl);
 			if (modal) modal.hide();
 		});
@@ -262,9 +270,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-	const abrirBtn = document.getElementById('btnPesquisarCnaeSecundario');
 	if (abrirBtn) {
 		abrirBtn.addEventListener('click', () => {
+			focusSafe?.rememberReturnFocus(abrirBtn);
 			const inst = bootstrap.Modal.getOrCreateInstance(modalEl);
 			inst.show();
 		});

@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const btnConfirmar  = document.getElementById('btnConfirmarCnaePrincipal') ||
 												document.getElementById('btnInserirCnaePrincipal');
 	const btnLimpar     = document.getElementById('btnLimparCnaePrincipal');
+	const focusSafe = window.wdgModalFocusSafe?.install?.(modalEl, {
+		getReturnFocus: () => campoDestino,
+	}) || null;
 
 	let listaCnaes = [];         // [{ codigo, nome }]
 		let baseListaCnaes = [];     // cache do JSON estático completo
@@ -203,6 +206,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		campoDestino.value = `${codigo} - ${nome}`;
 		campoDestino.dataset.cnaeCodigo = codigo;    // guarda para pré-seleção futura
 		campoDestino.dispatchEvent(new Event('change', { bubbles: true }));
+		if (focusSafe){
+			focusSafe.hide(campoDestino);
+			return;
+		}
 		bootstrap.Modal.getInstance(modalEl)?.hide();
 	});
 
