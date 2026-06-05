@@ -2,6 +2,8 @@
 // Implementações de máscaras e validações para o sistema
 (function() {
   'use strict';
+  const DEBUG_FLAGS = ['WDG_DEBUG_UNIDADES', 'WDG_DEBUG_GESTOR_ASSETS'];
+  const debugLog = (...args) => window.WDGDebug?.log?.(DEBUG_FLAGS, 'debug', ...args);
   // Importante: reutiliza o objeto já existente em window.WDMasks (definido antes em utils-masks.js)
   // para não apagar funções como formatCPF/formatCNPJ usadas por outras páginas.
   const WDMasks = (window.WDMasks = window.WDMasks || {});
@@ -108,11 +110,11 @@
       if(!WDMasks.__debugMoeda){
         WDMasks.__debugMoeda = { formatFromDigits };
       }
-      console.debug('[MOEDA] digit-cent mask aplicada no elemento id=', element.id);
+      debugLog('[MOEDA] digit-cent mask aplicada no elemento id=', element.id);
     };
-    console.log('[MASKS][MOEDA] bindMoedaMask (digit-cent) registrado em gestor/core/masks.js');
+    debugLog('[MASKS][MOEDA] bindMoedaMask (digit-cent) registrado em gestor/core/masks.js');
   } else {
-    console.log('[MASKS][MOEDA] bindMoedaMask já existente – não sobrescrito');
+    debugLog('[MASKS][MOEDA] bindMoedaMask já existente – não sobrescrito');
   }
   // Reatribui (por clareza) e loga merge
   // Garante que funções críticas existam mesmo se utils-masks.js ainda não tiver sido carregado
@@ -247,5 +249,5 @@
     if (inputEl.value) apply();
     inputEl.__wd_urlMaskBound = true;
   };
-  window.WDMasks = WDMasks; console.log('[MASKS] WDMasks (merge) carregado com sucesso (funções críticas asseguradas)');
+  window.WDMasks = WDMasks; debugLog('[MASKS] WDMasks (merge) carregado com sucesso (funções críticas asseguradas)');
 })();

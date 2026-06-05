@@ -2,7 +2,7 @@
  *  UNIDADES — Script principal (cópia íntegra de public/js/unidades.js)
  *  (Manter sincronizado até fase de remoção dos originais)
  * ========================================================================= */
-console.debug('[unidades.js] carregado (versão pós-modularização)');
+window.WDGDebug?.log?.('WDG_DEBUG_UNIDADES', 'debug', '[unidades.js] carregado (versão pós-modularização)');
 
 document.addEventListener('DOMContentLoaded', () => {
 	// ===================== Helpers gerais =====================
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		} catch(_) { return ''; }
 	})();
 	if (!window.__APP_BASE_PATH__) window.__APP_BASE_PATH__ = BASE; // expõe para outros módulos se precisarem
-	console.debug('[unidades.js] BASE detectado para API de unidades:', BASE || '(raiz)');
+	debugLog('[unidades.js] BASE detectado para API de unidades:', BASE || '(raiz)');
 
 	function apiUnidades(sufixo=''){ return `${BASE}/api/unidades${sufixo}`; }
 
@@ -333,11 +333,11 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 			});
 			cnpjEl.value = window.WDMasks.formatCNPJ(cnpjEl.value);
-			console.log('[unidades.js] Máscara CNPJ inicializada (attempt='+attempt+')');
+			debugLog('[unidades.js] Máscara CNPJ inicializada (attempt='+attempt+')');
 			return;
 		}
 		if (attempt <= 20){
-			if (attempt % 5 === 0) console.log('[unidades.js] aguardando WDMasks para CNPJ (tentativa '+attempt+')');
+			if (attempt % 5 === 0) debugLog('[unidades.js] aguardando WDMasks para CNPJ (tentativa '+attempt+')');
 			setTimeout(()=>bindCNPJMaskWhenReady(attempt+1), 75);
 		}else{
 			console.warn('[unidades.js] Não conseguiu inicializar máscara de CNPJ — WDMasks indisponível');
@@ -388,15 +388,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	function setPrincipalSelect(isMatriz) {
 		const sel = byId('unidadePrincipal');
 		if (!sel) return;
-		console.log('[setPrincipalSelect] Chamado com isMatriz:', isMatriz);
-		console.log('[setPrincipalSelect] Valor atual do select antes:', sel.value);
+		debugLog('[setPrincipalSelect] Chamado com isMatriz:', isMatriz);
+		debugLog('[setPrincipalSelect] Valor atual do select antes:', sel.value);
 		sel.disabled = !!isMatriz;   // desativa quando Matriz
 		sel.required = !isMatriz;    // exige quando Filial
 		if (isMatriz) {
 			sel.value = ''; // limpa se voltar para Matriz
-			console.log('[setPrincipalSelect] Select limpo porque é matriz');
+			debugLog('[setPrincipalSelect] Select limpo porque é matriz');
 		}
-		console.log('[setPrincipalSelect] Valor final do select:', sel.value);
+		debugLog('[setPrincipalSelect] Valor final do select:', sel.value);
 		try { window.DiretorModule?.atualizarVisibilidade?.(); } catch {}
 		// Regras de pessoa tipo/CNPJ conforme Matriz x Filial
 		lockPessoaTipoForFilial(!isMatriz);
@@ -453,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		if (!isDiretor) return;
 
-		console.log('[DIRETOR RESTRICTIONS] Aplicando restrições para diretor');
+		debugLog('[DIRETOR RESTRICTIONS] Aplicando restrições para diretor');
 
 		// 1. Garantir que sempre esteja selecionado "Filial"
 		const filialRadio = byId('filial');
@@ -470,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			matrizRadio.disabled = true;
 			filialRadio.disabled = true;
 
-			console.log('[DIRETOR RESTRICTIONS] Filial selecionada e bloqueada para diretores');
+			debugLog('[DIRETOR RESTRICTIONS] Filial selecionada e bloqueada para diretores');
 		}
 
 		// 2. Sempre mostrar e tornar obrigatório o select de unidade principal
@@ -481,7 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (unidadePrincipal) {
 			unidadePrincipal.required = true;
 			unidadePrincipal.disabled = false;
-			console.log('[DIRETOR RESTRICTIONS] Select de matriz tornado obrigatório');
+			debugLog('[DIRETOR RESTRICTIONS] Select de matriz tornado obrigatório');
 		}
 
 		// 3. Aplicar estado inicial correto
@@ -492,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (ev.target && ev.target.matches('input[name="tipoUnidade"]') && ev.target.value === 'matriz') {
 				ev.preventDefault();
 				ev.stopPropagation();
-				console.log('[DIRETOR RESTRICTIONS] Tentativa de seleção de matriz bloqueada');
+				debugLog('[DIRETOR RESTRICTIONS] Tentativa de seleção de matriz bloqueada');
 				return false;
 			}
 		};
@@ -544,7 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			return;
 		}
 		if (attempt <= 20){
-			if (attempt % 5 === 0) console.log('[unidades.js] aguardando WDMasks para togglePessoaFields (tentativa '+attempt+')');
+			if (attempt % 5 === 0) debugLog('[unidades.js] aguardando WDMasks para togglePessoaFields (tentativa '+attempt+')');
 			setTimeout(()=>initPessoaTipoWhenReady(attempt+1), 60);
 		}else{
 			console.warn('[unidades.js] prosseguindo sem WDMasks — togglePessoaFields não formatará valores');
@@ -588,11 +588,11 @@ document.addEventListener('DOMContentLoaded', () => {
 				window.WDMasks.setValidity(cpfEl, ok);
 				if (!ok && digits.length === 11) alert('CPF inválido');
 			});
-			console.log('[unidades.js] Máscara CPF inicializada (attempt='+attempt+')');
+			debugLog('[unidades.js] Máscara CPF inicializada (attempt='+attempt+')');
 			return;
 		}
 		if (attempt <= 20){
-			if (attempt % 5 === 0) console.log('[unidades.js] aguardando WDMasks para CPF (tentativa '+attempt+')');
+			if (attempt % 5 === 0) debugLog('[unidades.js] aguardando WDMasks para CPF (tentativa '+attempt+')');
 			setTimeout(()=>bindCPFMaskWhenReady(attempt+1), 75);
 		}else{
 			console.warn('[unidades.js] Não conseguiu inicializar máscara de CPF — WDMasks indisponível');
@@ -608,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const emailPrin = byId('emailPrincipal');
 		const emailFis  = byId('emailFiscal');
 
-		console.log('[unidades.js] Inicializando máscaras:', {
+		debugLog('[unidades.js] Inicializando máscaras:', {
 			telFixo: !!telFixo,
 			telCel: !!telCel,
 			emailPrin: !!emailPrin,
@@ -620,9 +620,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (!telFixo.__phoneMaskBound) {
 				window.WDMasks.applyPhoneMask(telFixo); // bind uma única vez
 				telFixo.__phoneMaskBound = true;
-				console.log('[unidades.js] Máscara telefone fixo aplicada (bind único)');
+				debugLog('[unidades.js] Máscara telefone fixo aplicada (bind único)');
 			} else {
-				console.log('[unidades.js] Máscara telefone fixo já aplicada — ignorando rebinding');
+				debugLog('[unidades.js] Máscara telefone fixo já aplicada — ignorando rebinding');
 			}
 		}
 
@@ -630,9 +630,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (!telCel.__phoneMaskBound) {
 				window.WDMasks.applyPhoneMask(telCel); // bind uma única vez
 				telCel.__phoneMaskBound = true;
-				console.log('[unidades.js] Máscara telefone celular aplicada (bind único)');
+				debugLog('[unidades.js] Máscara telefone celular aplicada (bind único)');
 			} else {
-				console.log('[unidades.js] Máscara telefone celular já aplicada — ignorando rebinding');
+				debugLog('[unidades.js] Máscara telefone celular já aplicada — ignorando rebinding');
 			}
 		}
 
@@ -650,7 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				applyEmail();
 			});
 			// não validar imediatamente se vazio; deixa feedback limpo até interação
-			console.log('[unidades.js] Validação email principal aplicada (input + blur)');
+			debugLog('[unidades.js] Validação email principal aplicada (input + blur)');
 		}
 
 		if (emailFis && window.WDMasks) {
@@ -667,20 +667,20 @@ document.addEventListener('DOMContentLoaded', () => {
 				applyEmailF();
 			});
 			// sem validação inicial agressiva
-			console.log('[unidades.js] Validação email fiscal aplicada (input + blur)');
+			debugLog('[unidades.js] Validação email fiscal aplicada (input + blur)');
 		}
 
 		// ===================== Máscara e validação de URL (Site) =====================
 		const siteEl = byId('site');
 		if (siteEl && window.WDMasks && window.WDMasks.applyURLMask) {
 			window.WDMasks.applyURLMask(siteEl);
-			console.log('[unidades.js] Máscara URL (site) aplicada');
+			debugLog('[unidades.js] Máscara URL (site) aplicada');
 		}
 	};
 
 	// Ouvir evento de carregamento do masks.js
 	document.addEventListener('masksLoaded', (e) => {
-		console.log('[unidades.js] Evento masksLoaded recebido');
+		debugLog('[unidades.js] Evento masksLoaded recebido');
 		initMasks();
 	});
 
@@ -751,8 +751,8 @@ document.addEventListener('DOMContentLoaded', () => {
 							// Sempre usar API para display (serverless-friendly)
 							const apiUrl = `${BASE}/api/unidades/${byId('unidadeId')?.value || ''}/logo`;
 							const sep = apiUrl.includes('?')?'&':'?';
-							console.log('BASE in upload success:', BASE);
-							console.log('Setting preview src to:', apiUrl + sep + 'v=' + Date.now());
+							debugLog('BASE in upload success:', BASE);
+							debugLog('Setting preview src to:', apiUrl + sep + 'v=' + Date.now());
 							preview.src = apiUrl + sep + 'v=' + Date.now();
 						}
 		} catch(e){ console.error('[logoUpload] erro',e); setStatus(e.message||'Erro ao enviar','error'); alert('Erro ao enviar logo: '+(e.message||'erro')); }
@@ -796,8 +796,8 @@ document.addEventListener('DOMContentLoaded', () => {
 							const unidadeId = byId('detalhesModal')?.getAttribute('data-unidade-id') || '';
 							const apiUrl = `${BASE}/api/unidades/${unidadeId}/logo`;
 							const sep=apiUrl.includes('?')?'&':'?';
-							console.log('BASE in modal upload success:', BASE);
-							console.log('Setting prev src to:', apiUrl+sep+'v='+Date.now());
+							debugLog('BASE in modal upload success:', BASE);
+							debugLog('Setting prev src to:', apiUrl+sep+'v='+Date.now());
 							prev.src=apiUrl+sep+'v='+Date.now();
 						}
 		} catch(e){ console.error('[logoModalUpload] erro',e); setStatus(e.message||'Erro','error'); alert('Erro ao enviar logo: '+(e.message||'erro')); }
@@ -1731,8 +1731,8 @@ document.addEventListener('DOMContentLoaded', () => {
 					// Sempre usar API para display (serverless-friendly)
 					const apiUrl = `${BASE}/api/unidades/${u._id}/logo`;
 					const sep = apiUrl.includes('?') ? '&' : '?';
-					console.log('BASE in editar:', BASE);
-					console.log('Setting logoUnidadePreview src to:', apiUrl + sep + 'v=' + Date.now());
+					debugLog('BASE in editar:', BASE);
+					debugLog('Setting logoUnidadePreview src to:', apiUrl + sep + 'v=' + Date.now());
 					preview.src = apiUrl + sep + 'v=' + Date.now();
 				}
 			} catch(_){}
@@ -1796,7 +1796,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const matrizInput = byId('matriz');
 			const filialInput = byId('filial');
 			if (matrizInput && filialInput) {
-				console.log('[EDITAR] Definindo radios - is_principal:', u.is_principal);
+				debugLog('[EDITAR] Definindo radios - is_principal:', u.is_principal);
 				matrizInput.checked = !!u.is_principal;
 				filialInput.checked  = !u.is_principal;
 			}
@@ -1808,16 +1808,16 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (!u.is_principal) {
 					const unidadePrincipalId = u.unidade_principal_id ? String(u.unidade_principal_id) : '';
 					setVal('unidadePrincipal', unidadePrincipalId);
-					console.log('[EDITAR] Definindo unidade principal:', unidadePrincipalId);
-					console.log('[EDITAR] Valor original unidade_principal_id:', u.unidade_principal_id);
-					console.log('[EDITAR] Tipo do valor:', typeof u.unidade_principal_id);
+					debugLog('[EDITAR] Definindo unidade principal:', unidadePrincipalId);
+					debugLog('[EDITAR] Valor original unidade_principal_id:', u.unidade_principal_id);
+					debugLog('[EDITAR] Tipo do valor:', typeof u.unidade_principal_id);
 
 					// Disparar evento change para garantir que o select seja atualizado
 					const selectEl = byId('unidadePrincipal');
 					if (selectEl) {
 						selectEl.dispatchEvent(new Event('change', { bubbles: true }));
-						console.log('[EDITAR] Select unidadePrincipal atualizado');
-						console.log('[EDITAR] Valor atual do select:', selectEl.value);
+						debugLog('[EDITAR] Select unidadePrincipal atualizado');
+						debugLog('[EDITAR] Valor atual do select:', selectEl.value);
 					}
 				}
 			}, 100);
@@ -1830,7 +1830,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			// Definir tipo de pessoa baseado no campo pessoaTipo do banco
 			const pessoaTipoRadios = document.querySelectorAll('input[name="pessoaTipo"]');
-			console.log('[EDITAR] pessoaTipo:', u.pessoaTipo, 'CPF:', u.cpf, 'CNPJ:', u.cnpj);
+			debugLog('[EDITAR] pessoaTipo:', u.pessoaTipo, 'CPF:', u.cpf, 'CNPJ:', u.cnpj);
 
 			if (pessoaTipoRadios.length > 0 && u.pessoaTipo) {
 				pessoaTipoRadios.forEach(radio => {

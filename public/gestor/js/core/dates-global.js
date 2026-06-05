@@ -1,7 +1,9 @@
 // Migrated from public/js/init/dates-global.js
 (function () {
+	const DEBUG_FLAGS = ['WDG_DEBUG_UNIDADES', 'WDG_DEBUG_GESTOR_ASSETS'];
+	const debugLog = (...args) => window.WDGDebug?.log?.(DEBUG_FLAGS, 'debug', ...args);
 	if(window.__WDDatesCanonicalLoaded){
-		console.log('[dates-global] Abortando: já carregado canonicamente.');
+		debugLog('[dates-global] Abortando: já carregado canonicamente.');
 		return;
 	}
 	window.__WDDatesCanonicalLoaded = true;
@@ -17,8 +19,10 @@
 			console.error(tag, msg);
 		} else if (level === 'warn') {
 			console.warn(tag, msg);
+		} else if (level === 'debug') {
+			debugLog(tag, msg);
 		} else {
-			console.log(tag, msg);
+			window.WDGDebug?.log?.(DEBUG_FLAGS, 'info', tag, msg);
 		}
 	}
 
@@ -101,14 +105,14 @@
 		lastEnhanceRun = now;
 		if (typeof window.flatpickr !== 'function') {
 			if (!loggedFlatpickrMissing) {
-				log('flatpickr indisponível no momento do enhance() – execução adiada.', 'warn');
+				log('flatpickr indisponível no momento do enhance() – execução adiada.', 'debug');
 				loggedFlatpickrMissing = true;
 			}
 			return; // Sai silenciosamente
 		}
 		if (!window.flatpickr.l10ns || !window.flatpickr.l10ns.pt) {
 			if (!loggedLocaleMissing) {
-				log('Locale pt ainda não carregada – aguardando.', 'warn');
+				log('Locale pt ainda não carregada – aguardando.', 'debug');
 				loggedLocaleMissing = true;
 			}
 			return;

@@ -9,6 +9,9 @@
   if (window.__perfilModularLoaded) return; // evita inicialização dupla
   try { window.__perfilModularLoaded = true; } catch(_){ }
   const logPrefix = '[perfil-modular]';
+  const DEBUG_FLAGS = ['WDG_DEBUG_UNIDADES', 'WDG_DEBUG_GESTOR_ASSETS'];
+  const debugLog = (...args) => window.WDGDebug?.log?.(DEBUG_FLAGS, 'debug', ...args);
+  const infoLog = (...args) => window.WDGDebug?.log?.(DEBUG_FLAGS, 'info', ...args);
   const resolveBasePath = () => {
     const modal = document.getElementById('modalPerfil');
     const bodyBp = (document.body && (document.body.dataset?.basePath || document.body.getAttribute('data-base-path'))) || '';
@@ -18,7 +21,7 @@
   };
 
   let BASE_PATH = resolveBasePath();
-  console.log(logPrefix, 'inicializando com basePath =', BASE_PATH || '(root)');
+  infoLog(logPrefix, 'inicializando com basePath =', BASE_PATH || '(root)');
 
   function emitReady(stage){
     try {
@@ -31,7 +34,7 @@
   // Reexpõe função para permitir mudar dinamicamente se necessário
   window.__setPerfilBasePath = (p)=>{
     BASE_PATH = (p||'').replace(/\/$/,'');
-    console.log(logPrefix,'basePath alterado para', BASE_PATH || '(root)');
+    infoLog(logPrefix,'basePath alterado para', BASE_PATH || '(root)');
     emitReady('base-changed');
   };
 
@@ -192,7 +195,7 @@
       } finally {
         const endedAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         const ms = Math.max(0, endedAt - startedAt);
-        try { console.log(logPrefix, 'carregarDadosPerfil:', ms.toFixed(1), 'ms'); } catch(_){ }
+        try { debugLog(logPrefix, 'carregarDadosPerfil:', ms.toFixed(1), 'ms'); } catch(_){ }
       }
     })();
 
@@ -281,7 +284,7 @@
   function mostrarErro(msg){ if(window.__perfilState){ window.__perfilState.setStatus(msg,'error'); return;} alert(msg); }
 
   document.addEventListener('DOMContentLoaded',()=>{
-    console.log(logPrefix,'DOM pronto');
+    debugLog(logPrefix,'DOM pronto');
     const form=document.getElementById('formAlterarSenha');
     form && form.addEventListener('submit',e=>{ e.preventDefault(); salvarNovaSenha(); });
     const modalPerfilEl=document.getElementById('modalPerfil');

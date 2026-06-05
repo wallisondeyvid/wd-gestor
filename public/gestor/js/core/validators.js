@@ -1,5 +1,6 @@
 // Migrated from public/js/validators.js
 (function(){
+	const DEBUG_FLAGS = ['WDG_DEBUG_UNIDADES', 'WDG_DEBUG_GESTOR_ASSETS'];
 	const Validators = {};
 	function formatarCNPJInput(valor){ try { const dig=String(valor||'').replace(/\D/g,'').slice(0,14); if(dig.length!==14) return valor||''; return dig.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5'); } catch(_){ return valor||''; } }
 	function aplicarMascaraCNPJInput(el){ if(!el) return; const dig=String(el.value||'').replace(/\D/g,'').slice(0,14); let out=dig; if(dig.length>12) out=dig.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2}).*/, '$1.$2.$3/$4-$5'); else if(dig.length>8) out=dig.replace(/^(\d{2})(\d{3})(\d{3})(\d{0,4}).*/,'$1.$2.$3/$4'); else if(dig.length>5) out=dig.replace(/^(\d{2})(\d{3})(\d{0,3}).*/, '$1.$2.$3'); else if(dig.length>2) out=dig.replace(/^(\d{2})(\d{0,3}).*/, '$1.$2'); el.value=out; }
@@ -91,5 +92,5 @@
 	function marcarCampoIE(inputEl,valido,uf){ if(!inputEl) return; if(valido){ inputEl.classList.remove('is-invalid'); inputEl.style.borderColor=''; inputEl.title=''; } else { inputEl.classList.add('is-invalid'); inputEl.style.borderColor='red'; inputEl.title=uf?`Inscrição Estadual inválida para ${uf}`:'Inscrição Estadual inválida'; } }
 	Validators.formatarCNPJInput=formatarCNPJInput; Validators.validarCNPJValor=validarCNPJValor; Validators.marcarCNPJInvalido=marcarCNPJInvalido; Validators.validarCPFValor=validarCPFValor; Validators.aplicarMascaraTelefone=aplicarMascaraTelefone; Validators.validarEmailValor=validarEmailValor; Validators.extrairUFDoEndereco=extrairUFDoEndereco; Validators.validarIEPorUF=validarIEPorUF; Validators.marcarCampoIE=marcarCampoIE; Validators.aplicarMascaraCNPJInput=aplicarMascaraCNPJInput; Validators.formatarIEPorUF=formatarIEPorUF; Validators.aplicarMascaraIEInput=aplicarMascaraIEInput;
 	window.Validators = Validators;
-	console.debug('[validators] carregado');
+	window.WDGDebug?.log?.(DEBUG_FLAGS, 'debug', '[validators] carregado');
 })();

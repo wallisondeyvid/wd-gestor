@@ -1,6 +1,7 @@
 // Loader com fallback para flatpickr
 // Inclua este script ANTES de datepicker-init.js e dates-global.js
 (function(){
+	const DEBUG_FLAGS = ['WDG_DEBUG_UNIDADES', 'WDG_DEBUG_GESTOR_ASSETS'];
   // Inverte a prioridade: CDN primeiro (evita erro sintaxe se bundle local estiver corrompido em cache)
   const CDN_SRC   = 'https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js';
   const LOCAL_SRC = '/gestor/js/vendor/flatpickr.min.js';
@@ -12,7 +13,7 @@
     const tag = '[flatpickr-loader]';
     if (level==='error') return console.error(tag, msg);
     if (level==='warn') return console.warn(tag, msg);
-    console.log(tag, msg);
+    return window.WDGDebug?.log?.(DEBUG_FLAGS, level === 'debug' ? 'debug' : 'info', tag, msg);
   }
 
   function alreadyPresent(){

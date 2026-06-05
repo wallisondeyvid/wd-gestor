@@ -1,6 +1,7 @@
 // Helper global para compor URL de arquivos de dados estáticos considerando basePath do módulo
 (() => {
   if (window.wdgDataUrl) return; // evitar redeclaração
+  const DEBUG_FLAGS = ['WDG_DEBUG_UNIDADES', 'WDG_DEBUG_GESTOR_ASSETS'];
   function getBase(){
     const b = document.body?.getAttribute('data-base-path') || window.__WD_BASE_PATH || '/gestor';
     return b.endsWith('/') ? b.slice(0,-1) : b;
@@ -37,6 +38,6 @@
   window.wdgDataUrl = dataUrl;
   window.wdgFetchData = fetchData;
   try {
-    console.info('[wdgDataUrl] carregado; ordem de tentativas = basePath > /gestor > /data | basePath atual =', getBase());
+    window.WDGDebug?.log?.(DEBUG_FLAGS, 'info', '[wdgDataUrl] carregado; ordem de tentativas = basePath > /gestor > /data | basePath atual =', getBase());
   } catch {}
 })();

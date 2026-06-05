@@ -3,6 +3,8 @@
   const IDs = { modal:'modalBanco', tbody:'modalBancoTbody', search:'modalBancoPesquisa', confirm:'modalBancoConfirmar', clear:'modalBancoLimpar', outroCheck:'modalBancoOutroCheck', outroWrap:'modalBancoOutro', outroCod:'modalBancoOutroCodigo', outroNome:'modalBancoOutroNome' };
   const $ = id => document.getElementById(id);
   const getTargetInput = () => document.getElementById('banco') || document.getElementById('extra_banco');
+  const debugLog = (...args) => window.WDGDebug?.log?.('WDG_DEBUG_UNIDADES', 'debug', ...args);
+  const infoLog = (...args) => window.WDGDebug?.log?.('WDG_DEBUG_UNIDADES', 'info', ...args);
 
   // Estado
   let cache = [];
@@ -43,7 +45,7 @@
     cache = fallbackBancos();
     if(!cache.length) cache = DEFAULT_BANCOS.slice();
     tentativas.push({ ok:true, fallback:true, quantidade: cache.length });
-    console.info('[Modal Banco] Tentativas (final):', tentativas, { lastError:lastError?.message });
+    infoLog('[Modal Banco] Tentativas (final):', tentativas, { lastError:lastError?.message });
     return cache;
   }
 
@@ -63,7 +65,7 @@
     cache.sort((a,b)=>a.codigo.localeCompare(b.codigo));
     const info = { path, quantidade: cache.length, ms: ((performance.now()-t0)|0) };
     tentativas.push({ ok:true, ...info });
-    console.debug('[Modal Banco] Carregado', info);
+    debugLog('[Modal Banco] Carregado', info);
   }
 
   function ensureInit(){
@@ -74,7 +76,7 @@
     const focusSafe = window.wdgModalFocusSafe?.install?.(modal, {
       getReturnFocus: () => getTargetInput(),
     }) || null;
-    console.debug('[Modal Banco] Inicializando handlers (modal presente)');
+    debugLog('[Modal Banco] Inicializando handlers (modal presente)');
 
     const tbody = $(IDs.tbody), search=$(IDs.search), btnConfirm=$(IDs.confirm), btnClear=$(IDs.clear), chkOutro=$(IDs.outroCheck), outroWrap=$(IDs.outroWrap), outroCod=$(IDs.outroCod), outroNome=$(IDs.outroNome), btnReload=document.getElementById('modalBancoReload');
 
@@ -87,7 +89,7 @@
     const filtroDebounced = debounce(aplicarFiltro,220);
 
     modal.addEventListener('show.bs.modal', async () => {
-      console.debug('[Modal Banco] show.bs.modal disparado');
+      debugLog('[Modal Banco] show.bs.modal disparado');
       try { await carregarBancos(); } catch(err){ console.error('[Modal Banco] Erro carregarBancos', err); }
       aplicarFiltro('');
       if(search){ search.value=''; setTimeout(()=>search.focus(),120); }
@@ -101,9 +103,9 @@
     btnClear?.addEventListener('click', ()=>{ const tgt=getTargetInput(); if(tgt) tgt.value=''; tbody?.querySelectorAll('input[type="radio"][name="bancoOpt"]').forEach(r=>r.checked=false); if(chkOutro) chkOutro.checked=false; outroWrap?.classList.add('d-none'); outroCod&&(outroCod.value=''); outroNome&&(outroNome.value=''); search&&(search.value=''); aplicarFiltro(''); });
     btnConfirm?.addEventListener('click', ()=>{ const tgt=getTargetInput(); if(!tgt){ console.warn('[Modal Banco] Campo destino não encontrado'); return; } if(chkOutro && chkOutro.checked){ const cod=(outroCod?.value||'').trim(); const nom=(outroNome?.value||'').trim(); if(!cod||!nom){ alert('Informe código e nome do banco.'); return; } tgt.value=`${cod} - ${nom}`; } else { const sel=tbody?.querySelector('input[type="radio"][name="bancoOpt"]:checked'); if(!sel){ alert('Selecione um banco.'); return; } const codigo=sel.getAttribute('data-codigo')||sel.value; const nome=sel.getAttribute('data-nome')||''; tgt.value=`${codigo} - ${nome}`; } if(focusSafe){ focusSafe.hide(tgt); } else { (bootstrap.Modal.getInstance(modal)||bootstrap.Modal.getOrCreateInstance(modal)).hide(); } tgt.dispatchEvent(new Event('change',{bubbles:true})); });
 
-    if(btnReload){ const isDev=!/prod|www\./i.test(location.host); if(isDev) btnReload.classList.remove('d-none'); btnReload.addEventListener('click', async ()=>{ console.info('[Modal Banco] Recarga manual'); cache=[]; await carregarBancos(); aplicarFiltro(search?.value||''); }); }
+    if(btnReload){ const isDev=!/prod|www\./i.test(location.host); if(isDev) btnReload.classList.remove('d-none'); btnReload.addEventListener('click', async ()=>{ infoLog('[Modal Banco] Recarga manual'); cache=[]; await carregarBancos(); aplicarFiltro(search?.value||''); }); }
 
-    (async()=>{ try { await carregarBancos(); if(cache.length) console.debug('[Modal Banco] Pré-carregado (lazy) quantidade=', cache.length); } catch(e){ console.warn('[Modal Banco] Pré-carregamento falhou', e.message); } })();
+    (async()=>{ try { await carregarBancos(); if(cache.length) debugLog('[Modal Banco] Pré-carregado (lazy) quantidade=', cache.length); } catch(e){ console.warn('[Modal Banco] Pré-carregamento falhou', e.message); } })();
     return true;
   }
 

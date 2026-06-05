@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const overlay            = document.getElementById('cnae-loading-overlay');
 	const limiteInfo        = document.getElementById('limiteCnaesSecundarios');
 	const abrirBtn           = document.getElementById('btnPesquisarCnaeSecundario');
+	const debugLog = (...args) => window.WDGDebug?.log?.('WDG_DEBUG_UNIDADES', 'debug', ...args);
 	const focusSafe = window.wdgModalFocusSafe?.install?.(modalEl, {
 		getReturnFocus: () => campoDestino || abrirBtn,
 	}) || null;
@@ -148,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			baseListaCnaes = normaliza(dados);
 			listaCnaes = baseListaCnaes.slice(0);
 			if (!window.__CNAE_SEC_DEBUG_ONCE){
-				console.debug('[cnae_secundario] carregado itens:', listaCnaes.length, 'exemplo:', listaCnaes.slice(0,3));
+				debugLog('[cnae_secundario] carregado itens:', listaCnaes.length, 'exemplo:', listaCnaes.slice(0,3));
 				window.__CNAE_SEC_DEBUG_ONCE = true;
 			}
 			renderLista('');

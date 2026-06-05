@@ -1,13 +1,15 @@
 // Migrated from public/js/utils/datepicker-init.js
 (function () {
+  const DEBUG_FLAGS = ['WDG_DEBUG_UNIDADES', 'WDG_DEBUG_GESTOR_ASSETS'];
+  const debugLog = (...args) => window.WDGDebug?.log?.(DEBUG_FLAGS, 'debug', ...args);
   // Se o inicializador canônico de datas já está carregado, não duplicar
   if (window.__WDDatesCanonicalLoaded) {
-    console.debug('[datepicker-init] Abortando: dates-global canônico já está ativo.');
+    debugLog('[datepicker-init] Abortando: dates-global canônico já está ativo.');
     return;
   }
   function ensureISOFromBR(str) { if (!window.Dates) return ''; return Dates.toISODateString(str || ''); }
   function initFlatpickrs() {
-    if (!window.flatpickr) { console.warn('[datepicker-init] flatpickr indisponível no momento'); return; }
+    if (!window.flatpickr) { debugLog('[datepicker-init] flatpickr indisponível no momento'); return; }
     const locale = (flatpickr.l10ns && flatpickr.l10ns.pt) ? flatpickr.l10ns.pt : {
       firstDayOfWeek: 1,
       weekdays: { shorthand: ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'], longhand: ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'] },
@@ -17,7 +19,7 @@
     // Seleciona qualquer input com classe date-br (mesmo que não tenha data-calendar)
     const candidates = Array.from(document.querySelectorAll('input.date-br'));
     if (!candidates.length) {
-      console.debug('[datepicker-init] nenhum input.date-br encontrado');
+      debugLog('[datepicker-init] nenhum input.date-br encontrado');
       return;
     }
     candidates.forEach(function (el) {

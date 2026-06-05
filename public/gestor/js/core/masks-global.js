@@ -2,6 +2,8 @@
 (function() {
 	'use strict';
 	const TAG = '[masks-global]';
+	const DEBUG_FLAGS = ['WDG_DEBUG_UNIDADES', 'WDG_DEBUG_GESTOR_ASSETS'];
+	const debugLog = (...args) => window.WDGDebug?.log?.(DEBUG_FLAGS, 'debug', ...args);
 	function safeBind(methodName, fn, el) {
 		try {
 			if (typeof fn !== 'function') { console.warn(TAG, 'Método ausente:', methodName); return; }
@@ -11,9 +13,9 @@
 	function initMasks(attempt=1) {
 		if (!window.__WDMasksCanonicalLoaded) {
 			window.__WDMasksCanonicalLoaded = true;
-			console.log(TAG, 'Marcando canonical loaded');
+			debugLog(TAG, 'Marcando canonical loaded');
 		} else {
-			console.log(TAG, 'Reentrada detectada - já marcado canonical loaded');
+			debugLog(TAG, 'Reentrada detectada - já marcado canonical loaded');
 		}
 		if (!window.WDMasks) {
 			if (attempt <= 10) return setTimeout(() => initMasks(attempt+1), 100 * attempt);
@@ -38,7 +40,7 @@
 				if (d.length <=10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6,10)}`;
 				return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7,11)}`;
 			};
-			console.log(TAG, 'Polyfill formatTelefone adicionado (utils-masks.js ausente nesta página).');
+			debugLog(TAG, 'Polyfill formatTelefone adicionado (utils-masks.js ausente nesta página).');
 		}
 		// Removido fallback automático de moeda para não conflitar com versão digit-a-digit.
 		if (!WDMasks.bindMoedaMask) {
