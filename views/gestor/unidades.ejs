@@ -30,7 +30,6 @@
 <body class="wdg-layout" data-base-path="<%= _basePath %>">
   <%- include('../shared/partials/header-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
   <%- include('../shared/partials/navbar-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user, prefixMenuPaths: false }) %>
-  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
 
   <div class="wdg-page">
     <!-- Título alinhado ao tema Condomínios -->
@@ -697,6 +696,7 @@
   </div><!-- /.wdg-page -->
 
   <!-- MODAIS -->
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
   <%- include('../partials/modais/detalhes_unidades') %>
   <%- include('../partials/modais/modal_banco') %>
   <%- include('../partials/modais/modal_cnae_principal') %>
