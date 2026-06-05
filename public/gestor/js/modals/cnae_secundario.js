@@ -184,6 +184,21 @@ document.addEventListener('DOMContentLoaded', () => {
 		return (i > -1 ? v.slice(0, i) : v).trim();
 	}
 
+	function getBasePath(){
+		const raw = document.body?.getAttribute('data-base-path')
+			|| window.__APP_BASE_PATH__
+			|| window.basePathGlobal
+			|| (window.location.pathname.startsWith('/gestor') ? '/gestor' : '');
+		const value = String(raw || '').trim();
+		if (!value || value === '/') return '';
+		return value.endsWith('/') ? value.slice(0, -1) : value;
+	}
+
+	function buildCnaesUrl(params){
+		const query = params.toString();
+		return `${getBasePath()}/cnaes${query ? `?${query}` : ''}`;
+	}
+
 	async function buscarApiCnaes(search){
 		try{
 			const natureza = getNaturezaCodigo();
@@ -191,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (search) params.set('search', search);
 			if (natureza) params.set('natureza', natureza);
 			params.set('limit', '300');
-			const url = `/cnaes?${params.toString()}`;
+			const url = buildCnaesUrl(params);
 			const res = await fetch(url, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
 			if (!res.ok) throw new Error('HTTP '+res.status);
 			const body = await res.json();
