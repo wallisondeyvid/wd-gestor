@@ -480,9 +480,9 @@ test('moduleStatuses segue snapshot atual enquanto unit_provisioning_events guar
     'trilha historica deve acumular mais registros do que o snapshot atual de modulos'
   );
   const selectiveSuccessEvents = auditEvents.filter(
-    (eventDoc) => eventDoc?.eventType === 'unit_retry_succeeded' && eventDoc?.operation === 'retry_selective'
+    (eventDoc) => eventDoc?.eventType === 'unit_retry_failed' && eventDoc?.operation === 'retry_selective'
   );
-  assert.ok(selectiveSuccessEvents.length >= 2, 'historico deve manter retries seletivos sucessivos');
+  assert.ok(selectiveSuccessEvents.length >= 2, 'historico deve manter retries seletivos sucessivos mesmo com falhas remanescentes');
 });
 
 test('retry seletivo com modulo desconhecido retorna 400', async () => {
@@ -810,11 +810,11 @@ test('retry seletivo de escalas provisiona estrutura minima de dominio real com 
   );
   assert.ok(
     auditEvents.some((eventDoc) => (
-      eventDoc?.eventType === 'unit_retry_succeeded'
+      eventDoc?.eventType === 'unit_retry_failed'
       && eventDoc?.operation === 'retry_selective'
-      && eventDoc?.status === 'success'
+      && eventDoc?.status === 'error'
     )),
-    'deve registrar sucesso de retry seletivo'
+    'deve registrar retry seletivo com erro agregado quando houver falha remanescente'
   );
   assert.ok(
     auditEvents.some((eventDoc) => (
@@ -826,7 +826,7 @@ test('retry seletivo de escalas provisiona estrutura minima de dominio real com 
     'deve registrar bootstrap de modulo escalas no retry seletivo'
   );
 
-  const sampleEvent = auditEvents.find((eventDoc) => eventDoc?.eventType === 'unit_retry_succeeded');
+  const sampleEvent = auditEvents.find((eventDoc) => eventDoc?.eventType === 'unit_retry_failed');
   assert.equal(String(sampleEvent?.unidadeId || ''), String(fixture.unidadeId));
   assert.equal(typeof sampleEvent?.dbName, 'string');
   assert.equal(typeof sampleEvent?.scope, 'string');

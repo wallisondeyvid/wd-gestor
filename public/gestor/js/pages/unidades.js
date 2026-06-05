@@ -1128,6 +1128,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			clinica: 'Clinica',
 			escalas: 'Escalas',
 			gestor: 'Gestor',
+			'portal do morador': 'Portal do Morador',
+			'portal morador': 'Portal do Morador',
 		};
 
 		return nomesAmigaveis[chave] || nomeOriginal;

@@ -9,6 +9,7 @@ const MODULE_BOOTSTRAP_HANDLERS = new Map([
 ]);
 
 const MODULE_BOOTSTRAP_KEYS = new Set(['condominio', 'clinica', 'escalas']);
+const MODULE_NOOP_KEYS = new Set(['gestor', 'portal-morador']);
 
 function normalizeRawModuleValue(rawValue) {
   return String(rawValue || '')
@@ -60,13 +61,15 @@ function resolveModuleKey(rawValue) {
   const normalized = normalizeRawModuleValue(rawValue).replace(/^\/+/, '');
   if (!normalized) return null;
 
-  if (MODULE_BOOTSTRAP_KEYS.has(normalized)) return normalized;
+  if (MODULE_BOOTSTRAP_KEYS.has(normalized) || MODULE_NOOP_KEYS.has(normalized)) return normalized;
 
   const compact = normalized.replace(/[\s_-]+/g, '');
 
   if (compact.includes('condominio')) return 'condominio';
   if (compact.includes('clinica')) return 'clinica';
   if (compact.includes('escala')) return 'escalas';
+  if (compact.includes('gestor')) return 'gestor';
+  if (compact.includes('portalmorador') || compact.includes('portaldomorador')) return 'portal-morador';
 
   return null;
 }
@@ -188,10 +191,16 @@ export async function dispatchModuleBootstraps({ unidadeId, dbName, modulosHabil
 
   const executed = [];
   const executedModuleKeys = [];
+  const noBootstrapRequiredModuleKeys = [];
 
   for (const moduleKey of selectedModuleKeys) {
     const bootstrapHandler = MODULE_BOOTSTRAP_HANDLERS.get(moduleKey);
     if (!bootstrapHandler) {
+      if (MODULE_NOOP_KEYS.has(moduleKey)) {
+        noBootstrapRequiredModuleKeys.push(moduleKey);
+        continue;
+      }
+
       console.warn('[UnitProvisioningService] bootstrap handler ausente; ignorando', {
         unidadeId,
         moduleKey,
@@ -217,6 +226,7 @@ export async function dispatchModuleBootstraps({ unidadeId, dbName, modulosHabil
     selectedModuleKeys,
     skippedModuleKeys,
     targetOutOfScopeModuleKeys,
+    noBootstrapRequiredModuleKeys,
     executedModuleKeys,
     executed,
   };

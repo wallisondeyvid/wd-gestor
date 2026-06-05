@@ -145,6 +145,7 @@ function buildDelegatedEnsureSource() {
       const now = new Date();
       const tenantBase = buildTenantBaseDescriptor({ unidadeId: normalizedUnidadeId, dbName });
       const moduleStatuses = buildPersistedModuleStatusesFromBootstrap({ moduleBootstrap, now });
+      const provisioningSummary = resolveProvisioningSummaryFromModuleStatuses(moduleStatuses);
 
       await provisioningRepository.upsertGlobalProvisioningStatus({
         collectionName: GLOBAL_PROVISIONING_COLLECTION,
@@ -153,8 +154,9 @@ function buildDelegatedEnsureSource() {
           dbName: tenantBase.dbName,
           tipo: normalizedTipo,
           modulosHabilitados: normalizedModulos,
-          ready: true,
-          status: 'ready',
+          ready: provisioningSummary.ready,
+          status: provisioningSummary.status,
+          lastProvisioningError: provisioningSummary.lastProvisioningError,
           tenantBase,
           tenantBaseModel: tenantBase.model,
           tenantBaseUnidadeId: tenantBase.unidadeId,
@@ -168,10 +170,13 @@ function buildDelegatedEnsureSource() {
       await safeRegisterProvisioningAuditEvent({
         unidadeId: normalizedUnidadeId,
         dbName,
-        eventType: 'unit_provisioning_succeeded',
+        eventType: provisioningSummary.ready ? 'unit_provisioning_succeeded' : 'unit_provisioning_failed',
         scope: 'unit',
-        status: 'success',
-        message: 'Provisioning da unidade concluido.',
+        status: provisioningSummary.ready ? 'success' : 'error',
+        message: provisioningSummary.ready
+          ? 'Provisioning da unidade concluido.'
+          : 'Provisioning da unidade concluiu com falhas de modulo.',
+        reason: provisioningSummary.lastProvisioningError,
         operation: 'ensure',
         metadata: {
           tipo: normalizedTipo,
@@ -190,7 +195,7 @@ function buildDelegatedEnsureSource() {
         moduleStatuses,
         globalStatusCollection: GLOBAL_PROVISIONING_COLLECTION,
         auditTrailCollection: GLOBAL_PROVISIONING_EVENTS_COLLECTION,
-        globalStatus: 'ready',
+        globalStatus: provisioningSummary.status,
         snapshotVersion: SNAPSHOT_CANONICAL_VERSION,
       };
     } catch (error) {
@@ -345,6 +350,7 @@ function buildDelegatedRetrySelectiveSource() {
         includeUnknownModules: false,
       });
       const mergedModuleStatuses = mergeCanonicalModuleStatuses(retriedModuleStatuses, previousModuleStatuses);
+      const provisioningSummary = resolveProvisioningSummaryFromModuleStatuses(mergedModuleStatuses);
 
       await provisioningRepository.ensureGlobalProvisioningIndex({
         collectionName: GLOBAL_PROVISIONING_COLLECTION,
@@ -359,9 +365,9 @@ function buildDelegatedRetrySelectiveSource() {
           dbName: tenantBase.dbName,
           tipo: normalizedTipo,
           modulosHabilitados: normalizedModulos,
-          ready: true,
-          status: 'ready',
-          lastProvisioningError: null,
+          ready: provisioningSummary.ready,
+          status: provisioningSummary.status,
+          lastProvisioningError: provisioningSummary.lastProvisioningError,
           tenantBase,
           tenantBaseModel: tenantBase.model,
           tenantBaseUnidadeId: tenantBase.unidadeId,
@@ -377,10 +383,13 @@ function buildDelegatedRetrySelectiveSource() {
       await safeRegisterProvisioningAuditEvent({
         unidadeId: normalizedUnidadeId,
         dbName,
-        eventType: 'unit_retry_succeeded',
+        eventType: provisioningSummary.ready ? 'unit_retry_succeeded' : 'unit_retry_failed',
         scope: 'unit',
-        status: 'success',
-        message: 'Retry seletivo de provisioning concluido.',
+        status: provisioningSummary.ready ? 'success' : 'error',
+        message: provisioningSummary.ready
+          ? 'Retry seletivo de provisioning concluido.'
+          : 'Retry seletivo de provisioning concluiu com falhas remanescentes.',
+        reason: provisioningSummary.lastProvisioningError,
         operation: 'retry_selective',
         metadata: {
           retryMode: 'selective',
@@ -411,7 +420,7 @@ function buildDelegatedRetrySelectiveSource() {
           moduleStatuses: mergedModuleStatuses,
           globalStatusCollection: GLOBAL_PROVISIONING_COLLECTION,
           auditTrailCollection: GLOBAL_PROVISIONING_EVENTS_COLLECTION,
-          globalStatus: 'ready',
+          globalStatus: provisioningSummary.status,
           snapshotVersion: SNAPSHOT_CANONICAL_VERSION,
         },
         snapshot,
@@ -594,6 +603,7 @@ test('ensure permanece owner semantico e delega apenas o contexto minimo para a 
     },
     buildTenantBaseDescriptor: ({ unidadeId, dbName }) => ({ unidadeId, dbName, model: 'unidade' }),
     buildPersistedModuleStatusesFromBootstrap: () => ['status-1'],
+    resolveProvisioningSummaryFromModuleStatuses: () => ({ ready: true, status: 'ready', lastProvisioningError: null }),
     registerProvisioningErrorStatus: async () => {},
     wrapProvisioningError: (operation, unidadeId, error) => new Error(`${operation}:${unidadeId}:${error.message}`),
     normalizeErrorMessage: (error) => error.message,
@@ -632,6 +642,55 @@ test('ensure permanece owner semantico e delega apenas o contexto minimo para a 
   assert.match(delegatedEnsureSource, /safeRegisterProvisioningAuditEvent/);
   assert.match(delegatedEnsureSource, /registerProvisioningErrorStatus/);
   assert.match(delegatedEnsureSource, /upsertGlobalProvisioningStatus/);
+});
+
+test('ensure nao registra unit_provisioning_succeeded quando ha falha real agregada', async () => {
+  const delegatedEnsureSource = buildDelegatedEnsureSource();
+  const auditEvents = [];
+  const upsertPayloads = [];
+
+  const ensureUnitProvisioned = buildFunctionFromSource(delegatedEnsureSource, {
+    normalizeUnidadeId: (value) => `norm:${value}`,
+    normalizeTipo: (value) => `tipo:${value}`,
+    normalizeModulosHabilitados: (values) => (Array.isArray(values) ? values : []),
+    buildUnitDbName: (unidadeId) => `db:${unidadeId}`,
+    safeRegisterProvisioningAuditEvent: async (payload) => {
+      auditEvents.push(payload.eventType);
+    },
+    sharedUnitProvisioningBootstrapCore: async () => ({
+      baseResult: { ok: true, marker: 'tenant-base' },
+      moduleBootstrap: { unknownModules: ['Modulo X'] },
+    }),
+    provisioningRepository: {
+      ensureGlobalProvisioningIndex: async () => {},
+      findGlobalProvisioningStatusByUnidadeId: async () => ({ ready: false }),
+      upsertGlobalProvisioningStatus: async ({ payload }) => {
+        upsertPayloads.push(payload);
+      },
+    },
+    buildTenantBaseDescriptor: ({ unidadeId, dbName }) => ({ unidadeId, dbName, model: 'unidade' }),
+    buildPersistedModuleStatusesFromBootstrap: () => ([{ moduleKey: null, moduleLabel: 'Modulo X', requestedModule: 'Modulo X', status: 'unmapped' }]),
+    resolveProvisioningSummaryFromModuleStatuses: () => ({ ready: false, status: 'error', lastProvisioningError: 'Modulo Modulo X: bootstrap_handler_not_mapped' }),
+    registerProvisioningErrorStatus: async () => {},
+    wrapProvisioningError: (operation, unidadeId, error) => new Error(`${operation}:${unidadeId}:${error.message}`),
+    normalizeErrorMessage: (error) => error.message,
+    GLOBAL_PROVISIONING_COLLECTION: 'unit_provisioning_status',
+    GLOBAL_PROVISIONING_EVENTS_COLLECTION: 'unit_provisioning_events',
+    GLOBAL_PROVISIONING_INDEX_NAME: 'uk_unidadeId',
+    SNAPSHOT_CANONICAL_VERSION: 'unit-tenant-v1',
+    Date,
+  });
+
+  const result = await ensureUnitProvisioned({
+    unidadeId: 'u-erro',
+    tipo: 'principal',
+    modulosHabilitados: ['modulo-x'],
+  });
+
+  assert.deepEqual(auditEvents, ['unit_provisioning_started', 'unit_provisioning_failed']);
+  assert.equal(result.globalStatus, 'error');
+  assert.equal(upsertPayloads[0]?.status, 'error');
+  assert.equal(upsertPayloads[0]?.ready, false);
 });
 
 test('retry seletivo permanece owner semantico e delega apenas o contexto minimo adicional da seam', async () => {
@@ -679,6 +738,7 @@ test('retry seletivo permanece owner semantico e delega apenas o contexto minimo
     },
     buildPersistedModuleStatusesFromBootstrap: () => ['status-retry'],
     mergeCanonicalModuleStatuses: (retried, previous) => ({ retried, previous }),
+    resolveProvisioningSummaryFromModuleStatuses: () => ({ ready: true, status: 'ready', lastProvisioningError: null }),
     provisioningRepository: {
       ensureGlobalProvisioningIndex: async () => {},
       upsertGlobalProvisioningStatus: async () => {},

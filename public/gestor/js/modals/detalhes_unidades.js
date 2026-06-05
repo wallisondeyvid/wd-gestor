@@ -154,6 +154,8 @@
 			clinica: 'Clínica',
 			escalas: 'Escalas',
 			gestor: 'Gestor',
+			'portal do morador': 'Portal do Morador',
+			'portal morador': 'Portal do Morador',
 		};
 
 		return nomesAmigaveis[chave] || nomeOriginal;
@@ -297,7 +299,12 @@
 			const linhas = listaEventos.map((eventDoc) => {
 				const modulo = eventDoc?.moduleKey
 					? formatarNomeModuloProvisioning(eventDoc.moduleKey)
-					: '--';
+					: formatarNomeModuloProvisioning(
+						eventDoc?.moduleLabel
+						|| eventDoc?.requestedModule
+						|| eventDoc?.metadata?.requestedModule
+						|| ''
+					) || '--';
 				const detalhe = String(eventDoc?.message || eventDoc?.reason || '--');
 
 				return `

@@ -18,6 +18,7 @@ const MODULE_LABEL_BY_KEY = Object.freeze({
   clinica: 'Clinica',
   escalas: 'Escalas',
   gestor: 'Gestor',
+  'portal-morador': 'Portal do Morador',
 });
 
 const MODULE_STATUS = Object.freeze({
@@ -32,6 +33,7 @@ const MODULE_STATUS_REASON = Object.freeze({
   PENDING: 'bootstrap_pending',
   ERROR: 'bootstrap_error',
   UNMAPPED: 'bootstrap_handler_not_mapped',
+  NOT_REQUIRED: 'bootstrap_not_required',
 });
 
 const RETRY_BOOTSTRAPPABLE_MODULE_KEYS = new Set(['condominio', 'clinica', 'escalas']);
@@ -337,6 +339,9 @@ async function registerModuleBootstrapAuditEvents({ unidadeId, dbName, operation
   const safeBootstrap = (moduleBootstrap && typeof moduleBootstrap === 'object') ? moduleBootstrap : {};
   const executed = Array.isArray(safeBootstrap.executed) ? safeBootstrap.executed : [];
   const unknownModules = Array.isArray(safeBootstrap.unknownModules) ? safeBootstrap.unknownModules : [];
+  const noBootstrapRequiredModuleKeys = Array.isArray(safeBootstrap.noBootstrapRequiredModuleKeys)
+    ? safeBootstrap.noBootstrapRequiredModuleKeys
+    : [];
 
   for (const execution of executed) {
     const moduleKey = resolveCanonicalModuleKey(execution?.module) || normalizeNullableText(execution?.module);
@@ -362,6 +367,26 @@ async function registerModuleBootstrapAuditEvents({ unidadeId, dbName, operation
         bootstrapCollection: normalizeNullableText(execution?.collection),
         markerKey: normalizeNullableText(execution?.markerKey),
         indexName: normalizeNullableText(execution?.indexName),
+      },
+    });
+  }
+
+  for (const moduleKeyRaw of noBootstrapRequiredModuleKeys) {
+    const moduleKey = resolveCanonicalModuleKey(moduleKeyRaw) || normalizeNullableText(moduleKeyRaw);
+    if (!moduleKey) continue;
+
+    await safeRegisterProvisioningAuditEvent({
+      unidadeId,
+      dbName,
+      eventType: 'module_bootstrap_skipped',
+      scope: 'module',
+      moduleKey,
+      status: 'info',
+      message: `Modulo ${resolveCanonicalModuleLabel({ moduleKey }) || moduleKey} nao requer bootstrap dedicado.`,
+      reason: MODULE_STATUS_REASON.NOT_REQUIRED,
+      operation,
+      metadata: {
+        retryMode: normalizeNullableText(retryMode),
       },
     });
   }
@@ -410,8 +435,49 @@ function resolveCanonicalModuleKey(rawValue) {
   if (normalized.includes('clinica')) return 'clinica';
   if (normalized.includes('escala')) return 'escalas';
   if (normalized.includes('gestor')) return 'gestor';
+  if (normalized.includes('portalmorador') || normalized.includes('portaldomorador')) return 'portal-morador';
 
   return null;
+}
+
+function resolveProvisioningSummaryFromModuleStatuses(moduleStatuses) {
+  const normalizedStatuses = Array.isArray(moduleStatuses) ? moduleStatuses : [];
+  const blockingEntry = normalizedStatuses.find((entry) => {
+    const status = normalizeNullableText(entry?.status);
+    return status === MODULE_STATUS.ERROR || status === MODULE_STATUS.UNMAPPED;
+  });
+
+  if (blockingEntry) {
+    const moduleName = resolveCanonicalModuleLabel({
+      moduleKey: blockingEntry?.moduleKey,
+      fallbackLabel: blockingEntry?.moduleLabel,
+      fallbackRequestedModule: blockingEntry?.requestedModule,
+    }) || 'desconhecido';
+    const reason = normalizeNullableText(blockingEntry?.reason);
+
+    return {
+      ready: false,
+      status: 'error',
+      lastProvisioningError: reason
+        ? `Modulo ${moduleName}: ${reason}`
+        : `Modulo ${moduleName} com falha de provisioning.`,
+    };
+  }
+
+  const hasPendingEntry = normalizedStatuses.some((entry) => normalizeNullableText(entry?.status) === MODULE_STATUS.PENDING);
+  if (hasPendingEntry) {
+    return {
+      ready: false,
+      status: 'pending',
+      lastProvisioningError: null,
+    };
+  }
+
+  return {
+    ready: true,
+    status: 'ready',
+    lastProvisioningError: null,
+  };
 }
 
 function resolveCanonicalModuleLabel({ moduleKey, fallbackLabel, fallbackRequestedModule } = {}) {
@@ -793,6 +859,7 @@ function resolveFriendlyModuloLabel(moduloDoc, fallbackValue) {
   if (slug.includes('condominio')) return 'Gestao de Condominio';
   if (slug.includes('clinica')) return 'Clinica';
   if (slug.includes('escala')) return 'Escalas';
+  if (slug.includes('portalmorador') || slug.includes('portaldomorador')) return 'Portal do Morador';
 
   if (urlBase) return urlBase;
   return String(fallbackValue || '').trim();
@@ -1094,6 +1161,7 @@ export async function ensureUnitProvisioned({ unidadeId, tipo, modulosHabilitado
     const now = new Date();
     const tenantBase = buildTenantBaseDescriptor({ unidadeId: normalizedUnidadeId, dbName });
     const moduleStatuses = buildPersistedModuleStatusesFromBootstrap({ moduleBootstrap, now });
+    const provisioningSummary = resolveProvisioningSummaryFromModuleStatuses(moduleStatuses);
 
     await provisioningRepository.upsertGlobalProvisioningStatus({
       collectionName: GLOBAL_PROVISIONING_COLLECTION,
@@ -1102,8 +1170,9 @@ export async function ensureUnitProvisioned({ unidadeId, tipo, modulosHabilitado
         dbName: tenantBase.dbName,
         tipo: normalizedTipo,
         modulosHabilitados: normalizedModulos,
-        ready: true,
-        status: 'ready',
+        ready: provisioningSummary.ready,
+        status: provisioningSummary.status,
+        lastProvisioningError: provisioningSummary.lastProvisioningError,
         tenantBase,
         tenantBaseModel: tenantBase.model,
         tenantBaseUnidadeId: tenantBase.unidadeId,
@@ -1117,10 +1186,13 @@ export async function ensureUnitProvisioned({ unidadeId, tipo, modulosHabilitado
     await safeRegisterProvisioningAuditEvent({
       unidadeId: normalizedUnidadeId,
       dbName,
-      eventType: 'unit_provisioning_succeeded',
+      eventType: provisioningSummary.ready ? 'unit_provisioning_succeeded' : 'unit_provisioning_failed',
       scope: 'unit',
-      status: 'success',
-      message: 'Provisioning da unidade concluido.',
+      status: provisioningSummary.ready ? 'success' : 'error',
+      message: provisioningSummary.ready
+        ? 'Provisioning da unidade concluido.'
+        : 'Provisioning da unidade concluiu com falhas de modulo.',
+      reason: provisioningSummary.lastProvisioningError,
       operation: 'ensure',
       metadata: {
         tipo: normalizedTipo,
@@ -1145,7 +1217,7 @@ export async function ensureUnitProvisioned({ unidadeId, tipo, modulosHabilitado
       moduleStatuses,
       globalStatusCollection: GLOBAL_PROVISIONING_COLLECTION,
       auditTrailCollection: GLOBAL_PROVISIONING_EVENTS_COLLECTION,
-      globalStatus: 'ready',
+      globalStatus: provisioningSummary.status,
       snapshotVersion: SNAPSHOT_CANONICAL_VERSION,
     };
   } catch (error) {
@@ -1403,6 +1475,7 @@ export async function retryUnitProvisioning({ unidadeId, tipo, modulosHabilitado
       includeUnknownModules: false,
     });
     const mergedModuleStatuses = mergeCanonicalModuleStatuses(retriedModuleStatuses, previousModuleStatuses);
+    const provisioningSummary = resolveProvisioningSummaryFromModuleStatuses(mergedModuleStatuses);
 
     await provisioningRepository.ensureGlobalProvisioningIndex({
       collectionName: GLOBAL_PROVISIONING_COLLECTION,
@@ -1417,9 +1490,9 @@ export async function retryUnitProvisioning({ unidadeId, tipo, modulosHabilitado
         dbName: tenantBase.dbName,
         tipo: normalizedTipo,
         modulosHabilitados: normalizedModulos,
-        ready: true,
-        status: 'ready',
-        lastProvisioningError: null,
+        ready: provisioningSummary.ready,
+        status: provisioningSummary.status,
+        lastProvisioningError: provisioningSummary.lastProvisioningError,
         tenantBase,
         tenantBaseModel: tenantBase.model,
         tenantBaseUnidadeId: tenantBase.unidadeId,
@@ -1435,10 +1508,13 @@ export async function retryUnitProvisioning({ unidadeId, tipo, modulosHabilitado
     await safeRegisterProvisioningAuditEvent({
       unidadeId: normalizedUnidadeId,
       dbName,
-      eventType: 'unit_retry_succeeded',
+      eventType: provisioningSummary.ready ? 'unit_retry_succeeded' : 'unit_retry_failed',
       scope: 'unit',
-      status: 'success',
-      message: 'Retry seletivo de provisioning concluido.',
+      status: provisioningSummary.ready ? 'success' : 'error',
+      message: provisioningSummary.ready
+        ? 'Retry seletivo de provisioning concluido.'
+        : 'Retry seletivo de provisioning concluiu com falhas remanescentes.',
+      reason: provisioningSummary.lastProvisioningError,
       operation: 'retry_selective',
       metadata: {
         retryMode: 'selective',
@@ -1469,7 +1545,7 @@ export async function retryUnitProvisioning({ unidadeId, tipo, modulosHabilitado
         moduleStatuses: mergedModuleStatuses,
         globalStatusCollection: GLOBAL_PROVISIONING_COLLECTION,
         auditTrailCollection: GLOBAL_PROVISIONING_EVENTS_COLLECTION,
-        globalStatus: 'ready',
+        globalStatus: provisioningSummary.status,
         snapshotVersion: SNAPSHOT_CANONICAL_VERSION,
       },
       snapshot,
