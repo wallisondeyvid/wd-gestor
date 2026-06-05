@@ -40,7 +40,7 @@ test('unidades.ejs mantém cadastroUnidadeForm como form principal e isola forms
   const html = await renderUnidadesView();
 
   const formIds = [...html.matchAll(/<form\b[^>]*id="([^"]+)"[^>]*>/gi)].map((match) => match[1]);
-  assert.deepEqual(formIds, ['cadastroUnidadeForm']);
+  assert.deepEqual(formIds, ['cadastroUnidadeForm', 'formAlterarSenha']);
 
   const cadastro = findFormOpenTagBounds(html, 'cadastroUnidadeForm');
   const cadastroClose = html.indexOf('</form>', cadastro.openEnd);
@@ -53,8 +53,14 @@ test('unidades.ejs mantém cadastroUnidadeForm como form principal e isola forms
   assert.match(cadastroInnerHtml, /<button type="submit" id="btnSubmitUnidade"/i);
   assert.ok(cadastroInnerHtml.includes(submitTag));
 
-  assert.match(html, /<div\b[^>]*id="formAlterarSenha"[^>]*role="form"/i);
-  assert.equal(html.indexOf('id="formAlterarSenha"') > cadastroClose, true);
+  const formAlterarSenha = findFormOpenTagBounds(html, 'formAlterarSenha');
+  assert.ok(formAlterarSenha.openStart > cadastroClose, 'formAlterarSenha deve ficar fora do cadastro principal');
+  const formAlterarSenhaClose = html.indexOf('</form>', formAlterarSenha.openEnd);
+  assert.notEqual(formAlterarSenhaClose, -1, 'formAlterarSenha deve ter fechamento');
+  const formAlterarSenhaInnerHtml = html.slice(formAlterarSenha.openEnd + 1, formAlterarSenhaClose);
+  assert.match(formAlterarSenhaInnerHtml, /id="senhaAtual"/i);
+  assert.match(formAlterarSenhaInnerHtml, /id="novaSenha"/i);
+  assert.match(formAlterarSenhaInnerHtml, /id="confirmarSenha"/i);
 
   const modalIds = [
     'modalPerfil',

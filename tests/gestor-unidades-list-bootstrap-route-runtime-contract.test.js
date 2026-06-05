@@ -333,6 +333,22 @@ test('POST /api/unidades preserva branch global com auth-context canônico sem u
 	assert.equal(state.controllerCalls[0].method, 'POST');
 });
 
+test('POST /api/unidades preserva branch global sem exigir unidadeId quando só existe unidade legada residual fora do auth-context canônico', async () => {
+	const app = await buildApp({
+		user: { role: 'user', isMaster: false, global_role: 'admin', unidade_id: 'legacy-user-unit' },
+		sessionUser: { role: 'user', global_role: 'admin', unidade_id: 'legacy-session-unit', unidade_principal_id: 'legacy-principal-unit' },
+	});
+	const response = await request(app).post('/api/unidades').send({ nome: 'Nova unidade', principal: 'true', subunidade: 'false' });
+
+	assert.equal(response.status, 200, JSON.stringify(response.body));
+	assert.equal(response.body.handler, 'createUnidade');
+	assert.equal(response.body.unitScope, null);
+	assert.equal(state.requireUnitScopeCalls.length, 0);
+	assert.equal(state.controllerCalls.length, 1);
+	assert.equal(state.controllerCalls[0].name, 'createUnidade');
+	assert.equal(state.controllerCalls[0].method, 'POST');
+});
+
 test('POST /api/unidades mantem diretor sem unidade bloqueado por UNIDADE_ID_REQUIRED', async () => {
 	const app = await buildApp({ user: { role: 'diretor', isMaster: false } });
 	const response = await request(app).post('/api/unidades').send({ nome: 'Nova unidade' });

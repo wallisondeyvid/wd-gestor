@@ -283,7 +283,7 @@
   document.addEventListener('DOMContentLoaded',()=>{
     console.log(logPrefix,'DOM pronto');
     const form=document.getElementById('formAlterarSenha');
-    form && form.addEventListener('keydown',e=>{ if(e.key!=='Enter' || e.shiftKey) return; e.preventDefault(); salvarNovaSenha(); });
+    form && form.addEventListener('submit',e=>{ e.preventDefault(); salvarNovaSenha(); });
     const modalPerfilEl=document.getElementById('modalPerfil');
     if(modalPerfilEl){
       modalPerfilEl.addEventListener('show.bs.modal',()=>{ try{ carregarDadosPerfil(); }catch(e){ console.warn(logPrefix,'falha show',e);} });

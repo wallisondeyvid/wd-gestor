@@ -9,6 +9,8 @@ import { disconnectMongo } from '../src/core/db/connect.js';
 import { clearResolveConnectionCache } from '../src/shared/db/resolveConnection.js';
 import { resolveModel } from '../src/shared/db/resolveModel.js';
 import { createUnitScope } from '../src/shared/unitScope.js';
+import requireLogin from '../src/modules/gestor/app/middlewares/requireLogin.js';
+import { isPrivilegedGestorContext, requireUnitScope } from '../src/modules/gestor/app/middlewares/requireUnitScope.js';
 import {
   findUnidadesByCondLean,
   findUnidadesByCondSelectCodigoNomeOrdenadasLean,
@@ -190,6 +192,48 @@ before(async () => {
 
     return req.session.save(() => res.status(204).end());
   });
+  app.all('/__probe-unidades-create-wrapper', (req, res) => requireLogin(req, res, () => {
+    const authContext = req.session?.gestorAuthContext || null;
+    const hasCanonicalActiveUnitContext = Boolean(
+      (authContext?.source === 'auth-context-v1' && (
+        authContext?.active_unidade_id
+        || authContext?.activeUnidadeId
+        || authContext?.activeContext?.unidadeId
+      ))
+      || req.query?.unidadeId
+      || req.query?.unidade_id
+      || req.params?.unidadeId
+      || req.params?.unidade_id
+      || req.body?.unidadeId
+      || req.body?.unidade_id
+    );
+    const isPrivileged = isPrivilegedGestorContext({
+      user: req.user || null,
+      sessionUser: req.session?.user || null,
+      authContext,
+    });
+
+    if (isPrivileged && !hasCanonicalActiveUnitContext) {
+      return res.json({
+        phase: 'bypass',
+        isPrivileged,
+        hasCanonicalActiveUnitContext,
+        user: req.user,
+        sessionUser: req.session?.user || null,
+        authContext,
+      });
+    }
+
+    return requireUnitScope(req, res, () => res.json({
+      phase: 'scoped',
+      isPrivileged,
+      hasCanonicalActiveUnitContext,
+      user: req.user,
+      sessionUser: req.session?.user || null,
+      authContext,
+      unitScope: req.unitScope || null,
+    }));
+  }));
   if (typeof built.registerErrorHandlers === 'function') {
     await Promise.resolve(built.registerErrorHandlers());
   }
@@ -433,8 +477,19 @@ test('GET /gestor/unidades entrega o HTML final real com apenas um form no DOM p
   assert.match(res.headers['content-type'] || '', /text\/html/i);
 
   const formIds = [...String(res.text || '').matchAll(/<form\b[^>]*id="([^"]+)"[^>]*>/gi)].map((match) => match[1]);
-  assert.deepEqual(formIds, ['cadastroUnidadeForm']);
-  assert.match(String(res.text || ''), /<div\b[^>]*id="formAlterarSenha"[^>]*role="form"/i);
+  assert.deepEqual(formIds, ['cadastroUnidadeForm', 'formAlterarSenha']);
+
+  const html = String(res.text || '');
+  const cadastroOpenIndex = html.indexOf('id="cadastroUnidadeForm"');
+  const cadastroCloseIndex = html.indexOf('</form>', cadastroOpenIndex);
+  const formAlterarSenhaIndex = html.indexOf('id="formAlterarSenha"');
+  assert.ok(cadastroOpenIndex !== -1 && cadastroCloseIndex !== -1 && formAlterarSenhaIndex !== -1);
+  assert.ok(formAlterarSenhaIndex > cadastroCloseIndex);
+  const formAlterarSenhaCloseIndex = html.indexOf('</form>', formAlterarSenhaIndex);
+  const formAlterarSenhaInnerHtml = html.slice(html.lastIndexOf('<form', formAlterarSenhaIndex), formAlterarSenhaCloseIndex);
+  assert.match(formAlterarSenhaInnerHtml, /id="senhaAtual"/i);
+  assert.match(formAlterarSenhaInnerHtml, /id="novaSenha"/i);
+  assert.match(formAlterarSenhaInnerHtml, /id="confirmarSenha"/i);
 
   for (const modalId of ['modalPerfil', 'modalAlterarSenha', 'modalBanco', 'modalCnaePrincipal', 'modalNaturezaJuridica']) {
     assert.match(String(res.text || ''), new RegExp(`id="${modalId}"`));
@@ -560,6 +615,89 @@ test('POST /gestor/api/unidades com payload do frontend e auth-context global ad
   assert.equal(res.status, 201, JSON.stringify(res.body));
   assert.notEqual(res.body?.error, 'UNIDADE_ID_REQUIRED');
   assert.ok(String(res.body?.data?._id || res.body?.id || res.body?._id || ''));
+});
+
+test('POST /gestor/api/unidades com payload real de matriz e unidade legada residual fora do auth-context continua no branch global e chega ao createUnidade', async () => {
+  const moduloGestor = await ensureGestorModulo();
+
+  const unidadePrincipalResidual = await createUnit({ nome: `Principal Residual ${nextSequence()}` });
+  await Unidade.updateOne({ _id: unidadePrincipalResidual._id }, { $set: { cnpj: '11222333000181' } });
+
+  const user = await createUser({
+    email: buildUniqueEmail('unidades-matriz-legado-global'),
+    nome: 'Admin Global Residual',
+    role: 'admin',
+    unidadeId: unidadePrincipalResidual._id,
+  });
+
+  await User.updateOne({ _id: user._id }, {
+    $set: {
+      modulosAcessiveis: [moduloGestor._id],
+    },
+  });
+
+  const agent = request.agent(app);
+  await seedSession(agent, {
+    email: user.email,
+    role: 'admin',
+    unidadeId: normalizeId(unidadePrincipalResidual._id),
+    unidadePrincipalId: normalizeId(unidadePrincipalResidual._id),
+  });
+
+  const pageRes = await agent
+    .get('/gestor/unidades')
+    .set('Accept', 'text/html')
+    .set('Connection', 'close');
+
+  assert.equal(pageRes.status, 200);
+  assert.match(pageRes.text, new RegExp(unidadePrincipalResidual.nome));
+
+  const probeRes = await agent
+    .post('/__probe-unidades-create-wrapper')
+    .set('Accept', 'application/json')
+    .set('Connection', 'close')
+    .send({
+      principal: 'true',
+      subunidade: 'false',
+      unidadePrincipal: null,
+      pessoaTipo: 'pj',
+      nomeFantasia: `Probe Matriz Residual ${nextSequence()}`,
+      razaoSocial: `Probe Matriz Residual LTDA ${nextSequence()}`,
+      cnpj: '12345678000195',
+      emailPrincipal: buildUniqueEmail('probe-matriz-residual-global'),
+      modulosAcessiveis: [],
+    });
+
+  assert.equal(probeRes.status, 200, JSON.stringify(probeRes.body));
+  assert.equal(probeRes.body?.phase, 'bypass', JSON.stringify(probeRes.body));
+  assert.equal(probeRes.body?.isPrivileged, true, JSON.stringify(probeRes.body));
+  assert.equal(probeRes.body?.hasCanonicalActiveUnitContext, false, JSON.stringify(probeRes.body));
+
+  const res = await agent
+    .post('/gestor/api/unidades')
+    .set('Accept', 'application/json')
+    .set('Connection', 'close')
+    .send({
+      principal: 'true',
+      subunidade: 'false',
+      unidadePrincipal: null,
+      pessoaTipo: 'pj',
+      nomeFantasia: `Matriz Residual ${nextSequence()}`,
+      razaoSocial: `Matriz Residual LTDA ${nextSequence()}`,
+      cnpj: '12345678000195',
+      emailPrincipal: buildUniqueEmail('matriz-residual-global'),
+      modulosAcessiveis: [],
+    });
+
+  assert.equal(res.status, 201, JSON.stringify(res.body));
+  assert.notEqual(res.body?.error, 'UNIDADE_ID_REQUIRED');
+
+  const createdId = String(res.body?.data?._id || res.body?.id || res.body?._id || '');
+  assert.ok(createdId);
+
+  const created = await Unidade.findById(createdId).lean();
+  assert.ok(created);
+  assert.equal(Boolean(created.is_principal), true);
 });
 
 test('POST /gestor/api/unidades com payload do frontend e diretor sem unidade ativa continua bloqueado por UNIDADE_ID_REQUIRED', async () => {
