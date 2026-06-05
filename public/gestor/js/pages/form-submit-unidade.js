@@ -149,6 +149,36 @@
 		const mtlsStatus = document.getElementById('apiMtlsFileName');
 		if (mtlsStatus) mtlsStatus.textContent = 'Nenhum arquivo selecionado';
 	}
+
+	function isInteractiveButtonTarget(target){
+		if (!target || typeof target !== 'object') return false;
+		const tagName = String(target.tagName || '').toUpperCase();
+		const type = String(target.type || '').toLowerCase();
+		const role = String(target.getAttribute?.('role') || target.role || '').toLowerCase();
+		return tagName === 'BUTTON'
+			|| tagName === 'A'
+			|| role === 'button'
+			|| ['submit', 'button', 'reset', 'image', 'file'].includes(type);
+	}
+
+	function shouldBlockImplicitSubmitOnEnter(event, form){
+		if (!event || event.defaultPrevented || event.key !== 'Enter') return false;
+		if (event.isComposing || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return false;
+
+		const target = event.target;
+		if (!target || target.form !== form) return false;
+
+		const tagName = String(target.tagName || '').toUpperCase();
+		if (tagName === 'TEXTAREA' || target.isContentEditable) return false;
+		if (isInteractiveButtonTarget(target)) return false;
+
+		return true;
+	}
+
+	function preventImplicitSubmitOnEnter(event, form){
+		if (!shouldBlockImplicitSubmitOnEnter(event, form)) return;
+		event.preventDefault();
+	}
 	async function cadastrarUnidade(e){
 		try {
 			if(e && typeof e.preventDefault==='function') e.preventDefault();
@@ -423,7 +453,15 @@
 	function bind(){ 
 		const form=document.getElementById('cadastroUnidadeForm'); 
 		if(form) {
+			if (!form.__wdgPreventEnterSubmitBound) {
+				form.addEventListener('keydown', function(event){
+					preventImplicitSubmitOnEnter(event, form);
+				}, true);
+				form.__wdgPreventEnterSubmitBound = true;
+			}
+			if (form.__wdgCadastrarUnidadeBound) return;
 			form.addEventListener('submit', cadastrarUnidade, true);
+			form.__wdgCadastrarUnidadeBound = true;
 		}
 	}
 	document.addEventListener('DOMContentLoaded', bind);

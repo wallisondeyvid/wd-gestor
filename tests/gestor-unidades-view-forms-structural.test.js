@@ -1,8 +1,79 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import ejs from 'ejs';
+import bcrypt from 'bcryptjs';
+import request from 'supertest';
+
+import { createServer } from '../src/server/createServer.js';
+import { disconnectMongo } from '../src/core/db/connect.js';
 
 const VIEW_PATH = 'views/gestor/unidades.ejs';
+const PASSWORD = 'Senha@123456';
+
+let app;
+let closeServer;
+let passwordHash = '';
+let sequence = 0;
+
+function nextSequence() {
+  sequence += 1;
+  return sequence;
+}
+
+function buildUniqueEmail(prefix = 'unidades-view-forms') {
+  return `${prefix}.${Date.now()}.${nextSequence()}@example.com`;
+}
+
+function listForms(html) {
+  return [...html.matchAll(/<form\b[^>]*>/gi)].map((match) => match[0]);
+}
+
+function getFormMarkerIndex(html, marker) {
+  const index = html.indexOf(marker);
+  assert.notEqual(index, -1, `marcador ${marker} deve existir`);
+  return index;
+}
+
+test.before(async () => {
+  passwordHash = await bcrypt.hash(PASSWORD, Number(process.env.BCRYPT_MIN_ROUNDS || 12));
+  const built = await createServer({ skipDb: false, deferErrorHandlers: true });
+  app = built.app;
+  closeServer = built.close;
+  app.get('/__seed-session', (req, res) => {
+    const email = String(req.query?.email || buildUniqueEmail()).trim().toLowerCase();
+    const role = String(req.query?.role || 'admin').trim().toLowerCase();
+    const globalRole = String(req.query?.globalRole || 'admin').trim().toLowerCase();
+
+    req.session.user = {
+      id: `seed-${nextSequence()}`,
+      _id: `seed-${nextSequence()}`,
+      email,
+      role,
+      nome: `Seed ${role}`,
+      global_role: globalRole,
+      senha: passwordHash,
+    };
+    req.session.gestorAuthContext = {
+      source: 'auth-context-v1',
+      global_role: globalRole,
+      needs_selection: false,
+    };
+    return req.session.save(() => res.status(204).end());
+  });
+  if (typeof built.registerErrorHandlers === 'function') {
+    await Promise.resolve(built.registerErrorHandlers());
+  }
+});
+
+test.after(async () => {
+  try {
+    if (typeof closeServer === 'function') {
+      await closeServer({ stopMemoryServer: true });
+      return;
+    }
+    await disconnectMongo({ stopMemoryServer: true });
+  } catch {}
+});
 
 async function renderUnidadesView() {
   return ejs.renderFile(
@@ -81,4 +152,39 @@ test('unidades.ejs mantém cadastroUnidadeForm como form principal e isola forms
 
   const modalBancoIndex = html.indexOf('id="modalBanco"');
   assert.ok(modalBancoIndex > cadastroClose, 'os modais da página devem aparecer após o fechamento do cadastro principal');
+});
+
+test('GET /gestor/unidades entrega HTML final sem form aninhado em cadastroUnidadeForm', async () => {
+  const agent = request.agent(app);
+  const seedRes = await agent
+    .get('/__seed-session')
+    .query({ role: 'admin', globalRole: 'admin', email: buildUniqueEmail('runtime-forms') });
+
+  assert.equal(seedRes.status, 204);
+
+  const response = await agent.get('/gestor/unidades');
+
+  assert.equal(response.status, 200);
+  const html = response.text;
+
+  const formTags = listForms(html);
+  assert.equal(formTags.length, 3);
+  assert.match(html, /<form\b[^>]*id="cadastroUnidadeForm"/i);
+  assert.match(html, /<form\b[^>]*id="formAlterarSenha"/i);
+  assert.match(html, /<form\b[^>]*class="wdg-feedback-chat-compose"/i);
+
+  const cadastro = findFormOpenTagBounds(html, 'cadastroUnidadeForm');
+  const cadastroClose = html.indexOf('</form>', cadastro.openEnd);
+  assert.notEqual(cadastroClose, -1, 'cadastroUnidadeForm deve ter fechamento no HTML final');
+
+  const cadastroInnerHtml = html.slice(cadastro.openEnd + 1, cadastroClose);
+  assert.doesNotMatch(cadastroInnerHtml, /<form\b/i);
+
+  const formAlterarSenhaIndex = getFormMarkerIndex(html, 'id="formAlterarSenha"');
+  const feedbackFormIndex = getFormMarkerIndex(html, 'class="wdg-feedback-chat-compose"');
+  assert.ok(formAlterarSenhaIndex > cadastroClose, 'formAlterarSenha deve permanecer fora do cadastro principal no HTML final');
+  assert.ok(
+    feedbackFormIndex < cadastro.openStart || feedbackFormIndex > cadastroClose,
+    'o form do feedback deve ser irmão do cadastro principal, nunca filho',
+  );
 });
