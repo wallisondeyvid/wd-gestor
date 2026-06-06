@@ -125,6 +125,7 @@
           </thead>
           <tbody>
             <% (funcoesFiltradas || []).forEach(function(funcao){ %>
+              <% const funcaoUnidadePrincipalId = String((funcao.unidade_principal_id && (funcao.unidade_principal_id._id || funcao.unidade_principal_id.id || funcao.unidade_principal_id)) || '').trim(); %>
               <tr>
                 <td><%= funcao.codigo %></td>
                 <td><%= funcao.nome %></td>
@@ -147,7 +148,7 @@
                 </td>
                 <td class="col-acoes">
                   <div class="d-flex gap-1 justify-content-center flex-nowrap">
-                    <button type="button" class="wdg-icon-btn" onclick="editar('<%= funcao._id %>')" title="Editar" aria-label="Editar">
+                    <button type="button" class="wdg-icon-btn" onclick="editar('<%= funcao._id %>', '<%= funcaoUnidadePrincipalId %>')" title="Editar" aria-label="Editar">
                       <img src="<%= _basePath %>/images/editar.png" alt="Editar" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'" />
                     </button>
                     <button type="button" class="wdg-icon-btn" onclick="excluir('<%= funcao._id %>', '<%= encodeURIComponent(funcao.nome || '') %>')" title="Excluir" aria-label="Excluir">
@@ -429,8 +430,10 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // --- Globais editar / excluir
-  window.editar = function(id){
-  fetch(BASE + '/api/funcoes/' + encodeURIComponent(id))
+  window.editar = function(id, unidadePrincipalId){
+  const unidadeId = String(unidadePrincipalId || '').trim();
+  const query = unidadeId ? ('?unidade_id=' + encodeURIComponent(unidadeId)) : '';
+  fetch(BASE + '/api/funcoes/' + encodeURIComponent(id) + query)
       .then(r => r.ok ? r.json() : Promise.reject(r))
       .then(payload => {
         // Compat: aceita { success, data } ou { sucesso, dados } ou objeto direto
