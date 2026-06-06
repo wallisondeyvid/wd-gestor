@@ -4,17 +4,6 @@
 */ %>
 <% /* CSS de layout e icons agora vêm da partial head-styles-gestor. Mantemos somente o HTML estrutural aqui. */ %>
 <% const __hdrBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? moduleBasePath : '/gestor'; %>
-<header class="hero-wd" role="banner" aria-label="Cabeçalho WDGestor">
+<header class="hero-wd hero-wd-fixed-height" role="banner" aria-label="Cabeçalho WDGestor">
   <img src="<%= __hdrBase %>/images/cabecalho.png?v=4" alt="Cabeçalho WDGestor" class="hero-bg" onerror="this.closest('header').classList.add('hero-noimg'); this.remove();">
 </header>
-<style>
-  :root{ --wd-hero-height: 160px; }
-  /* Mantém altura fixa mesmo em telas menores (sem reduzir) */
-  @media (max-width: 992px){ :root{ --wd-hero-height: 160px; } }
-  @media (max-width: 576px){ :root{ --wd-hero-height: 160px; } }
-  .hero-wd{ position:relative; overflow:hidden; z-index:1; height: var(--wd-hero-height); background:#f8f9fa; }
-  /* Manter a altura e recortar horizontalmente quando necessário: usa cover e ancora à esquerda/centro */
-  .hero-wd .hero-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit: cover; object-position: left center; display:block; background-color: #f8f9fa; }
-  /* Quando não houver imagem, reduz altura e aplica um leve gradiente */
-  body.wdg-layout .hero-wd.hero-noimg{ min-height:72px; background:linear-gradient(135deg,#f2f6fa,#ffffff); }
-</style>
