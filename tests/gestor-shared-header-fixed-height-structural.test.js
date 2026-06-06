@@ -16,7 +16,7 @@ test('header-shared usa variante explicita de altura fixa para o topo compartilh
   assert.doesNotMatch(source, /height\s*:\s*var\(--wd-hero-height\)/i);
 });
 
-test('layout global fixa a altura do header compartilhado e usa cover na arte', () => {
+test('layout global fixa a altura do header compartilhado sem crop por cover', () => {
   const source = fs.readFileSync(layoutCssPath, 'utf8');
   const fixedHeightBlockMatch = source.match(/\.hero-wd\.hero-wd-fixed-height\s+\.hero-bg,[\s\S]*?\}/i);
 
@@ -24,6 +24,8 @@ test('layout global fixa a altura do header compartilhado e usa cover na arte', 
   assert.match(source, /\.hero-wd\.hero-wd-fixed-height[\s\S]*min-height:\s*var\(--wd-hero-height\)/i);
   assert.match(source, /\.hero-wd\.hero-wd-fixed-height[\s\S]*max-height:\s*var\(--wd-hero-height\)/i);
   assert.ok(fixedHeightBlockMatch, 'Bloco do hero-bg com altura fixa deve existir');
-  assert.match(fixedHeightBlockMatch[0], /object-fit:\s*cover/i);
-  assert.doesNotMatch(fixedHeightBlockMatch[0], /object-fit:\s*contain/i);
+  assert.match(fixedHeightBlockMatch[0], /object-fit:\s*fill/i);
+  assert.match(fixedHeightBlockMatch[0], /object-position:\s*left\s+center/i);
+  assert.doesNotMatch(fixedHeightBlockMatch[0], /object-fit:\s*cover/i);
+  assert.doesNotMatch(source, /background-size:\s*cover/i);
 });

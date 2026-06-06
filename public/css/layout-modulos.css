@@ -1,6 +1,6 @@
-:root{ --wd-hero-height:160px; --wd-hero-focus-x:18%; }
-@media (max-width:992px){ :root{ --wd-hero-height:160px; --wd-hero-focus-x:14%; } }
-@media (max-width:576px){ :root{ --wd-hero-height:160px; --wd-hero-focus-x:10%; } }
+:root{ --wd-hero-height:160px; }
+@media (max-width:992px){ :root{ --wd-hero-height:160px; } }
+@media (max-width:576px){ :root{ --wd-hero-height:160px; } }
 .hero-wd{ position:relative; overflow:hidden; z-index:1; background:#f8f9fa; }
 .hero-wd.hero-wd-fixed-height,
 body.wdg-layout .hero-wd.hero-wd-fixed-height{
@@ -18,8 +18,8 @@ body.wdg-layout .hero-wd.hero-wd-fixed-height{
 }
 .hero-wd.hero-wd-fixed-height .hero-bg,
 body.wdg-layout .hero-wd.hero-wd-fixed-height .hero-bg{
-	object-fit:cover;
-	object-position:var(--wd-hero-focus-x) center;
+	object-fit:fill;
+	object-position:left center;
 }
 .hero-wd.hero-noimg,
 body.wdg-layout .hero-wd.hero-noimg{
