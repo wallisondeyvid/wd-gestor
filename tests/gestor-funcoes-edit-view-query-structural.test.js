@@ -26,6 +26,14 @@ test('submit de edicao envia unidade_id na query do PUT /api/funcoes/:id com fon
   assert.match(viewSource, /form\.dataset\.unidadePrincipalId = String\(unidId \|\| ''\)\.trim\(\);/);
 });
 
+test('excluir na view envia unidade_id na query do DELETE /api/funcoes/:id com fonte em unidade_principal_id real', () => {
+  assert.match(viewSource, /onclick="excluir\('<%= funcao\._id %>', '<%= encodeURIComponent\(funcao\.nome \|\| ''\) %>', '<%= funcaoUnidadePrincipalId %>'\)"/);
+  assert.match(viewSource, /window\.excluir = async function\(id, nomeEncoded, unidadePrincipalId\)\{/);
+  assert.match(viewSource, /const scopedUnidadeId = String\(unidadePrincipalId \|\| form\.dataset\.unidadePrincipalId \|\| ''\)\.trim\(\);/);
+  assert.match(viewSource, /const query = '\?unidade_id=' \+ encodeURIComponent\(scopedUnidadeId\);/);
+  assert.match(viewSource, /fetch\(BASE \+ '\/api\/funcoes\/' \+ encodeURIComponent\(id\) \+ query, \{ method:'DELETE'/);
+});
+
 test('GET /api/funcoes/:id continua protegido por requireUnitScope no backend', () => {
   assert.match(routeSource, /router\.get\('\/api\/funcoes\/:id', withLoginAndRequiredUnitScope\(getFuncao\)\);/);
   assert.doesNotMatch(routeSource, /router\.get\('\/api\/funcoes\/:id',\s*getFuncao\)/);

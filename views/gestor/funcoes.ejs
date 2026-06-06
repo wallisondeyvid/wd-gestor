@@ -151,7 +151,7 @@
                     <button type="button" class="wdg-icon-btn" onclick="editar('<%= funcao._id %>', '<%= funcaoUnidadePrincipalId %>')" title="Editar" aria-label="Editar">
                       <img src="<%= _basePath %>/images/editar.png" alt="Editar" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'" />
                     </button>
-                    <button type="button" class="wdg-icon-btn" onclick="excluir('<%= funcao._id %>', '<%= encodeURIComponent(funcao.nome || '') %>')" title="Excluir" aria-label="Excluir">
+                    <button type="button" class="wdg-icon-btn" onclick="excluir('<%= funcao._id %>', '<%= encodeURIComponent(funcao.nome || '') %>', '<%= funcaoUnidadePrincipalId %>')" title="Excluir" aria-label="Excluir">
                       <img src="<%= _basePath %>/images/excluir.png" alt="Excluir" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'" />
                     </button>
                   </div>
@@ -512,11 +512,17 @@ document.addEventListener('DOMContentLoaded', function(){
       });
   };
 
-  window.excluir = async function(id, nomeEncoded){
+  window.excluir = async function(id, nomeEncoded, unidadePrincipalId){
     const nome = nomeEncoded ? decodeURIComponent(String(nomeEncoded)) : '';
     const ok = await askDeleteFuncaoConfirm(nome);
     if (!ok) return;
-  fetch(BASE + '/api/funcoes/' + encodeURIComponent(id), { method:'DELETE', headers:{'Accept':'application/json'} })
+  const scopedUnidadeId = String(unidadePrincipalId || form.dataset.unidadePrincipalId || '').trim();
+  if (!scopedUnidadeId) {
+    alert('Erro: Unidade principal obrigatória para excluir a função.');
+    return;
+  }
+  const query = '?unidade_id=' + encodeURIComponent(scopedUnidadeId);
+  fetch(BASE + '/api/funcoes/' + encodeURIComponent(id) + query, { method:'DELETE', headers:{'Accept':'application/json'} })
       .then(r => r.ok ? location.reload() : r.text().then(t => { throw new Error(t || 'Erro ao excluir'); }))
       .catch(err => alert('Erro: ' + err.message));
   };

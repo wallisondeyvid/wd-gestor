@@ -52,7 +52,16 @@ export async function updateFuncao(req, res) {
 }
 export async function getFuncoesPorUnidade(req, res) { return res.status(200).json({ success: true, data: [] }); }
 export async function listarFuncoesApi(req, res) { return res.status(200).json({ success: true, data: [] }); }
-export async function deleteFuncao(req, res) { return res.status(200).json({ success: true }); }
+export async function deleteFuncao(req, res) {
+  getCalls().push({
+    method: 'DELETE',
+    params: req?.params || null,
+    query: req?.query || null,
+    unitScope: req?.unitScope || null,
+    userRole: req?.user?.role || null,
+  });
+  return res.status(200).json({ success: true, data: { deleted: true } });
+}
 export async function bulkUpdateFuncoes(req, res) { return res.status(200).json({ success: true, data: { updated: 0, results: [] } }); }
 export default { createFuncao, getFuncao, updateFuncao, getFuncoesPorUnidade, listarFuncoesApi, deleteFuncao, bulkUpdateFuncoes };
 `,
@@ -186,6 +195,50 @@ test('PUT /gestor/api/funcoes/:id com admin sem contexto ativo e sem unidade_id 
       unidade_principal_id: '507f191e810c19729de860ea',
       modulos_habilitados: ['mod-1'],
     },
+  });
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body?.success, false);
+  assert.equal(response.body?.error, 'UNIDADE_ID_REQUIRED');
+  assert.equal(globalThis.__GESTOR_FUNCOES_GET_BY_ID_QUERY_ROUTE_CALLS__.length, 0);
+});
+
+test('DELETE /gestor/api/funcoes/:id com admin sem contexto ativo e unidade_id na query passa no requireUnitScope e retorna 200', async () => {
+  const response = await requestWithSession({
+    pathname: '/gestor/api/funcoes/507f1f77bcf86cd799439011?unidade_id=507f191e810c19729de860ea',
+    sessionUser: {
+      id: 'session-admin-sem-contexto-delete',
+      email: 'admin.sem.contexto.delete@example.com',
+      role: 'admin',
+      nome: 'Admin sem contexto DELETE',
+    },
+    method: 'DELETE',
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body?.success, true);
+  assert.equal(globalThis.__GESTOR_FUNCOES_GET_BY_ID_QUERY_ROUTE_CALLS__.length, 1);
+  assert.equal(globalThis.__GESTOR_FUNCOES_GET_BY_ID_QUERY_ROUTE_CALLS__[0]?.method, 'DELETE');
+  assert.equal(
+    String(globalThis.__GESTOR_FUNCOES_GET_BY_ID_QUERY_ROUTE_CALLS__[0]?.unitScope?.unidadeId || ''),
+    '507f191e810c19729de860ea',
+  );
+  assert.equal(
+    String(globalThis.__GESTOR_FUNCOES_GET_BY_ID_QUERY_ROUTE_CALLS__[0]?.query?.unidade_id || ''),
+    '507f191e810c19729de860ea',
+  );
+});
+
+test('DELETE /gestor/api/funcoes/:id com admin sem contexto ativo e sem unidade_id continua retornando UNIDADE_ID_REQUIRED', async () => {
+  const response = await requestWithSession({
+    pathname: '/gestor/api/funcoes/507f1f77bcf86cd799439011',
+    sessionUser: {
+      id: 'session-admin-sem-contexto-delete-sem-unidade',
+      email: 'admin.sem.unidade.delete@example.com',
+      role: 'admin',
+      nome: 'Admin sem unidade DELETE',
+    },
+    method: 'DELETE',
   });
 
   assert.equal(response.status, 400);
