@@ -9,12 +9,16 @@ import express from 'express';
 import request from 'supertest';
 
 const BRIDGE_ALIAS = '#modules/gestor/app/services/apiDbBridgeService.js';
+const CONTROLLER_ALIAS = '#modules/gestor/app/controllers/funcaoApiController.js';
 const BRIDGE_FILE_URL = pathToFileURL(resolve(process.cwd(), 'src/modules/gestor/app/services/apiDbBridgeService.js')).href;
 const BRIDGE_MOCK_URL = 'mock:gestor-funcoes-create-bridge';
+const CONTROLLER_ROUTE_MOCK_URL = 'mock:gestor-funcoes-create-route-controller';
 const OWNER_CONTROLLER_IMPORT = '../src/modules/gestor/app/controllers/funcaoApiController.js?gestor-funcoes-create-runtime-owner';
 
 globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_MOCKS__ = {};
 globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_USE_BRIDGE_MOCK__ = false;
+globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_USE_ROUTE_CONTROLLER_MOCK__ = false;
+globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_ROUTE_CONTROLLER_CALLS__ = [];
 
 registerHooks({
 	resolve(specifier, context, nextResolve) {
@@ -22,6 +26,13 @@ registerHooks({
 			return {
 				shortCircuit: true,
 				url: BRIDGE_MOCK_URL,
+			};
+		}
+
+		if (specifier === CONTROLLER_ALIAS && globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_USE_ROUTE_CONTROLLER_MOCK__) {
+			return {
+				shortCircuit: true,
+				url: CONTROLLER_ROUTE_MOCK_URL,
 			};
 		}
 
@@ -39,6 +50,39 @@ export function findFuncaoByNome(...args) { return getState().findFuncaoByNome(.
 export function createFuncao(...args) { return getState().createFuncao(...args); }
 export function findUnidadeByIdWithModulosAcessiveis(...args) { return getState().findUnidadeByIdWithModulosAcessiveis(...args); }
 export function findUnidadeUserBaseLean(...args) { return getState().findUnidadeUserBaseLean(...args); }
+`,
+			};
+		}
+
+		if (url === CONTROLLER_ROUTE_MOCK_URL) {
+			return {
+				format: 'module',
+				shortCircuit: true,
+				source: `
+const getCalls = () => globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_ROUTE_CONTROLLER_CALLS__;
+export async function createFuncao(req, res) {
+	getCalls().push({
+		body: req?.body || null,
+		unitScope: req?.unitScope || null,
+		userRole: req?.user?.role || null,
+	});
+	return res.status(201).json({ success: true, data: { _id: ${JSON.stringify(CREATED_FUNCAO_ID)} } });
+}
+export async function getFuncao(req, res) { return res.status(200).json({ success: true }); }
+export async function updateFuncao(req, res) { return res.status(200).json({ success: true }); }
+export async function getFuncoesPorUnidade(req, res) { return res.status(200).json({ success: true, data: [] }); }
+export async function listarFuncoesApi(req, res) { return res.status(200).json({ success: true, data: [] }); }
+export async function deleteFuncao(req, res) { return res.status(200).json({ success: true }); }
+export async function bulkUpdateFuncoes(req, res) { return res.status(200).json({ success: true, data: { updated: 0, results: [] } }); }
+export default {
+	createFuncao,
+	getFuncao,
+	updateFuncao,
+	getFuncoesPorUnidade,
+	listarFuncoesApi,
+	deleteFuncao,
+	bulkUpdateFuncoes,
+};
 `,
 			};
 		}
@@ -114,6 +158,7 @@ function resetBridgeMocks() {
 			};
 		},
 	};
+	globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_ROUTE_CONTROLLER_CALLS__ = [];
 
 	return calls;
 }
@@ -181,15 +226,20 @@ async function requestGestorAppWithSession({
 	pathname = '/api/funcoes',
 	body,
 	sessionUser,
+	useBridgeMock = false,
+	useRouteControllerMock = false,
 } = {}) {
-	globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_USE_BRIDGE_MOCK__ = false;
+	globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_USE_BRIDGE_MOCK__ = !!useBridgeMock;
+	globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_USE_ROUTE_CONTROLLER_MOCK__ = !!useRouteControllerMock;
+	const routeModuleQuery = useRouteControllerMock ? 'route-controller-mock' : (useBridgeMock ? 'bridge-mock' : 'bridge-real');
+	const routeModule = await import(`../src/modules/gestor/app/routes/funcaoApi.js?${routeModuleQuery}-${Date.now()}`);
 	const app = express();
 	app.use(express.json());
 	app.use((req, res, next) => {
 		req.session = sessionUser ? { user: { ...sessionUser } } : {};
 		next();
 	});
-	app.use('/gestor', (await import('../src/modules/gestor/app/routes/funcaoApi.js')).default);
+	app.use('/gestor', routeModule.default);
 
 	const req = request(app)
 		[method.toLowerCase()]("/gestor" + pathname)
@@ -263,6 +313,62 @@ test('POST /gestor/api/funcoes com diretor sem contexto canonico ativo retorna 4
 	assert.equal(response.status, 400);
 	assert.equal(response.body?.success, false);
 	assert.equal(response.body?.error, 'UNIDADE_ID_REQUIRED');
+});
+
+test('POST /gestor/api/funcoes com admin sem contexto canonico ativo e unidadePrincipal no body deriva escopo e cria com 201', async () => {
+	const response = await requestGestorAppWithSession({
+		pathname: '/api/funcoes',
+		body: {
+			nome: 'Supervisor admin sem contexto',
+			descricao: 'Criado com escopo derivado',
+			unidadePrincipal: CONTEXT_PRINCIPAL_ID,
+			modulos_habilitados: [MOD_ALLOWED_1, MOD_BLOCKED, MOD_ALLOWED_2],
+		},
+		sessionUser: {
+			id: 'session-admin-sem-contexto',
+			email: 'admin.sem.contexto@example.com',
+			role: 'admin',
+			nome: 'Admin sem contexto',
+		},
+		useBridgeMock: true,
+		useRouteControllerMock: true,
+	});
+
+	assert.equal(response.status, 201);
+	assert.equal(response.body?.success, true);
+	assert.equal(response.body?.data?._id || response.body?.id, CREATED_FUNCAO_ID);
+	assert.equal(globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_ROUTE_CONTROLLER_CALLS__.length, 1);
+	assert.equal(
+		String(globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_ROUTE_CONTROLLER_CALLS__[0]?.unitScope?.unidadeId || ''),
+		CONTEXT_PRINCIPAL_ID,
+	);
+	assert.equal(
+		String(globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_ROUTE_CONTROLLER_CALLS__[0]?.body?.unidade_id || ''),
+		CONTEXT_PRINCIPAL_ID,
+	);
+});
+
+test('POST /gestor/api/funcoes com user sem contexto canonico ativo continua bloqueado com 400 mesmo com unidadePrincipal no body', async () => {
+	const response = await requestGestorAppWithSession({
+		pathname: '/api/funcoes',
+		body: {
+			nome: 'Supervisor user sem contexto',
+			unidadePrincipal: CONTEXT_PRINCIPAL_ID,
+		},
+		sessionUser: {
+			id: 'session-user-sem-contexto',
+			email: 'user.sem.contexto@example.com',
+			role: 'user',
+			nome: 'User sem contexto',
+		},
+		useBridgeMock: true,
+		useRouteControllerMock: true,
+	});
+
+	assert.equal(response.status, 400);
+	assert.equal(response.body?.success, false);
+	assert.equal(response.body?.error, 'UNIDADE_ID_REQUIRED');
+	assert.equal(globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_ROUTE_CONTROLLER_CALLS__.length, 0);
 });
 
 test('owner real exige nome', async () => {
