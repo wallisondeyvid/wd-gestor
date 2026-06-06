@@ -18,7 +18,13 @@ body.wdg-layout .hero-wd.hero-wd-fixed-height{
 }
 .hero-wd.hero-wd-fixed-height .hero-bg,
 body.wdg-layout .hero-wd.hero-wd-fixed-height .hero-bg{
-	object-fit:fill;
+	right:auto;
+	bottom:auto;
+	height:100%;
+	width:auto;
+	max-width:none;
+	min-width:0;
+	object-fit:contain;
 	object-position:left center;
 }
 .hero-wd.hero-noimg,
