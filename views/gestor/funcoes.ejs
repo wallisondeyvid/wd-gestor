@@ -353,6 +353,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function cancelarEdicao(){
     hiddenId.value = '';
+    delete form.dataset.unidadePrincipalId;
     form.reset();
     renderModulosSelect([]);
     syncHiddenFromSelect();
@@ -388,7 +389,20 @@ document.addEventListener('DOMContentLoaded', function(){
     btnSubmit.title = btnSubmit.textContent;
     btnSubmit.setAttribute('aria-label', btnSubmit.textContent);
 
-  const url = isUpdate ? (BASE + '/api/funcoes/' + encodeURIComponent(hiddenId.value)) : (BASE + '/api/funcoes');
+  const scopedUnidadeId = String(form.dataset.unidadePrincipalId || payload.unidade_principal_id || '').trim();
+  if (isUpdate && !scopedUnidadeId) {
+    alert('Erro: Unidade principal obrigatória para salvar a edição.');
+    btnSubmit.disabled = false;
+    btnSubmit.textContent = 'Salvar';
+    btnSubmit.title = btnSubmit.textContent;
+    btnSubmit.setAttribute('aria-label', btnSubmit.textContent);
+    return;
+  }
+
+  const query = (isUpdate && scopedUnidadeId) ? ('?unidade_id=' + encodeURIComponent(scopedUnidadeId)) : '';
+  const url = isUpdate
+    ? (BASE + '/api/funcoes/' + encodeURIComponent(hiddenId.value) + query)
+    : (BASE + '/api/funcoes');
     const method = isUpdate ? 'PUT' : 'POST';
 
     fetch(url, {
@@ -461,6 +475,7 @@ document.addEventListener('DOMContentLoaded', function(){
           (data.unidade_principal_id && (data.unidade_principal_id._id || data.unidade_principal_id.id))
           || data.unidade_principal_id
           || '';
+        form.dataset.unidadePrincipalId = String(document.getElementById('unidade_principal_id').value || '').trim();
 
         // Ao entrar em edição, carregue os módulos permitidos pela unidade selecionada
         const unidId = document.getElementById('unidade_principal_id').value;
@@ -550,6 +565,7 @@ document.addEventListener('DOMContentLoaded', function(){
   if (selectUnid) {
     selectUnid.addEventListener('change', async (e) => {
       const unidId = e.target.value;
+      form.dataset.unidadePrincipalId = String(unidId || '').trim();
       // Controla disponibilidade do botão Gerenciar
       if (btnGerenciar) btnGerenciar.disabled = !unidId;
 

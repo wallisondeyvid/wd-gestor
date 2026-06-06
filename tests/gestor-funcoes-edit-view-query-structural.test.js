@@ -18,6 +18,14 @@ test('editar na view envia unidade_id na query do GET /api/funcoes/:id usando un
   assert.match(viewSource, /fetch\(BASE \+ '\/api\/funcoes\/' \+ encodeURIComponent\(id\) \+ query\)/);
 });
 
+test('submit de edicao envia unidade_id na query do PUT /api/funcoes/:id com fonte em unidade_principal_id real', () => {
+  assert.match(viewSource, /const scopedUnidadeId = String\(form\.dataset\.unidadePrincipalId \|\| payload\.unidade_principal_id \|\| ''\)\.trim\(\);/);
+  assert.match(viewSource, /const query = \(isUpdate && scopedUnidadeId\) \? \('\?unidade_id=' \+ encodeURIComponent\(scopedUnidadeId\)\) : '';/);
+  assert.match(viewSource, /\? \(BASE \+ '\/api\/funcoes\/' \+ encodeURIComponent\(hiddenId\.value\) \+ query\)/);
+  assert.match(viewSource, /form\.dataset\.unidadePrincipalId = String\(document\.getElementById\('unidade_principal_id'\)\.value \|\| ''\)\.trim\(\);/);
+  assert.match(viewSource, /form\.dataset\.unidadePrincipalId = String\(unidId \|\| ''\)\.trim\(\);/);
+});
+
 test('GET /api/funcoes/:id continua protegido por requireUnitScope no backend', () => {
   assert.match(routeSource, /router\.get\('\/api\/funcoes\/:id', withLoginAndRequiredUnitScope\(getFuncao\)\);/);
   assert.doesNotMatch(routeSource, /router\.get\('\/api\/funcoes\/:id',\s*getFuncao\)/);
