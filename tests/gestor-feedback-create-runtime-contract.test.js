@@ -239,6 +239,45 @@ test('POST /gestor/api/feedback sem sessão retorna 401 JSON', async () => {
   });
 });
 
+test('POST canônico do widget create permite feedback global autenticado sem unidade ativa em página global do gestor', async () => {
+  await withHarness(async ({ app }) => {
+    const marker = `feedback_create_global_${Date.now()}_${nextCounter()}`;
+    const privilegedUser = await createTestUser({ role: 'admin', marker });
+    const privilegedAgent = await seedAuthenticatedAgent(app, privilegedUser);
+
+    const res = await privilegedAgent
+      .post(CANONICAL_CREATE_ENDPOINT)
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send({
+        mensagem: 'Feedback global sem unidade ativa na tela de unidades',
+        tipo: 'elogio',
+        contexto: {
+          url: '/gestor/unidades',
+          timezone: 'America/Sao_Paulo',
+        },
+      });
+
+    expectApiSuccessEnvelope(res, 200);
+    assert.equal(res.body?.created, true);
+    assert.equal(res.body?.error, undefined);
+    assert.notEqual(res.body?.message, 'UNIDADE_ID_REQUIRED');
+    assert.ok(res.body?.id);
+    assert.equal(res.body?.data?.tipo, 'elogio');
+    assert.equal(res.body?.data?.origem?.modulo, 'gestor');
+    assert.equal(res.body?.data?.origem?.path, '/gestor/unidades');
+    assert.equal(String(res.body?.data?.criadoPor?.userId || ''), String(privilegedUser._id));
+
+    const persisted = await Feedback.findById(res.body.id).lean();
+    assert.ok(persisted, 'feedback global criado deve existir no banco');
+    assert.equal(persisted.tipo, 'elogio');
+    assert.equal(String(persisted?.origem?.modulo || ''), 'gestor');
+    assert.equal(String(persisted?.origem?.path || ''), '/gestor/unidades');
+    assert.equal(String(persisted?.criadoPor?.userId || ''), String(privilegedUser._id));
+    assert.ok(persisted.unidade_id == null, 'feedback global não deve exigir unidade ativa');
+  });
+});
+
 test('POST canônico do widget create cria feedback contextual com unidade ativa e status novo', async () => {
   await withHarness(async ({ app }) => {
     const marker = `feedback_create_${Date.now()}_${nextCounter()}`;
@@ -266,6 +305,45 @@ test('POST canônico do widget create cria feedback contextual com unidade ativa
     assert.ok(persisted, 'feedback criado deve existir no banco');
     assert.equal(String(persisted.unidade_id || ''), FEEDBACK_UNIT_A);
     assert.equal(persisted.status, 'novo');
+  });
+});
+
+test('POST canônico do widget create permite feedback global sem unidade ativa para admin e master autenticados', async () => {
+  await withHarness(async ({ app }) => {
+    for (const role of ['admin', 'master']) {
+      const marker = `feedback_create_global_${role}_${Date.now()}_${nextCounter()}`;
+      const creatorUser = await createTestUser({ role, marker });
+      const creatorAgent = await seedAuthenticatedAgent(app, creatorUser);
+
+      const res = await creatorAgent
+        .post(CANONICAL_CREATE_ENDPOINT)
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .send({
+          mensagem: `Mensagem global do widget em /gestor/unidades para ${role}`,
+          tipo: 'elogio',
+          contexto: {
+            url: '/gestor/unidades',
+            timezone: 'America/Sao_Paulo',
+          },
+        });
+
+      expectApiSuccessEnvelope(res, 200);
+      assert.equal(res.body?.error, undefined);
+      assert.notEqual(res.body?.error, 'UNIDADE_ID_REQUIRED');
+      assert.equal(res.body?.created, true);
+      assert.equal(String(res.body?.data?.criadoPor?.userId || ''), String(creatorUser._id));
+      assert.equal(res.body?.data?.origem?.modulo, 'gestor');
+      assert.equal(res.body?.data?.origem?.path, '/gestor/unidades');
+      assert.ok(res.body?.data?.unidade_id == null || String(res.body?.data?.unidade_id || '').trim() === '');
+
+      const persisted = await Feedback.findById(res.body.id).lean();
+      assert.ok(persisted, `feedback global criado para ${role} deve existir no banco`);
+      assert.equal(String(persisted?.criadoPor?.userId || ''), String(creatorUser._id));
+      assert.equal(String(persisted?.origem?.modulo || ''), 'gestor');
+      assert.equal(String(persisted?.origem?.path || ''), '/gestor/unidades');
+      assert.ok(persisted?.unidade_id == null || String(persisted?.unidade_id || '').trim() === '');
+    }
   });
 });
 

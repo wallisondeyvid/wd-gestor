@@ -5,7 +5,6 @@ import multer from 'multer';
 import { del } from '@vercel/blob';
 import { createUnitScope } from '#shared/unitScope.js';
 import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
-import { requireUnitScope } from '#modules/gestor/app/middlewares/requireUnitScope.js';
 import { createAdminFeedbackDetailHandler } from '#modules/gestor/app/controllers/feedbackDetailApiController.js';
 import { createCreateFeedbackHandler } from '#modules/gestor/app/controllers/feedbackCreateApiController.js';
 import { createUploadFeedbackAnexoHandler } from '#modules/gestor/app/controllers/feedbackUploadApiController.js';
@@ -38,6 +37,26 @@ function isAdminLike(user){
   return !!(user && (user.isMaster || user.role === 'admin' || user.role === 'master'));
 }
 
+function normalizeOptionalFeedbackUnitId(value) {
+  const normalized = String(value || '').trim();
+  return /^[0-9a-fA-F]{24}$/.test(normalized) ? normalized : '';
+}
+
+function seedOptionalFeedbackUnitScope(req, _res, next) {
+  const scopedUnitId = normalizeOptionalFeedbackUnitId(
+    req.unitScope?.unidadeId
+      || req.session?.gestorAuthContext?.active_unidade_id
+      || req.user?.unidade_id
+      || req.session?.user?.unidade_id,
+  );
+
+  if (scopedUnitId) {
+    req.unitScope = createUnitScope({ unidadeId: scopedUnitId });
+  }
+
+  return next();
+}
+
 function apiOk(res, data = null, extra = {}){
   return res.json({ ok: true, success: true, data, ...extra });
 }
@@ -47,7 +66,10 @@ function apiFail(res, status, message, extra = {}){
 
 function seedFeedbackAdminUnitScopeFromAuthContext(req, _res, next) {
   const scopedUnitId = String(
-    req.unitScope?.unidadeId || req.session?.gestorAuthContext?.active_unidade_id || '',
+    req.unitScope?.unidadeId
+      || req.session?.gestorAuthContext?.active_unidade_id
+      || req.session?.user?.unidade_id
+      || '',
   ).trim();
 
   if (scopedUnitId) {
@@ -144,7 +166,7 @@ const createFeedbackHandler = createCreateFeedbackHandler({
   inferModuloFromUrl,
   createFeedback,
 });
-router.post('/api/feedback', requireLogin, requireUnitScope, createFeedbackHandler);
+router.post('/api/feedback', requireLogin, seedOptionalFeedbackUnitScope, createFeedbackHandler);
 
 // Upload de anexo para um feedback
 const uploadStorageInfra = createFeedbackUploadStorageInfraCore();
@@ -157,7 +179,7 @@ const uploadFeedbackAnexoHandler = createUploadFeedbackAnexoHandler({
   feedbackPolicy,
   uploadStorageInfra,
 });
-router.post('/api/feedback/:feedbackId/anexo', requireLogin, requireUnitScope, uploadFeedbackAnexoMiddleware, uploadFeedbackAnexoHandler);
+router.post('/api/feedback/:feedbackId/anexo', requireLogin, seedOptionalFeedbackUnitScope, uploadFeedbackAnexoMiddleware, uploadFeedbackAnexoHandler);
 
 // Meus feedbacks
 const listMyFeedback = createMyFeedbackListHandler({
@@ -166,7 +188,7 @@ const listMyFeedback = createMyFeedbackListHandler({
   feedbackPolicy,
   findFeedbackByFilterSortCreatedAtDescLimit200Lean,
 });
-router.get('/api/feedback/meus', requireLogin, requireUnitScope, listMyFeedback);
+router.get('/api/feedback/meus', requireLogin, seedOptionalFeedbackUnitScope, listMyFeedback);
 
 // Detalhar meu feedback
 const detailMyFeedback = createMyFeedbackDetailHandler({
@@ -175,7 +197,7 @@ const detailMyFeedback = createMyFeedbackDetailHandler({
   feedbackPolicy,
   findFeedbackByIdLean,
 });
-router.get('/api/feedback/meus/:feedbackId', requireLogin, requireUnitScope, detailMyFeedback);
+router.get('/api/feedback/meus/:feedbackId', requireLogin, seedOptionalFeedbackUnitScope, detailMyFeedback);
 
 // =============== Admin (Gestor) ===============
 
