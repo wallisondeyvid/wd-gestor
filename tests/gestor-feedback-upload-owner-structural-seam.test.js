@@ -231,7 +231,8 @@ test('feedback upload: route owner preserva wiring canonico da rota de anexo', (
 	assert.ok(registration, 'A rota canonica de upload de anexo deve permanecer registrada no route owner.');
 	assert.equal(registration.handlers.length, 4);
 	assert.equal(registration.handlers[0], deps.requireLogin);
-	assert.equal(registration.handlers[1], deps.requireUnitScope);
+	assert.equal(typeof registration.handlers[1], 'function');
+	assert.equal(registration.handlers[1].name, 'seedOptionalFeedbackUnitScope');
 	assert.equal(typeof registration.handlers[2], 'function');
 	assert.equal(typeof registration.handlers[3], 'function');
 	assert.equal(callLog.createUploadHandlerCalls.length, 1);

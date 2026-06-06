@@ -343,3 +343,42 @@ test('GET canônico do widget list preserva o fallback legado para feedback sem 
     assert.equal(returnedIds.has(ownLegacyId), true);
   });
 });
+
+test('GET canônico do widget list permite acompanhar feedbacks globais sem unidade ativa', async () => {
+  await withHarness(async ({ app }) => {
+    const marker = `feedback_my_list_global_${Date.now()}_${nextCounter()}`;
+    const creatorUser = await createTestUser({ role: 'admin', marker });
+    const otherUser = await createTestUser({ role: 'admin', marker: `${marker}_other` });
+    const creatorAgent = await seedAuthenticatedAgent(app, creatorUser);
+
+    const ownGlobalId = await createFeedbackDoc({
+      unidadeId: null,
+      creatorUser,
+      mensagem: 'feedback global do criador',
+      omitUnit: true,
+    });
+    const ownScopedId = await createFeedbackDoc({
+      unidadeId: FEEDBACK_UNIT_A,
+      creatorUser,
+      mensagem: 'feedback contextual do mesmo criador',
+    });
+    const otherGlobalId = await createFeedbackDoc({
+      unidadeId: null,
+      creatorUser: otherUser,
+      mensagem: 'feedback global de outro usuário',
+      omitUnit: true,
+    });
+
+    const res = await creatorAgent
+      .get(CANONICAL_MY_LIST_ENDPOINT)
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    expectApiSuccessEnvelope(res, 200);
+    assert.notEqual(res.body?.error, 'UNIDADE_ID_REQUIRED');
+    const returnedIds = new Set((res.body?.data || []).map((item) => String(item?._id || item?.id || '')));
+    assert.equal(returnedIds.has(ownGlobalId), true);
+    assert.equal(returnedIds.has(ownScopedId), true);
+    assert.equal(returnedIds.has(otherGlobalId), false);
+  });
+});

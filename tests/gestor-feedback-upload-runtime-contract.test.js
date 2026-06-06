@@ -221,12 +221,11 @@ function expectApiSuccessEnvelope(res, expectedStatus = 200) {
   assert.equal(res.body?.success, true);
 }
 
-async function createFeedbackDoc({ unidadeId, creatorUser, mensagem }) {
-  const feedback = await Feedback.create({
+async function createFeedbackDoc({ unidadeId, creatorUser, mensagem, omitUnit = false }) {
+  const payload = {
     tipo: 'outro',
     status: 'novo',
     mensagem,
-    unidade_id: unidadeId,
     criadoPor: {
       userId: creatorUser?._id || null,
       email: creatorUser?.email || '',
@@ -240,7 +239,13 @@ async function createFeedbackDoc({ unidadeId, creatorUser, mensagem }) {
       timezone: 'America/Sao_Paulo',
     },
     anexos: [],
-  });
+  };
+
+  if (!omitUnit) {
+    payload.unidade_id = unidadeId;
+  }
+
+  const feedback = await Feedback.create(payload);
 
   return String(feedback._id);
 }
@@ -328,6 +333,41 @@ test('POST canônico do widget upload anexa arquivo em feedback do criador no es
     const persisted = await Feedback.findById(feedbackId).lean();
     assert.ok(Array.isArray(persisted?.anexos));
     assert.ok((persisted?.anexos || []).length >= 1);
+  });
+});
+
+test('POST canônico do widget upload permite anexo em feedback global sem unidade ativa', async () => {
+  await withHarness(async ({ app }) => {
+    const marker = `feedback_upload_global_${Date.now()}_${nextCounter()}`;
+    const creatorUser = await createTestUser({ role: 'admin', marker });
+    const creatorAgent = await seedAuthenticatedAgent(app, creatorUser);
+    const feedbackId = await createFeedbackDoc({
+      unidadeId: null,
+      creatorUser,
+      mensagem: 'feedback global para upload focal',
+      omitUnit: true,
+    });
+
+    const res = await withEnvPatch(
+      {
+        VERCEL: '',
+        BLOB_READ_WRITE_TOKEN: '',
+        WDGESTOR_DB_DADOS_READ_WRITE_TOKEN: '',
+        VERCEL_BLOB_RW_TOKEN: '',
+      },
+      async () => creatorAgent
+        .post(withRouteParam(CANONICAL_UPLOAD_ENDPOINT, feedbackId))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .attach('anexo', createTinyPngBuffer(), 'ok-global.png'),
+    );
+
+    expectApiSuccessEnvelope(res, 200);
+    assert.notEqual(res.body?.error, 'UNIDADE_ID_REQUIRED');
+    const persisted = await Feedback.findById(feedbackId).lean();
+    assert.ok(Array.isArray(persisted?.anexos));
+    assert.ok((persisted?.anexos || []).length >= 1);
+    assert.ok(persisted?.unidade_id == null || String(persisted?.unidade_id || '').trim() === '');
   });
 });
 

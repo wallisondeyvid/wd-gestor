@@ -195,12 +195,11 @@ function withRouteParam(template, value) {
   return template.replace(':feedbackId', encodeURIComponent(String(value)));
 }
 
-async function createFeedbackDoc({ unidadeId, creatorUser, mensagem }) {
-  const feedback = await Feedback.create({
+async function createFeedbackDoc({ unidadeId, creatorUser, mensagem, omitUnit = false }) {
+  const payload = {
     tipo: 'outro',
     status: 'novo',
     mensagem,
-    unidade_id: unidadeId,
     criadoPor: {
       userId: creatorUser?._id || null,
       email: creatorUser?.email || '',
@@ -214,7 +213,13 @@ async function createFeedbackDoc({ unidadeId, creatorUser, mensagem }) {
       timezone: 'America/Sao_Paulo',
     },
     anexos: [],
-  });
+  };
+
+  if (!omitUnit) {
+    payload.unidade_id = unidadeId;
+  }
+
+  const feedback = await Feedback.create(payload);
 
   return String(feedback._id);
 }
@@ -333,5 +338,29 @@ test('GET canônico do widget detail preserva a validação 400 para id malforma
 
     expectApiFailEnvelope(res, 400);
     assert.equal(res.body?.error, 'ID inválido.');
+  });
+});
+
+test('GET canônico do widget detail permite ler feedback global do criador sem unidade ativa', async () => {
+  await withHarness(async ({ app }) => {
+    const marker = `feedback_my_detail_global_${Date.now()}_${nextCounter()}`;
+    const creatorUser = await createTestUser({ role: 'admin', marker });
+    const creatorAgent = await seedAuthenticatedAgent(app, creatorUser);
+    const feedbackId = await createFeedbackDoc({
+      unidadeId: null,
+      creatorUser,
+      mensagem: 'feedback global do criador para widget detail',
+      omitUnit: true,
+    });
+
+    const res = await creatorAgent
+      .get(withRouteParam(CANONICAL_MY_DETAIL_ENDPOINT, feedbackId))
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    expectApiSuccessEnvelope(res, 200);
+    assert.notEqual(res.body?.error, 'UNIDADE_ID_REQUIRED');
+    assert.equal(String(res.body?.data?._id || res.body?.data?.id || ''), feedbackId);
+    assert.ok(res.body?.data?.unidade_id == null || String(res.body?.data?.unidade_id || '').trim() === '');
   });
 });
