@@ -13,6 +13,10 @@ test('create de funcoes usa derivacao de escopo apenas na rota de create', () =>
   assert.match(routeSource, /function resolveCreateFuncaoScopedUnitIdFromBody\(req\) \{/);
   assert.match(routeSource, /body\.unidade_principal_id/);
   assert.match(routeSource, /body\.unidadePrincipal/);
+  assert.match(
+    routeSource,
+    /function withLoginAndRequiredUnitScopeForCreate\(handler\) \{[\s\S]*?const scopedUnitCandidate = resolveCreateFuncaoScopedUnitIdFromBody\(req\);[\s\S]*?return requireUnitScope\(req, res, \(\) => \{/,
+  );
   assert.match(routeSource, /router\.post\('\/api\/funcoes', withLoginAndRequiredUnitScopeForCreate\(createFuncao\)\);/);
 
   assert.match(routeSource, /router\.get\('\/api\/funcoes', withLoginAndRequiredUnitScope\(listarFuncoesApi\)\);/);

@@ -49,14 +49,12 @@ function withLoginAndRequiredUnitScope(handler) {
 
 function withLoginAndRequiredUnitScopeForCreate(handler) {
 	return (req, res, next) => requireLogin(req, res, () => {
-		if (isPrivilegedGestorUser(req.user) && !hasCanonicalUnitContext(req)) {
-			const scopedUnitCandidate = resolveCreateFuncaoScopedUnitIdFromBody(req);
-			if (scopedUnitCandidate) {
-				req.body = {
-					...(req.body && typeof req.body === 'object' ? req.body : {}),
-					unidade_id: scopedUnitCandidate,
-				};
-			}
+		const scopedUnitCandidate = resolveCreateFuncaoScopedUnitIdFromBody(req);
+		if (scopedUnitCandidate) {
+			req.body = {
+				...(req.body && typeof req.body === 'object' ? req.body : {}),
+				unidade_id: scopedUnitCandidate,
+			};
 		}
 
 		return requireUnitScope(req, res, () => {

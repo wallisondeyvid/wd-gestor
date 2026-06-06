@@ -315,13 +315,13 @@ test('POST /gestor/api/funcoes com diretor sem contexto canonico ativo retorna 4
 	assert.equal(response.body?.error, 'UNIDADE_ID_REQUIRED');
 });
 
-test('POST /gestor/api/funcoes com admin sem contexto canonico ativo e unidadePrincipal no body deriva escopo e cria com 201', async () => {
+test('POST /gestor/api/funcoes com admin sem contexto canonico ativo e payload real (apenas unidade_principal_id) deriva escopo e cria com 201', async () => {
 	const response = await requestGestorAppWithSession({
 		pathname: '/api/funcoes',
 		body: {
 			nome: 'Supervisor admin sem contexto',
 			descricao: 'Criado com escopo derivado',
-			unidadePrincipal: CONTEXT_PRINCIPAL_ID,
+			unidade_principal_id: CONTEXT_PRINCIPAL_ID,
 			modulos_habilitados: [MOD_ALLOWED_1, MOD_BLOCKED, MOD_ALLOWED_2],
 		},
 		sessionUser: {
@@ -339,12 +339,20 @@ test('POST /gestor/api/funcoes com admin sem contexto canonico ativo e unidadePr
 	assert.equal(response.body?.data?._id || response.body?.id, CREATED_FUNCAO_ID);
 	assert.equal(globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_ROUTE_CONTROLLER_CALLS__.length, 1);
 	assert.equal(
+		String(globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_ROUTE_CONTROLLER_CALLS__[0]?.body?.unidade_principal_id || ''),
+		CONTEXT_PRINCIPAL_ID,
+	);
+	assert.equal(
 		String(globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_ROUTE_CONTROLLER_CALLS__[0]?.unitScope?.unidadeId || ''),
 		CONTEXT_PRINCIPAL_ID,
 	);
 	assert.equal(
 		String(globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_ROUTE_CONTROLLER_CALLS__[0]?.body?.unidade_id || ''),
 		CONTEXT_PRINCIPAL_ID,
+	);
+	assert.equal(
+		String(globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_ROUTE_CONTROLLER_CALLS__[0]?.body?.unidadeId || ''),
+		'',
 	);
 });
 
@@ -360,6 +368,30 @@ test('POST /gestor/api/funcoes com user sem contexto canonico ativo continua blo
 			email: 'user.sem.contexto@example.com',
 			role: 'user',
 			nome: 'User sem contexto',
+		},
+		useBridgeMock: true,
+		useRouteControllerMock: true,
+	});
+
+	assert.equal(response.status, 400);
+	assert.equal(response.body?.success, false);
+	assert.equal(response.body?.error, 'UNIDADE_ID_REQUIRED');
+	assert.equal(globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_ROUTE_CONTROLLER_CALLS__.length, 0);
+});
+
+test('POST /gestor/api/funcoes com admin sem contexto ativo e sem unidade no body retorna UNIDADE_ID_REQUIRED', async () => {
+	const response = await requestGestorAppWithSession({
+		pathname: '/api/funcoes',
+		body: {
+			nome: 'Supervisor sem unidade no payload',
+			descricao: 'Sem unidade',
+			modulos_habilitados: [MOD_ALLOWED_1],
+		},
+		sessionUser: {
+			id: 'session-admin-sem-unidade',
+			email: 'admin.sem.unidade@example.com',
+			role: 'admin',
+			nome: 'Admin sem unidade',
 		},
 		useBridgeMock: true,
 		useRouteControllerMock: true,
