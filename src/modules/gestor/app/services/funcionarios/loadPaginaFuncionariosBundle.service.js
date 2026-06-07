@@ -10,15 +10,22 @@ export async function loadPaginaFuncionariosBundle({
 }) {
   const { operationalUnitId, operationalUnit, principalUnitId } = await loadScopedOperationalUnitContext(req);
 
-  if (operationalUnitId) {
+    if (operationalUnitId) {
     const { funcoesFiltradas, setoresFiltrados, funcionarios } = await loadScopedPaginaFuncionariosBundleData({
       operationalUnitId,
       principalUnitId,
     });
 
+    let unidadesFiltradas = operationalUnit ? [operationalUnit] : [];
+
+    if (privilegedUser) {
+      const privilegedBundle = await loadPrivilegedPaginaFuncionariosBundleData();
+      unidadesFiltradas = privilegedBundle.unidadesFiltradas || unidadesFiltradas;
+    }
+
     return {
       user: req.user,
-      unidadesFiltradas: operationalUnit ? [operationalUnit] : [],
+      unidadesFiltradas,
       funcoesFiltradas,
       setoresFiltrados,
       funcionarios,
