@@ -34,7 +34,7 @@ test('JS da pagina de Funcionarios ativa unidade global via switch-unit sem envi
   assert.match(pageSource, /document\.getElementById\('gestorFuncionariosGlobalAtivarUnidadeBtn'\)/);
   assert.match(pageSource, /document\.getElementById\('gestorFuncionariosGlobalTrocarUnidadeBtn'\)/);
   assert.match(pageSource, /\|\|/);
-  assert.match(pageSource, /if\(!unidadeId\)\{/);
+  assert.match(pageSource, /if\s*\(\s*!unidadeId\s*\)\s*\{/);
   assert.match(pageSource, /if\s*\(unidadeId\s*===\s*select\.dataset\.currentUnitId\s*\)\s*\{/);
   assert.match(pageSource, /JSON\.stringify\(\{\s*unidade_id:\s*unidadeId\s*\}\)/);
   assert.match(pageSource, /fetch\(`\$\{basePath\}\/auth\/switch-unit`, \{/);

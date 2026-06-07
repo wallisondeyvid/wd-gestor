@@ -22,98 +22,115 @@
     }
   }
 
-  function initGlobalConsultaUnitSwitcher(){
-    const body = document.body;
-    const globalMode = body?.getAttribute('data-funcionarios-global-consulta') === '1';
-    if(!globalMode) return;
+function initGlobalConsultaUnitSwitcher(){
+  const body = document.body;
+  const globalMode = body?.getAttribute('data-funcionarios-global-consulta') === '1';
 
-        const select = document.getElementById('gestorFuncionariosGlobalUnidadeSelect');
-    const button = document.getElementById('gestorFuncionariosGlobalAtivarUnidadeBtn') || document.getElementById('gestorFuncionariosGlobalTrocarUnidadeBtn');
-    const feedback = document.getElementById('gestorFuncionariosGlobalSwitchFeedback');
-    if(!select || !button || !feedback) return;
+  const select = document.getElementById('gestorFuncionariosGlobalUnidadeSelect');
+  const ativarButton = document.getElementById('gestorFuncionariosGlobalAtivarUnidadeBtn');
+  const trocarButton = document.getElementById('gestorFuncionariosGlobalTrocarUnidadeBtn');
+  const button = ativarButton || trocarButton;
+  const feedback = document.getElementById('gestorFuncionariosGlobalSwitchFeedback');
 
-    const setFeedback = (message, tone = 'muted') => {
-        feedback.textContent = message || '';
-        feedback.classList.remove('text-muted', 'text-danger', 'text-success');
-        feedback.classList.add(tone === 'danger' ? 'text-danger' : (tone === 'success' ? 'text-success' : 'text-muted'));
-      };
+  const hasSwitchUi = !!select && !!button && !!feedback;
+  if (!globalMode && !hasSwitchUi) return;
+  if (!hasSwitchUi) return;
 
-      const syncButtonState = () => {
-        const selectedUnitId = String(select.value || '').trim();
-        const busy = button.dataset.busy === '1';
-        const canSubmit = !!selectedUnitId && !busy;
-        button.disabled = !canSubmit;
-        button.setAttribute('aria-disabled', canSubmit ? 'false' : 'true');
-      };
+  const setFeedback = (message, tone = 'muted') => {
+    feedback.textContent = message || '';
+    feedback.classList.remove('text-muted', 'text-danger', 'text-success');
+    feedback.classList.add(
+      tone === 'danger'
+        ? 'text-danger'
+        : (tone === 'success' ? 'text-success' : 'text-muted'),
+    );
+  };
 
-      select.addEventListener('change', () => {
-        const selectedUnitId = String(select.value || '').trim();
-        if (!selectedUnitId) {
-          setFeedback('Selecione uma unidade para continuar.');
-        } else if(selectedUnitId === select.dataset.currentUnitId){
-          setFeedback('Esta unidade já está ativa.', 'danger');
-        } else {
-          setFeedback('Clique em Trocar unidade para alterar o contexto de gerenciamento.');
-        }
-        syncButtonState();
-      });
+  const syncButtonState = () => {
+    const selectedUnitId = String(select.value || '').trim();
+    const busy = button.dataset.busy === '1';
+    const canSubmit = !!selectedUnitId && !busy;
 
-        button.addEventListener('click', async () => {
-      const unidadeId = String(select.value || '').trim();
-      if(!unidadeId){
-        setFeedback('Selecione uma unidade válida para continuar.', 'danger');
-        syncButtonState();
-        select.focus();
-        return;
-      }
-      if(unidadeId === select.dataset.currentUnitId){
-        setFeedback('Esta unidade já está ativa.', 'danger');
-        syncButtonState();
-        return;
-      }
+    button.disabled = !canSubmit;
+    button.setAttribute('aria-disabled', canSubmit ? 'false' : 'true');
+  };
 
-      const originalLabel = button.textContent;
-      button.dataset.busy = '1';
-      button.disabled = true;
-      button.textContent = 'Ativando...';
-      setFeedback('Ativando unidade de gerenciamento...', 'muted');
+  select.addEventListener('change', () => {
+    const selectedUnitId = String(select.value || '').trim();
 
-      try {
-        const response = await fetch(`${basePath}/auth/switch-unit`, {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          credentials: 'same-origin',
-          body: JSON.stringify({ unidade_id: unidadeId }),
-        });
-
-        const payload = await response.json().catch(() => ({}));
-        if(response.ok && payload?.ok){
-          setFeedback('Unidade ativada. Recarregando a página...', 'success');
-          window.location.reload();
-          return;
-        }
-
-        if(response.status === 401){
-          window.location.assign(`${basePath}/login`);
-          return;
-        }
-
-        setFeedback(String(payload?.message || '').trim() || resolveGlobalSwitchUnitError(payload?.code), 'danger');
-      } catch(err){
-        console.error('[FUNC_INDEX][unificado] erro ao ativar unidade global', err);
-        setFeedback('Não foi possível ativar a unidade agora.', 'danger');
-      } finally {
-        button.dataset.busy = '0';
-        button.textContent = originalLabel;
-        syncButtonState();
-      }
-    });
+    if (!selectedUnitId) {
+      setFeedback('Selecione uma unidade para continuar.');
+    } else if (selectedUnitId === select.dataset.currentUnitId) {
+      setFeedback('Esta unidade já está ativa.', 'danger');
+    } else {
+      setFeedback('Clique em Trocar unidade para alterar o contexto de gerenciamento.');
+    }
 
     syncButtonState();
-  }
+  });
+
+  button.addEventListener('click', async () => {
+    const unidadeId = String(select.value || '').trim();
+
+    if (!unidadeId) {
+      setFeedback('Selecione uma unidade válida para continuar.', 'danger');
+      syncButtonState();
+      select.focus();
+      return;
+    }
+
+    if (unidadeId === select.dataset.currentUnitId) {
+      setFeedback('Esta unidade já está ativa.', 'danger');
+      syncButtonState();
+      return;
+    }
+
+    const originalLabel = button.textContent;
+    button.dataset.busy = '1';
+    button.disabled = true;
+    button.textContent = 'Ativando...';
+    setFeedback('Ativando unidade de gerenciamento...', 'muted');
+
+    try {
+      const response = await fetch(`${basePath}/auth/switch-unit`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ unidade_id: unidadeId }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (response.ok && payload?.ok) {
+        setFeedback('Unidade ativada. Recarregando a página...', 'success');
+        window.location.reload();
+        return;
+      }
+
+      if (response.status === 401) {
+        window.location.assign(`${basePath}/login`);
+        return;
+      }
+
+      setFeedback(
+        String(payload?.message || '').trim() || resolveGlobalSwitchUnitError(payload?.code),
+        'danger',
+      );
+    } catch (err) {
+      console.error('[FUNC_INDEX][unificado] erro ao ativar unidade global', err);
+      setFeedback('Não foi possível ativar a unidade agora.', 'danger');
+    } finally {
+      button.dataset.busy = '0';
+      button.textContent = originalLabel;
+      syncButtonState();
+    }
+  });
+
+  syncButtonState();
+}
 
   /* ================= WIZARD / ABAS (fallback) =================
    * O script completo (public/js/funcionarios/funcionarios_index.js) implementa
