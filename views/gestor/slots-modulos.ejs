@@ -126,8 +126,9 @@
           </thead>
           <tbody>
             <% (modulos||[]).forEach(modulo => { %>
+              <% const moduloRowId = String(modulo._id || modulo.id || '').trim(); %>
               <tr>
-                <td><%= modulo.id %></td>
+                <td><%= moduloRowId %></td>
                 <td><%= modulo.nome %></td>
                 <td class="col-desc">
                   <div class="text-truncate"><%= modulo.descricao || '-' %></div>
@@ -143,10 +144,10 @@
                 </td>
                 <td class="col-acoes">
                   <div class="d-flex gap-1 justify-content-center flex-nowrap">
-                    <button type="button" class="wdg-icon-btn" data-action="editar" data-id="<%= modulo.id %>" title="Editar" aria-label="Editar">
+                    <button type="button" class="wdg-icon-btn" data-action="editar" data-id="<%= moduloRowId %>" title="Editar" aria-label="Editar">
                       <img src="<%= _basePath %>/images/editar.png" alt="Editar" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'" />
                     </button>
-                    <button type="button" class="wdg-icon-btn" data-action="excluir" data-id="<%= modulo.id %>" data-nome="<%= encodeURIComponent(modulo.nome || '') %>" title="Excluir" aria-label="Excluir">
+                    <button type="button" class="wdg-icon-btn" data-action="excluir" data-id="<%= moduloRowId %>" data-nome="<%= encodeURIComponent(modulo.nome || '') %>" title="Excluir" aria-label="Excluir">
                       <img src="<%= _basePath %>/images/excluir.png" alt="Excluir" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'" />
                     </button>
                   </div>
