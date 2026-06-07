@@ -54,20 +54,67 @@
   </style>
 </head>
   <body class="wdg-layout" data-unidade-default="<%= unidadeContextualId || (user && user.unidade_id ? user.unidade_id.toString() : '') %>" data-base-path="<%= _basePath %>" data-funcionarios-global-consulta="<%= isGlobalConsultaMode ? '1' : '0' %>">
+  <% const unidadesGestao = Array.isArray(unidadesFiltradas)
+    ? unidadesFiltradas
+        .map((unidade) => ({
+          id: String(unidade?._id || unidade?.id || '').trim(),
+          codigo: String(unidade?.codigo || '').trim(),
+          nome: String(unidade?.nome || '').trim(),
+        }))
+        .filter((unidade) => unidade.id)
+    : []; %>
+  <% const unidadeAtivaGestao = String(unidadeContextualId || '').trim()
+    ? (unidadesGestao.find((unidade) => unidade.id === String(unidadeContextualId || '').trim()) || {
+        id: String(unidadeContextualId || '').trim(),
+        codigo: '',
+        nome: (unidadesGestao.length === 1 ? unidadesGestao[0].nome : ''),
+      })
+    : null; %>
+  <% const unidadeAtivaRotulo = unidadeAtivaGestao
+    ? ((unidadeAtivaGestao.codigo ? unidadeAtivaGestao.codigo + ' - ' : '') + (unidadeAtivaGestao.nome || unidadeAtivaGestao.id))
+    : ''; %>
   <%- include('../../shared/partials/header-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
   <%- include('../../shared/partials/navbar-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user, prefixMenuPaths: false }) %>
   <%- include('../../shared/partials/perfil-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
 
   <div class="wdg-page">
     <% if (isGlobalConsultaMode) { %>
-      <div id="gestor-funcionarios-global-consulta-marker" class="alert alert-info d-flex justify-content-between align-items-start gap-3" role="status">
-        <div>
-          <strong>Modo global de consulta</strong>
-          <div class="small mt-1">
-            A lista global de funcionários está disponível para consulta, mas criar, editar, excluir, abrir detalhes, foto e anexos permanecem indisponíveis até a seleção de uma unidade.
+      <div id="gestor-funcionarios-global-consulta-marker" class="alert alert-info" role="status">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+          <div>
+            <strong>Modo global de consulta</strong>
+            <div class="small mt-1">
+              A lista global de funcionários está disponível para consulta, mas criar, editar, excluir, abrir detalhes, foto e anexos permanecem indisponíveis até a seleção de uma unidade.
+            </div>
           </div>
         </div>
-        <a class="btn btn-outline-primary btn-sm" href="<%= _basePath %>/login?step=select">Selecionar unidade para gerenciar</a>
+        <div class="row g-2 align-items-end mt-2" id="gestor-funcionarios-global-consulta-switcher">
+          <div class="col-12 col-lg-7">
+            <label for="gestorFuncionariosGlobalUnidadeSelect" class="form-label mb-1">Unidade para gerenciamento</label>
+            <select id="gestorFuncionariosGlobalUnidadeSelect" class="form-select" <%= unidadesGestao.length ? '' : 'disabled aria-disabled="true"' %>>
+              <option value="">Selecione uma unidade...</option>
+              <% unidadesGestao.forEach((unidade) => { %>
+                <option value="<%= unidade.id %>"><%= unidade.codigo ? unidade.codigo + ' - ' : '' %><%= unidade.nome || unidade.id %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="col-12 col-lg-auto">
+            <button
+              type="button"
+              id="gestorFuncionariosGlobalAtivarUnidadeBtn"
+              class="btn btn-outline-primary"
+              <%= unidadesGestao.length ? 'disabled aria-disabled="true"' : 'disabled aria-disabled="true"' %>
+            >Ativar unidade</button>
+          </div>
+          <div class="col-12">
+            <div id="gestorFuncionariosGlobalSwitchFeedback" class="small text-muted"><%= unidadesGestao.length ? 'Selecione uma unidade para habilitar cadastro e ações de gerenciamento.' : 'Nenhuma unidade ativa disponível para gerenciamento.' %></div>
+          </div>
+        </div>
+      </div>
+    <% } else if (unidadeAtivaGestao) { %>
+      <div id="gestor-funcionarios-unidade-ativa-banner" class="alert alert-success py-2 px-3" role="status">
+        <strong>Unidade ativa para gerenciamento:</strong>
+        <span id="gestorFuncionariosUnidadeAtivaNome" data-unidade-ativa-id="<%= unidadeAtivaGestao.id %>"><%= unidadeAtivaRotulo %></span>
       </div>
     <% } %>
     <!-- Título padronizado -->

@@ -17,6 +17,7 @@ import {
   GESTOR_AUTH_CONTEXT_RESOLVER_FLAG,
   resolveGestorAuthContext,
 } from '#modules/gestor/app/services/authContextResolver.js';
+import { loadUnidadeByIdData } from '#modules/gestor/app/data/auth/authContextReadDataFacade.js';
 import { createAuthContextOrchestrationCore } from '#modules/gestor/app/services/auth/createAuthContextOrchestrationCore.js';
 import { evaluateLoginPreAuthGateService } from '#modules/gestor/app/services/auth/evaluateLoginPreAuthGate.service.js';
 import { createLoginModuleAccessCore } from '#modules/gestor/app/services/auth/createLoginModuleAccessCore.js';
@@ -302,6 +303,15 @@ function buildAuthContextResolverOptions(req) {
   };
 }
 
+function resolveAuthContextLoadUnidadeById(req) {
+  const resolverDeps = req.app?.locals?.gestorAuthContextResolverDeps || null;
+  if (resolverDeps && typeof resolverDeps.loadUnidadeById === 'function') {
+    return resolverDeps.loadUnidadeById;
+  }
+
+  return loadUnidadeByIdData;
+}
+
 function buildRequestIdentity(req) {
   const user = req?.user || req?.session?.user || null;
   const id = user?._id || user?.id || null;
@@ -427,6 +437,7 @@ async function mutateAuthUnitContext(req, {
       resolveAuthContext: resolveGestorAuthContext,
       isValidObjectId: (value) => mongoose.isValidObjectId(value),
       findMembershipByUnidadeId,
+      loadUnidadeById: ({ unidadeId, maxTimeMS }) => resolveAuthContextLoadUnidadeById(req)({ unidadeId, maxTimeMS }),
       persistActiveMembershipInSession: (session, selectedMembership, resolvedAuthContext) => {
         persistActiveMembershipInSession({ session }, selectedMembership, resolvedAuthContext);
       },

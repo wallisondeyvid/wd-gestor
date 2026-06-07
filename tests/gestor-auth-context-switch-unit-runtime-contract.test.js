@@ -209,7 +209,7 @@ test('switchAuthUnit responde 409 quando o resolvedor esta desligado', async () 
   assert.equal(response.body.effectiveRole, 'diretor');
 });
 
-test('switchAuthUnit responde 403 para auth-context-v1 global sem memberships', async () => {
+test('switchAuthUnit permite que Master global ative uma unidade valida sem memberships explicitas', async () => {
   const response = await invokeOwner({
     body: { unidade_id: '507f191e810c19729de860aa' },
     sessionUser: {
@@ -225,15 +225,21 @@ test('switchAuthUnit responde 403 para auth-context-v1 global sem memberships', 
       async loadActiveMembershipsByUserId() {
         throw new Error('nao-deveria-carregar-memberships');
       },
-      async loadUnidadeById() {
-        throw new Error('nao-deveria-carregar-unidades');
+      async loadUnidadeById({ unidadeId }) {
+        return {
+          _id: unidadeId,
+          nome: 'Unidade Global',
+          codigo: 'UG',
+          is_principal: true,
+          unidade_principal_id: unidadeId,
+        };
       },
     },
   });
 
-  assert.equal(response.statusCode, 403);
+  assert.equal(response.statusCode, 200);
   assert.deepEqual(response.body, {
-    ok: false,
+    ok: true,
     authenticated: true,
     source: 'auth-context-v1',
     identity: {
@@ -246,10 +252,17 @@ test('switchAuthUnit responde 403 para auth-context-v1 global sem memberships', 
     membershipCount: 0,
     memberships: [],
     needsUnitSelection: false,
-    activeContext: null,
+    activeContext: {
+      membershipId: 'global:507f191e810c19729de860aa',
+      unidadeId: '507f191e810c19729de860aa',
+      unidadePrincipalId: '507f191e810c19729de860aa',
+      papelContextual: 'gestor',
+      funcionarioId: null,
+      legacyRole: 'master',
+    },
     effectiveRole: 'master',
-    code: 'GESTOR_UNIT_NOT_ALLOWED',
   });
+  assert.equal(response.session?.gestorAuthContext?.active_unidade_id, '507f191e810c19729de860aa');
 });
 
 test('switchAuthUnit responde 403 quando a unidade pedida nao pertence as memberships ativas', async () => {

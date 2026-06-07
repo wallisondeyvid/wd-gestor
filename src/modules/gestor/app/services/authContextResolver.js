@@ -165,6 +165,39 @@ function toActiveContext(membership) {
   };
 }
 
+async function resolveGlobalPrivilegedActiveContext({
+  globalRole,
+  existingAuthContext = null,
+  loadUnidadeById,
+  maxTimeMS,
+}) {
+  const normalizedGlobalRole = normalizeGlobalRole(globalRole);
+  if (!normalizedGlobalRole) return null;
+
+  const activeUnidadeId = normalizeId(
+    existingAuthContext?.activeUnidadeId ||
+    existingAuthContext?.active_unidade_id ||
+    existingAuthContext?.activeContext?.unidadeId,
+  );
+  if (!activeUnidadeId) return null;
+
+  const unidade = await loadUnidadeById({ unidadeId: activeUnidadeId, maxTimeMS });
+  if (!unidade) return null;
+
+  const unidadePrincipalId = normalizeId(
+    unidade.is_principal ? unidade._id : unidade.unidade_principal_id || activeUnidadeId,
+  ) || activeUnidadeId;
+
+  return {
+    membershipId: `global:${activeUnidadeId}`,
+    unidadeId: activeUnidadeId,
+    unidadePrincipalId,
+    papelContextual: 'gestor',
+    funcionarioId: null,
+    legacyRole: normalizedGlobalRole,
+  };
+}
+
 function resolveSelectedMembership(memberships, existingAuthContext = null) {
   if (!Array.isArray(memberships) || memberships.length === 0) return null;
 
@@ -319,8 +352,17 @@ export async function resolveGestorAuthContext(options = {}) {
     return buildLegacyAuthContext({ authenticatedUser, sessionUser, identity });
   }
 
+  const loadUnidadeById = deps.loadUnidadeById || defaultLoadUnidadeById;
   const globalRole = normalizeGlobalRole(authenticatedUser?.global_role) || normalizeGlobalRole(sessionUser?.global_role);
+
   if (globalRole) {
+    const activeContext = await resolveGlobalPrivilegedActiveContext({
+      globalRole,
+      existingAuthContext,
+      loadUnidadeById,
+      maxTimeMS,
+    });
+
     return {
       authenticated: true,
       identity,
@@ -328,19 +370,19 @@ export async function resolveGestorAuthContext(options = {}) {
       memberships: [],
       membershipCount: 0,
       needsUnitSelection: false,
-      activeContext: null,
+      activeContext,
       effectiveRole: globalRole,
       source: AUTH_CONTEXT_SOURCE_V1,
     };
   }
 
   const loadActiveMembershipsByUserId = deps.loadActiveMembershipsByUserId || defaultLoadActiveMembershipsByUserId;
-  const loadUnidadeById = deps.loadUnidadeById || defaultLoadUnidadeById;
   const rawMemberships = identity.id
     ? await loadActiveMembershipsByUserId({ userId: identity.id, maxTimeMS })
     : [];
 
   const memberships = await normalizeMemberships(rawMemberships, { loadUnidadeById, maxTimeMS });
+
   const selectedMembership = resolveSelectedMembership(memberships, existingAuthContext);
   const activeContext = toActiveContext(selectedMembership);
   const needsUnitSelection = memberships.length > 1 && !activeContext;

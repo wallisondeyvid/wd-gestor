@@ -10,6 +10,7 @@ export async function mutateAuthUnitContextService({
     resolveAuthContext,
     isValidObjectId,
     findMembershipByUnidadeId,
+    loadUnidadeById,
     persistActiveMembershipInSession,
     saveSession,
   } = deps;
@@ -33,7 +34,28 @@ export async function mutateAuthUnitContextService({
     return { kind: 'selection-not-required', authContext };
   }
 
-  const selectedMembership = findMembershipByUnidadeId(authContext, unidadeId);
+  let selectedMembership = findMembershipByUnidadeId(authContext, unidadeId);
+  if (!selectedMembership && (authContext?.globalRole === 'master' || authContext?.globalRole === 'admin')) {
+    const unidade = typeof loadUnidadeById === 'function'
+      ? await loadUnidadeById({ unidadeId, maxTimeMS: resolverOptions?.maxTimeMS })
+      : null;
+
+    if (unidade) {
+      const unidadePrincipalId = String(
+        unidade.is_principal ? unidade._id : unidade.unidade_principal_id || unidadeId,
+      ).trim() || unidadeId;
+
+      selectedMembership = {
+        membershipId: `global:${unidadeId}`,
+        unidadeId,
+        unidadePrincipalId,
+        papelContextual: 'gestor',
+        funcionarioId: null,
+        legacyRole: authContext.globalRole,
+      };
+    }
+  }
+
   if (!selectedMembership) {
     return { kind: 'unit-not-allowed', authContext };
   }

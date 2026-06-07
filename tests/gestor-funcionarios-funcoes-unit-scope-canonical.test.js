@@ -710,7 +710,9 @@ test('Funcionários HTML: master sem unidade ativa recebe modo global de consult
     assert.match(res.headers['content-type'] || '', /text\/html/i);
     assert.match(res.text, /gestor-funcionarios-global-consulta-marker/);
     assert.match(res.text, /Modo global de consulta/);
-    assert.match(res.text, /Selecionar unidade para gerenciar/);
+    assert.match(res.text, /Unidade para gerenciamento/);
+    assert.match(res.text, /gestorFuncionariosGlobalUnidadeSelect/);
+    assert.match(res.text, /Gerenciar unidade|Ativar unidade/);
     assert.match(res.text, /gestor-funcionarios-contextual-fieldset" class="gestor-global-consulta-disabled" disabled/);
     assert.match(res.text, /data-funcionarios-global-consulta="1"/);
     assert.match(res.text, /aria-label="Detalhes indisponíveis no modo global" disabled/);
