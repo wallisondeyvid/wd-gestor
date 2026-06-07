@@ -13,6 +13,36 @@ document.addEventListener('DOMContentLoaded', () => {
 		return String(v ?? '').replace(/\s+/g, ' ').trim();
 	}
 
+	function isObjectId(value){
+		return /^[0-9a-fA-F]{24}$/.test(String(value || '').trim());
+	}
+
+	function getRecursoUnidadeId(recurso){
+		const candidates = [
+			recurso?.unidade_id?._id,
+			recurso?.unidade_id?.id,
+			typeof recurso?.unidade_id === 'string' ? recurso.unidade_id : '',
+			recurso?.unidadeId,
+			recurso?.unidade_principal_id?._id,
+			recurso?.unidade_principal_id?.id,
+			typeof recurso?.unidade_principal_id === 'string' ? recurso.unidade_principal_id : '',
+			recurso?.unidadePrincipalId
+		];
+
+		for (const candidate of candidates) {
+			const normalized = String(candidate || '').trim();
+			if (isObjectId(normalized)) return normalized;
+		}
+
+		return '';
+	}
+
+	function buildScopedResourceUrl(id, unidadeId){
+		const scopedUnidadeId = String(unidadeId || '').trim();
+		if (!isObjectId(scopedUnidadeId)) return '';
+		return `${basePath}/api/recursos/${id}?unidade_id=${encodeURIComponent(scopedUnidadeId)}`;
+	}
+
 	function askDeleteRecursoConfirm(label){
 		const modalEl = byId('rDeleteConfirmModal');
 		const labelEl = byId('rDeleteConfirmLabel');
@@ -153,8 +183,19 @@ document.addEventListener('DOMContentLoaded', () => {
 				// Determinar se é criação ou atualização
 				const recursoId = byId('recursoId').value;
 				const isUpdate = !!recursoId;
+				const scopedUnidadeId = String(form.dataset.unidadeId || processedData.unidade_id || '').trim();
 
-				const response = await fetch(isUpdate ? `${basePath}/api/recursos/${recursoId}` : `${basePath}/api/recursos`, {
+				if (isUpdate) {
+					if (!isObjectId(scopedUnidadeId)) {
+						alert('Falha ao salvar recurso: unidade não informada ou inválida.');
+						return;
+					}
+
+					form.dataset.unidadeId = scopedUnidadeId;
+				}
+
+				const updateUrl = buildScopedResourceUrl(recursoId, scopedUnidadeId);
+				const response = await fetch(isUpdate ? updateUrl : `${basePath}/api/recursos`, {
 					method: isUpdate ? 'PUT' : 'POST',
 					headers: {
 						'Content-Type': 'application/json',
@@ -170,6 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					form.reset();
 					form.classList.remove('was-validated');
 					byId('recursoId').value = '';
+					delete form.dataset.unidadeId;
 
 					// Resetar o botão para modo criação
 					const submitBtn = form.querySelector('button[type="submit"]');
@@ -219,8 +261,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			return;
 		}
 
-		tbody.innerHTML = recursos.map(recurso => `
-			<tr data-recurso-id="${recurso._id}">
+		tbody.innerHTML = recursos.map(recurso => {
+			const recursoUnidadeId = getRecursoUnidadeId(recurso);
+			return `
+			<tr data-recurso-id="${recurso._id}" data-unidade-id="${recursoUnidadeId}">
 				<td>${recurso.unidade_id?.nome || 'N/A'}</td>
 				<td>${recurso.tipo}</td>
 				<td>${recurso.placa}</td>
@@ -236,16 +280,17 @@ document.addEventListener('DOMContentLoaded', () => {
 				</td>
 				<td class="col-acoes">
 					<div class="d-flex gap-1 justify-content-center flex-nowrap">
-						<button type="button" class="wdg-icon-btn" data-action="editar" data-id="${recurso._id}" title="Editar" aria-label="Editar">
+						<button type="button" class="wdg-icon-btn" data-action="editar" data-id="${recurso._id}" data-unidade-id="${recursoUnidadeId}" title="Editar" aria-label="Editar">
 							<img src="${basePath}/images/editar.png" alt="Editar" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'" />
 						</button>
-						<button type="button" class="wdg-icon-btn" data-action="excluir" data-id="${recurso._id}" title="Excluir" aria-label="Excluir">
+						<button type="button" class="wdg-icon-btn" data-action="excluir" data-id="${recurso._id}" data-unidade-id="${recursoUnidadeId}" title="Excluir" aria-label="Excluir">
 							<img src="${basePath}/images/excluir.png" alt="Excluir" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'" />
 						</button>
 					</div>
 				</td>
 			</tr>
-		`).join('');
+		`;
+		}).join('');
 
 		// Atualiza paginação e scroll-limit a cada renderização
 		try { aplicarPaginacaoRecursos(); } catch (e) { console.warn('[recursos] aplicarPaginacaoRecursos falhou:', e); }
@@ -253,19 +298,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	// Funções globais para os botões (novoRecurso removido)
 
-	window.editarRecurso = async (id) => {
+	window.editarRecurso = async (id, unidadeId) => {
 		try {
-			const response = await fetch(`${basePath}/api/recursos/${id}`);
+			const scopedUnidadeId = String(unidadeId || '').trim();
+			if (!isObjectId(scopedUnidadeId)) {
+				alert('Falha ao carregar recurso: unidade não informada ou inválida.');
+				return;
+			}
+
+			const response = await fetch(buildScopedResourceUrl(id, scopedUnidadeId));
 			if (response.ok) {
 				const raw = await response.json();
 				const recurso = (raw && typeof raw === 'object' && (raw.data || raw.recurso)) ? (raw.data || raw.recurso) : raw; // suporta {data:...} ou {recurso:...} ou objeto direto
 				console.debug('[recursos] editarRecurso payload', raw, '-> usado:', recurso);
 				if(!recurso || typeof recurso !== 'object') { alert('Resposta inválida do servidor'); return; }
+				const recursoUnidadeId = getRecursoUnidadeId(recurso) || scopedUnidadeId;
+				if (!isObjectId(recursoUnidadeId)) {
+					alert('Falha ao carregar recurso: unidade não informada ou inválida.');
+					return;
+				}
 
 				// Preencher o formulário com os dados do recurso
 				const safe = (v)=> (v === undefined || v === null) ? '' : v;
 				byId('recursoId').value = safe(recurso._id);
-				byId('unidade_id').value = safe(recurso.unidade_id?._id || (typeof recurso.unidade_id === 'string' ? recurso.unidade_id : recurso.unidade_id?._id) || '');
+				byId('unidade_id').value = recursoUnidadeId;
 				byId('tipo').value = safe(recurso.tipo);
 				byId('placa').value = safe(recurso.placa);
 				byId('chassi').value = safe(recurso.chassi);
@@ -274,6 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				byId('mod').value = safe(recurso.mod ?? '');
 				byId('modelo').value = safe(recurso.modelo);
 				byId('cor').value = safe(recurso.cor);
+				form.dataset.unidadeId = recursoUnidadeId;
 
 				// Selecionar a marca correta
 				const selectMarca = byId('marca');
@@ -301,12 +358,18 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	window.excluirRecurso = async (id, label) => {
+	window.excluirRecurso = async (id, label, unidadeId) => {
+		const scopedUnidadeId = String(unidadeId || '').trim();
+		if (!isObjectId(scopedUnidadeId)) {
+			alert('Falha ao excluir recurso: unidade não informada ou inválida.');
+			return;
+		}
+
 		const ok = await askDeleteRecursoConfirm(label || 'selecionado');
 		if (!ok) return;
 
 		try {
-			const response = await fetch(`${basePath}/api/recursos/${id}`, {
+			const response = await fetch(buildScopedResourceUrl(id, scopedUnidadeId), {
 				method: 'DELETE'
 			});
 
@@ -333,9 +396,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			if(!btn) return;
 			const id = btn.getAttribute('data-id');
 			const action = btn.getAttribute('data-action');
+			const unidadeId = btn.getAttribute('data-unidade-id') || btn.closest('tr')?.getAttribute('data-unidade-id') || '';
 			if(!id || !action) return;
 			ev.preventDefault();
-			if(action === 'editar') return editarRecurso(id);
+			if(action === 'editar') return editarRecurso(id, unidadeId);
 			if(action === 'excluir'){
 				const tr = btn.closest('tr');
 				const unidade = normalizeText(tr?.children?.[0]?.textContent);
@@ -344,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				const parts = [placa, modelo].filter(Boolean);
 				const baseLabel = parts.length ? parts.join(' — ') : '';
 				const label = unidade ? (baseLabel ? `${baseLabel} (${unidade})` : unidade) : (baseLabel || 'selecionado');
-				return excluirRecurso(id, label);
+				return excluirRecurso(id, label, unidadeId);
 			}
 		});
 	}
@@ -412,8 +476,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		const mo = new MutationObserver(update); mo.observe(idField, { attributes:true, attributeFilter:['value'] });
 		['change','input'].forEach(ev=> idField.addEventListener(ev, update));
-		btnCancel && btnCancel.addEventListener('click', ()=>{ idField.value=''; form.reset(); update(); });
-		byId('btnResetRecurso')?.addEventListener('click', ()=>{ if(idField.value){ idField.value=''; update(); } });
+		btnCancel && btnCancel.addEventListener('click', ()=>{ idField.value=''; form.reset(); delete form.dataset.unidadeId; update(); });
+		byId('btnResetRecurso')?.addEventListener('click', ()=>{ if(idField.value){ idField.value=''; delete form.dataset.unidadeId; update(); } });
 		update();
 	})();
 });
