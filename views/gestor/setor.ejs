@@ -152,7 +152,7 @@
                     <button type="button" class="wdg-icon-btn" data-action="editar" data-id="<%= setor._id %>" data-unidade-id="<%= setorUnidadeId %>" title="Editar" aria-label="Editar">
                       <img src="<%= _basePath %>/images/editar.png" alt="Editar" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'" />
                     </button>
-                    <button type="button" class="wdg-icon-btn" data-action="excluir" data-id="<%= setor._id %>" data-nome="<%= (setor.nome||'').replace(/'/g,'&#39;') %>" title="Excluir" aria-label="Excluir">
+                    <button type="button" class="wdg-icon-btn" data-action="excluir" data-id="<%= setor._id %>" data-unidade-id="<%= setorUnidadeId %>" data-nome="<%= (setor.nome||'').replace(/'/g,'&#39;') %>" title="Excluir" aria-label="Excluir">
                       <img src="<%= _basePath %>/images/excluir.png" alt="Excluir" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'" />
                     </button>
                   </div>

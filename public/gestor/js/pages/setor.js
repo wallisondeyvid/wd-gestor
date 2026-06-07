@@ -87,7 +87,7 @@
             <button type="button" class="wdg-icon-btn" data-action="editar" data-id="${setor._id}" data-unidade-id="${setorUnidadeId}" title="Editar" aria-label="Editar">
               <img src="${basePath}/images/editar.png" alt="Editar" onerror="this.onerror=null;this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'" />
             </button>
-            <button type="button" class="wdg-icon-btn" data-action="excluir" data-id="${setor._id}" data-nome="${nomeEsc}" title="Excluir" aria-label="Excluir">
+            <button type="button" class="wdg-icon-btn" data-action="excluir" data-id="${setor._id}" data-unidade-id="${setorUnidadeId}" data-nome="${nomeEsc}" title="Excluir" aria-label="Excluir">
               <img src="${basePath}/images/excluir.png" alt="Excluir" onerror="this.onerror=null;this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'" />
             </button>
           </div>
@@ -163,23 +163,38 @@
     const deleteModalEl = document.getElementById('confirmDeleteModal');
     let deleteModalInstance = null;
     let deleteTargetId = null;
+    let deleteTargetUnidadeId = null;
     if (deleteModalEl && window.bootstrap && bootstrap.Modal) {
       deleteModalInstance = bootstrap.Modal.getOrCreateInstance(deleteModalEl, { backdrop: true, keyboard: true, focus: true });
       const btnConfirmDelete = document.getElementById('btnConfirmDelete');
       btnConfirmDelete?.addEventListener('click', () => {
         if(!deleteTargetId) return;
+        const scopedUnidadeId = String(deleteTargetUnidadeId || '').trim();
+        if(!scopedUnidadeId){
+          toastError('Falha ao excluir setor: unidade não informada.');
+          deleteTargetId = null;
+          deleteTargetUnidadeId = null;
+          return;
+        }
+        const query = '?unidade_id=' + encodeURIComponent(scopedUnidadeId);
         const btn = btnConfirmDelete;
         btn.disabled = true;
         btn.textContent = 'Excluindo...';
-        fetchJson(basePath + '/api/setores/' + deleteTargetId, { method:'DELETE' })
+        fetchJson(basePath + '/api/setores/' + deleteTargetId + query, { method:'DELETE' })
           .then(res => { if(!res.ok) throw new Error(res.error||'Erro'); toastSuccess('Setor excluído'); deleteModalInstance.hide(); return recarregarLista(); })
           .catch(err => toastError('Erro: ' + err.message))
-          .finally(()=>{ btn.disabled=false; btn.textContent='Excluir definitivamente'; deleteTargetId=null; });
+          .finally(()=>{ btn.disabled=false; btn.textContent='Excluir definitivamente'; deleteTargetId=null; deleteTargetUnidadeId=null; });
       });
     }
 
-    function excluirHandler(id, nome){
+    function excluirHandler(id, nome, unidadeId){
+      const scopedUnidadeId = String(unidadeId || '').trim();
+      if(!scopedUnidadeId){
+        toastError('Falha ao excluir setor: unidade não informada.');
+        return;
+      }
       deleteTargetId = id;
+      deleteTargetUnidadeId = scopedUnidadeId;
       const nameEl = document.getElementById('confirmDeleteName');
       const msgEl = document.getElementById('confirmDeleteMessage');
       const label = (String(nome || '').trim()) || 'selecionado';
@@ -192,7 +207,8 @@
       else {
         const ok = window.confirm(`Deseja excluir o setor ${label}? Esta exclusão é definitiva e não pode ser desfeita.`);
         if (!ok) return;
-        fetchJson(basePath + '/api/setores/' + id, { method:'DELETE' })
+        const query = '?unidade_id=' + encodeURIComponent(scopedUnidadeId);
+        fetchJson(basePath + '/api/setores/' + id + query, { method:'DELETE' })
           .then(res => { if(!res.ok) throw new Error(res.error||'Erro'); toastSuccess('Setor excluído'); return recarregarLista(); })
           .catch(err => toastError('Erro: ' + err.message));
       }
@@ -237,7 +253,7 @@
       const action = btn.getAttribute('data-action');
       const id = btn.getAttribute('data-id');
       if(action === 'editar' && id){ editarHandler(id, btn.getAttribute('data-unidade-id') || ''); }
-      if(action === 'excluir' && id){ excluirHandler(id, btn.getAttribute('data-nome')||''); }
+      if(action === 'excluir' && id){ excluirHandler(id, btn.getAttribute('data-nome')||'', btn.getAttribute('data-unidade-id') || ''); }
     });
 
     // (Removido) Código de atribuição de unidade a setores órfãos - modal foi retirado.
