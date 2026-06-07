@@ -91,6 +91,7 @@ test('POST /gestor/auth/select-unit responde 400 quando unidade_id está ausente
   assert.equal(missingRes.status, 400);
   assert.equal(missingRes.body.ok, false);
   assert.equal(missingRes.body.code, 'GESTOR_INVALID_UNIDADE_ID');
+  assert.equal(missingRes.body.reason, 'invalid-unidade-id');
 
   const invalidRes = await request(app)
     .post('/gestor/auth/select-unit')
@@ -99,6 +100,7 @@ test('POST /gestor/auth/select-unit responde 400 quando unidade_id está ausente
   assert.equal(invalidRes.status, 400);
   assert.equal(invalidRes.body.ok, false);
   assert.equal(invalidRes.body.code, 'GESTOR_INVALID_UNIDADE_ID');
+  assert.equal(invalidRes.body.reason, 'invalid-unidade-id');
 });
 
 test('POST /gestor/auth/select-unit responde 409 estável quando a flag está desligada', async () => {
@@ -116,6 +118,7 @@ test('POST /gestor/auth/select-unit responde 409 estável quando a flag está de
   assert.equal(res.body.ok, false);
   assert.equal(res.body.source, 'legacy');
   assert.equal(res.body.code, 'GESTOR_AUTH_CONTEXT_SELECTION_DISABLED');
+  assert.equal(res.body.reason, 'resolver-disabled');
 });
 
 test('POST /gestor/auth/select-unit responde 403 quando a unidade não pertence aos vínculos ativos', async () => {
@@ -156,6 +159,7 @@ test('POST /gestor/auth/select-unit responde 403 quando a unidade não pertence 
   assert.equal(res.status, 403);
   assert.equal(res.body.ok, false);
   assert.equal(res.body.code, 'GESTOR_UNIT_NOT_ALLOWED');
+  assert.equal(res.body.reason, 'unit-not-allowed');
 });
 
 test('POST /gestor/auth/select-unit grava activeContext na sessão e o GET subsequente reflete a seleção', async () => {
@@ -239,6 +243,7 @@ test('POST /gestor/auth/switch-unit responde 401 quando não autenticado', async
   assert.equal(res.status, 401);
   assert.equal(res.body.ok, false);
   assert.equal(res.body.code, 'GESTOR_UNAUTHORIZED');
+  assert.equal(res.body.reason, 'unauthorized');
 });
 
 test('POST /gestor/auth/switch-unit responde 400 quando unidade_id está ausente ou inválido', async () => {
@@ -255,6 +260,7 @@ test('POST /gestor/auth/switch-unit responde 400 quando unidade_id está ausente
   assert.equal(missingRes.status, 400);
   assert.equal(missingRes.body.ok, false);
   assert.equal(missingRes.body.code, 'GESTOR_INVALID_UNIDADE_ID');
+  assert.equal(missingRes.body.reason, 'invalid-unidade-id');
 
   const invalidRes = await request(app)
     .post('/gestor/auth/switch-unit')
@@ -263,6 +269,7 @@ test('POST /gestor/auth/switch-unit responde 400 quando unidade_id está ausente
   assert.equal(invalidRes.status, 400);
   assert.equal(invalidRes.body.ok, false);
   assert.equal(invalidRes.body.code, 'GESTOR_INVALID_UNIDADE_ID');
+  assert.equal(invalidRes.body.reason, 'invalid-unidade-id');
 });
 
 test('POST /gestor/auth/switch-unit responde 409 estável quando a flag está desligada', async () => {
@@ -280,6 +287,55 @@ test('POST /gestor/auth/switch-unit responde 409 estável quando a flag está de
   assert.equal(res.body.ok, false);
   assert.equal(res.body.source, 'legacy');
   assert.equal(res.body.code, 'GESTOR_AUTH_CONTEXT_SWITCH_DISABLED');
+  assert.equal(res.body.reason, 'resolver-disabled');
+  assert.equal(res.body.message, 'A ativação de unidade não está disponível neste ambiente.');
+});
+
+test('POST /gestor/auth/switch-unit permite Master global ativar unidade valida mesmo com resolvedor desligado', async () => {
+  const app = createAuthApp({
+    sessionUser: { id: IDS.user, email: 'master@example.com', role: 'master', global_role: 'master' },
+    authenticatedUser: { _id: IDS.user, email: 'master@example.com', role: 'master', global_role: 'master' },
+    featureFlags: { gestor_auth_context_resolver: false },
+    resolverDeps: createResolverDeps({
+      unidades: {
+        [IDS.unitA]: { _id: IDS.unitA, is_principal: true, unidade_principal_id: IDS.unitA, nome: 'Unidade A', codigo: 'UA' },
+      },
+    }),
+  });
+
+  const agent = request.agent(app);
+
+  const switchRes = await agent
+    .post('/gestor/auth/switch-unit')
+    .send({ unidade_id: IDS.unitA });
+
+  assert.equal(switchRes.status, 200);
+  assert.equal(switchRes.body.ok, true);
+  assert.equal(switchRes.body.source, 'legacy');
+  assert.equal(switchRes.body.globalRole, 'master');
+  assert.deepEqual(switchRes.body.activeContext, {
+    membershipId: 'legacy-active-context',
+    unidadeId: IDS.unitA,
+    unidadePrincipalId: IDS.unitA,
+    papelContextual: 'gestor',
+    funcionarioId: null,
+    legacyRole: 'master',
+  });
+  assert.equal(switchRes.body.reason, 'success');
+
+  const contextRes = await agent.get('/gestor/auth/context');
+
+  assert.equal(contextRes.status, 200);
+  assert.equal(contextRes.body.ok, true);
+  assert.equal(contextRes.body.source, 'legacy');
+  assert.deepEqual(contextRes.body.activeContext, {
+    membershipId: 'legacy-active-context',
+    unidadeId: IDS.unitA,
+    unidadePrincipalId: IDS.unitA,
+    papelContextual: 'gestor',
+    funcionarioId: null,
+    legacyRole: 'master',
+  });
 });
 
 test('POST /gestor/auth/switch-unit responde 403 quando a unidade não pertence aos vínculos ativos', async () => {
@@ -324,6 +380,7 @@ test('POST /gestor/auth/switch-unit responde 403 quando a unidade não pertence 
   assert.equal(res.status, 403);
   assert.equal(res.body.ok, false);
   assert.equal(res.body.code, 'GESTOR_UNIT_NOT_ALLOWED');
+  assert.equal(res.body.reason, 'unit-not-allowed');
 });
 
 test('POST /gestor/auth/switch-unit atualiza somente o activeContext da sessão e o GET subsequente reflete a troca', async () => {

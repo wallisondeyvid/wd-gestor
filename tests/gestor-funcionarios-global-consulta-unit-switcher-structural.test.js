@@ -32,6 +32,7 @@ test('JS da pagina de Funcionarios ativa unidade global via switch-unit e nao en
   assert.match(pageSource, /if\(!unidadeId\)\{/);
   assert.match(pageSource, /JSON\.stringify\(\{ unidade_id: unidadeId \}\)/);
   assert.match(pageSource, /fetch\(`\$\{basePath\}\/auth\/switch-unit`, \{/);
+  assert.match(pageSource, /String\(payload\?\.message \|\| ''\)\.trim\(\) \|\| resolveGlobalSwitchUnitError\(payload\?\.code\)/);
   assert.match(pageSource, /window\.location\.reload\(\);/);
 });
 

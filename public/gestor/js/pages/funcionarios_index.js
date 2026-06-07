@@ -94,7 +94,7 @@
           return;
         }
 
-        setFeedback(resolveGlobalSwitchUnitError(payload?.code), 'danger');
+        setFeedback(String(payload?.message || '').trim() || resolveGlobalSwitchUnitError(payload?.code), 'danger');
       } catch(err){
         console.error('[FUNC_INDEX][unificado] erro ao ativar unidade global', err);
         setFeedback('Não foi possível ativar a unidade agora.', 'danger');

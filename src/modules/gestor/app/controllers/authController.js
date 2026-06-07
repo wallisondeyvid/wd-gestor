@@ -450,41 +450,76 @@ async function mutateAuthUnitContext(req, {
   if (semanticResult.kind === 'unauthorized') {
     return {
       status: 401,
-      body: { ok: false, ...buildAuthContextHttpPayload(semanticResult.authContext), code: 'GESTOR_UNAUTHORIZED' },
+      body: {
+        ok: false,
+        ...buildAuthContextHttpPayload(semanticResult.authContext),
+        code: 'GESTOR_UNAUTHORIZED',
+        reason: 'unauthorized',
+        message: 'Sua sessão expirou. Faça login novamente.',
+      },
     };
   }
 
   if (semanticResult.kind === 'invalid-unidade-id') {
     return {
       status: 400,
-      body: { ok: false, ...lightweightPayload, code: 'GESTOR_INVALID_UNIDADE_ID' },
+      body: {
+        ok: false,
+        ...lightweightPayload,
+        code: 'GESTOR_INVALID_UNIDADE_ID',
+        reason: 'invalid-unidade-id',
+        message: 'Selecione uma unidade válida para continuar.',
+      },
     };
   }
 
   if (semanticResult.kind === 'resolver-disabled') {
     return {
       status: 409,
-      body: { ok: false, ...buildAuthContextHttpPayload(semanticResult.authContext), code: disabledCode },
+      body: {
+        ok: false,
+        ...buildAuthContextHttpPayload(semanticResult.authContext),
+        code: disabledCode,
+        reason: 'resolver-disabled',
+        message: 'A ativação de unidade não está disponível neste ambiente.',
+      },
     };
   }
 
   if (semanticResult.kind === 'selection-not-required') {
     return {
       status: 409,
-      body: { ok: false, ...buildAuthContextHttpPayload(semanticResult.authContext), code: notRequiredCode },
+      body: {
+        ok: false,
+        ...buildAuthContextHttpPayload(semanticResult.authContext),
+        code: notRequiredCode,
+        reason: 'selection-not-required',
+        message: 'Nao ha selecao de unidade pendente para esta sessao.',
+      },
     };
   }
 
   if (semanticResult.kind === 'unit-not-allowed') {
     return {
       status: 403,
-      body: { ok: false, ...buildAuthContextHttpPayload(semanticResult.authContext), code: 'GESTOR_UNIT_NOT_ALLOWED' },
+      body: {
+        ok: false,
+        ...buildAuthContextHttpPayload(semanticResult.authContext),
+        code: 'GESTOR_UNIT_NOT_ALLOWED',
+        reason: 'unit-not-allowed',
+        message: 'A unidade escolhida não está disponível para este usuário.',
+      },
     };
   }
 
   return {
     status: 200,
-    body: { ok: true, ...buildAuthContextHttpPayload(semanticResult.authContext) },
+    body: {
+      ok: true,
+      ...buildAuthContextHttpPayload(semanticResult.authContext),
+      reason: 'success',
+      message: 'Unidade ativada com sucesso.',
+    },
   };
 }
 

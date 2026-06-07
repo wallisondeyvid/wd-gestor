@@ -148,6 +148,8 @@ test('POST /gestor/auth/switch-unit sem sessao responde 401 no app real', async 
     activeContext: null,
     effectiveRole: null,
     code: 'GESTOR_UNAUTHORIZED',
+    reason: 'unauthorized',
+    message: 'Sua sessão expirou. Faça login novamente.',
   });
 });
 
@@ -182,10 +184,12 @@ test('switchAuthUnit responde 400 para unidade_id ausente ou invalida', async ()
     activeContext: null,
     effectiveRole: null,
     code: 'GESTOR_INVALID_UNIDADE_ID',
+    reason: 'invalid-unidade-id',
+    message: 'Selecione uma unidade válida para continuar.',
   });
 });
 
-test('switchAuthUnit responde 409 quando o resolvedor esta desligado', async () => {
+test('switchAuthUnit responde 409 quando o resolvedor esta desligado para usuario nao global', async () => {
   const response = await invokeOwner({
     body: { unidade_id: '507f191e810c19729de860ea' },
     sessionUser: {
@@ -204,9 +208,77 @@ test('switchAuthUnit responde 409 quando o resolvedor esta desligado', async () 
 
   assert.equal(response.statusCode, 409);
   assert.equal(response.body.code, 'GESTOR_AUTH_CONTEXT_SWITCH_DISABLED');
+  assert.equal(response.body.reason, 'resolver-disabled');
   assert.equal(response.body.source, 'legacy');
   assert.equal(response.body.membershipCount, 1);
   assert.equal(response.body.effectiveRole, 'diretor');
+});
+
+test('switchAuthUnit permite fallback compativel para Master global quando o resolvedor esta desligado', async () => {
+  const response = await invokeOwner({
+    body: { unidade_id: '507f191e810c19729de860ac' },
+    sessionUser: {
+      id: 'user-master-legacy',
+      email: 'master.legacy@gestor.test',
+      nome: 'Master Legacy',
+      role: 'master',
+      global_role: 'master',
+    },
+    featureFlags: {
+      gestor_auth_context_resolver: false,
+    },
+    deps: {
+      async loadUnidadeById({ unidadeId }) {
+        return {
+          _id: unidadeId,
+          nome: 'Unidade Legacy',
+          codigo: 'UL',
+          is_principal: true,
+          unidade_principal_id: unidadeId,
+        };
+      },
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(response.body, {
+    ok: true,
+    authenticated: true,
+    source: 'legacy',
+    identity: {
+      id: 'user-master-legacy',
+      email: 'master.legacy@gestor.test',
+      nome: 'Master Legacy',
+      authenticated: true,
+    },
+    globalRole: 'master',
+    membershipCount: 1,
+    memberships: [
+      {
+        membershipId: 'legacy-active-context',
+        unidadeId: '507f191e810c19729de860ac',
+        unidadePrincipalId: '507f191e810c19729de860ac',
+        unidadeNome: null,
+        unidadeCodigo: null,
+        papelContextual: 'gestor',
+        legacyRole: 'master',
+      },
+    ],
+    needsUnitSelection: false,
+    activeContext: {
+      membershipId: 'legacy-active-context',
+      unidadeId: '507f191e810c19729de860ac',
+      unidadePrincipalId: '507f191e810c19729de860ac',
+      papelContextual: 'gestor',
+      funcionarioId: null,
+      legacyRole: 'master',
+    },
+    effectiveRole: 'master',
+    reason: 'success',
+    message: 'Unidade ativada com sucesso.',
+  });
+  assert.equal(response.session?.gestorAuthContext?.active_unidade_id, '507f191e810c19729de860ac');
+  assert.equal(response.session?.user?.unidade_id, '507f191e810c19729de860ac');
 });
 
 test('switchAuthUnit permite que Master global ative uma unidade valida sem memberships explicitas', async () => {
@@ -261,8 +333,49 @@ test('switchAuthUnit permite que Master global ative uma unidade valida sem memb
       legacyRole: 'master',
     },
     effectiveRole: 'master',
+    reason: 'success',
+    message: 'Unidade ativada com sucesso.',
   });
   assert.equal(response.session?.gestorAuthContext?.active_unidade_id, '507f191e810c19729de860aa');
+});
+
+test('switchAuthUnit permite que Admin global ative uma unidade valida sem memberships explicitas', async () => {
+  const response = await invokeOwner({
+    body: { unidade_id: '507f191e810c19729de860ab' },
+    sessionUser: {
+      id: 'user-admin-1',
+      email: 'admin@gestor.test',
+      nome: 'Admin Gestor',
+      role: 'admin',
+      global_role: 'admin',
+    },
+    featureFlags: {
+      gestor_auth_context_resolver: true,
+    },
+    deps: {
+      async loadActiveMembershipsByUserId() {
+        throw new Error('nao-deveria-carregar-memberships');
+      },
+      async loadUnidadeById({ unidadeId }) {
+        return {
+          _id: unidadeId,
+          nome: 'Unidade Admin',
+          codigo: 'UA',
+          is_principal: true,
+          unidade_principal_id: unidadeId,
+        };
+      },
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.body.ok, true);
+  assert.equal(response.body.source, 'auth-context-v1');
+  assert.equal(response.body.globalRole, 'admin');
+  assert.equal(response.body.activeContext?.membershipId, 'global:507f191e810c19729de860ab');
+  assert.equal(response.body.effectiveRole, 'admin');
+  assert.equal(response.body.reason, 'success');
+  assert.equal(response.session?.gestorAuthContext?.active_unidade_id, '507f191e810c19729de860ab');
 });
 
 test('switchAuthUnit responde 403 quando a unidade pedida nao pertence as memberships ativas', async () => {
@@ -315,6 +428,7 @@ test('switchAuthUnit responde 403 quando a unidade pedida nao pertence as member
   assert.equal(response.body.source, 'auth-context-v1');
   assert.equal(response.body.membershipCount, 2);
   assert.equal(response.body.code, 'GESTOR_UNIT_NOT_ALLOWED');
+  assert.equal(response.body.reason, 'unit-not-allowed');
 });
 
 test('switchAuthUnit permite trocar unidade mesmo sem selecao pendente e responde 200 com activeContext resolvido', async () => {
@@ -427,6 +541,8 @@ test('switchAuthUnit permite trocar unidade mesmo sem selecao pendente e respond
       legacyRole: 'user',
     },
     effectiveRole: 'user',
+    reason: 'success',
+    message: 'Unidade ativada com sucesso.',
   });
   assert.equal(response.saveCalls, 1);
   assert.deepEqual(response.session.gestorAuthContext, {

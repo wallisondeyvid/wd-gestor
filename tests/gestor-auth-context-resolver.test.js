@@ -99,6 +99,43 @@ test('global_role resolve auth-context-v1 sem consultar memberships', async () =
   assert.deepEqual(harness.getCalls(), { membershipLoadCalls: 0, unidadeLoadCalls: 0 });
 });
 
+test('snapshot legado reconhece unidade ativa para Master global quando unidade_id ja esta na sessao', async () => {
+  const harness = createDeps();
+
+  const authContext = await resolveGestorAuthContext({
+    authenticatedUser: {
+      _id: IDS.user,
+      email: 'master@example.com',
+      role: 'master',
+      global_role: 'master',
+    },
+    sessionUser: {
+      id: IDS.user,
+      email: 'master@example.com',
+      role: 'master',
+      global_role: 'master',
+      unidade_id: IDS.unitA,
+      unidade_principal_id: IDS.principalA,
+    },
+    featureFlags: { gestor_auth_context_resolver: false },
+    deps: harness.deps,
+  });
+
+  assert.equal(authContext.source, AUTH_CONTEXT_SOURCE_LEGACY);
+  assert.equal(authContext.globalRole, 'master');
+  assert.equal(authContext.effectiveRole, 'master');
+  assert.equal(authContext.membershipCount, 1);
+  assert.deepEqual(authContext.activeContext, {
+    membershipId: 'legacy-active-context',
+    unidadeId: IDS.unitA,
+    unidadePrincipalId: IDS.principalA,
+    papelContextual: 'gestor',
+    funcionarioId: null,
+    legacyRole: 'master',
+  });
+  assert.deepEqual(harness.getCalls(), { membershipLoadCalls: 0, unidadeLoadCalls: 0 });
+});
+
 test('membership unico ativo vira contexto ativo automaticamente', async () => {
   const harness = createDeps({
     memberships: [{
