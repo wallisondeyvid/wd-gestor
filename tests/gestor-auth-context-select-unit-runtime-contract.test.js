@@ -148,6 +148,8 @@ test('POST /gestor/auth/select-unit sem sessao responde 401 no app real', async 
     activeContext: null,
     effectiveRole: null,
     code: 'GESTOR_UNAUTHORIZED',
+    reason: 'unauthorized',
+    message: 'Sua sessão expirou. Faça login novamente.',
   });
 });
 
@@ -182,6 +184,8 @@ test('selectAuthUnit responde 400 para unidade_id ausente ou invalida', async ()
     activeContext: null,
     effectiveRole: null,
     code: 'GESTOR_INVALID_UNIDADE_ID',
+    reason: 'invalid-unidade-id',
+    message: 'Selecione uma unidade válida para continuar.',
   });
 });
 
@@ -237,6 +241,8 @@ test('selectAuthUnit responde 409 quando o resolvedor esta desligado', async () 
     },
     effectiveRole: 'diretor',
     code: 'GESTOR_AUTH_CONTEXT_SELECTION_DISABLED',
+    reason: 'resolver-disabled',
+    message: 'A ativação de unidade não está disponível neste ambiente.',
   });
 });
 
@@ -311,6 +317,8 @@ test('selectAuthUnit responde 409 quando nao ha selecao pendente', async () => {
     },
     effectiveRole: 'diretor',
     code: 'GESTOR_SELECTION_NOT_REQUIRED',
+    reason: 'selection-not-required',
+    message: 'Nao ha selecao de unidade pendente para esta sessao.',
   });
 });
 
@@ -476,6 +484,8 @@ test('selectAuthUnit persiste a unidade escolhida e responde 200 com activeConte
       legacyRole: 'user',
     },
     effectiveRole: 'user',
+    reason: 'success',
+    message: 'Unidade ativada com sucesso.',
   });
   assert.equal(response.saveCalls, 1);
   assert.deepEqual(response.session.gestorAuthContext, {
