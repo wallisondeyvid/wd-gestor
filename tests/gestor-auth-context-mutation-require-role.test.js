@@ -262,3 +262,84 @@ test('switchAuthUnit seguido de requireRole aceita authContext canonico persisti
   assert.equal(roleReq.user.unidade_id, selectedUnitId);
   assert.equal(roleReq.user.funcionario_id, 'func-902');
 });
+
+// ─── requireUnitScope: fallback legacy via req.user.unidade_id ───────────────
+// Cobre o bug 400 UNIDADE_ID_REQUIRED após switch-unit legacy.
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function _runRusProbe({ userOverride, flagEnabled = false } = {}) {
+  const { createServer: _rusCS } = await import('node:http');
+  const { once: _rusOC } = await import('node:events');
+  const { default: _rusExpress } = await import('express');
+  const { requireUnitScope: _rusMiddleware } = await import(
+    '#modules/gestor/app/middlewares/requireUnitScope.js'
+  );
+  const app = _rusExpress();
+  app.use(_rusExpress.json());
+  app.use((req, _r, n) => {
+    req.app.locals = req.app.locals || {};
+    req.app.locals.gestorAuthContextFeatureFlags = { gestor_auth_context_resolver: flagEnabled };
+    n();
+  });
+  app.get('/probe', (req, _r, n) => {
+    req.user = { ...userOverride };
+    req.session = {};
+    n();
+  }, _rusMiddleware, (req, res) => res.json({ ok: true, unidadeId: req.unitScope?.unidadeId }));
+  const server = _rusCS(app);
+  server.listen(0, '127.0.0.1');
+  await _rusOC(server, 'listening');
+  const { port } = server.address();
+  try {
+    const r = await fetch(`http://127.0.0.1:${port}/probe`);
+    const b = await r.json().catch(() => ({}));
+    return { status: r.status, body: b };
+  } finally { server.close(); await _rusOC(server, 'close'); }
+}
+
+test('requireUnitScope legacy: master com req.user.unidade_id passa sem unidade_id no query', async () => {
+  const uid = '65f300000000000000000022';
+  const { status, body } = await _runRusProbe({
+    userOverride: { role: 'master', isMaster: true, unidade_id: uid },
+    flagEnabled: false,
+  });
+  assert.equal(status, 200, `status=${status} body=${JSON.stringify(body)}`);
+  assert.equal(body.unidadeId, uid);
+});
+
+test('requireUnitScope legacy: admin com req.user.unidade_id passa sem unidade_id no query', async () => {
+  const uid = '65f300000000000000000033';
+  const { status, body } = await _runRusProbe({
+    userOverride: { role: 'admin', isMaster: false, global_role: 'admin', unidade_id: uid },
+    flagEnabled: false,
+  });
+  assert.equal(status, 200, `status=${status} body=${JSON.stringify(body)}`);
+  assert.equal(body.unidadeId, uid);
+});
+
+test('requireUnitScope legacy: master sem unidade em req.user sem query retorna 400', async () => {
+  const { status, body } = await _runRusProbe({
+    userOverride: { role: 'master', isMaster: true, unidade_id: null },
+    flagEnabled: false,
+  });
+  assert.equal(status, 400, `status=${status}`);
+  assert.equal(body.error, 'UNIDADE_ID_REQUIRED');
+});
+
+test('requireUnitScope legacy: diretor sem unidade continua recebendo 400', async () => {
+  const { status, body } = await _runRusProbe({
+    userOverride: { role: 'diretor', isMaster: false, unidade_id: null },
+    flagEnabled: false,
+  });
+  assert.equal(status, 400, `status=${status}`);
+  assert.equal(body.error, 'UNIDADE_ID_REQUIRED');
+});
+
+test('requireUnitScope legacy: usuario comum sem unidade continua recebendo 400', async () => {
+  const { status, body } = await _runRusProbe({
+    userOverride: { role: 'user', isMaster: false, unidade_id: null },
+    flagEnabled: false,
+  });
+  assert.equal(status, 400, `status=${status}`);
+  assert.equal(body.error, 'UNIDADE_ID_REQUIRED');
+});
