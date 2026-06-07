@@ -15,8 +15,26 @@ export async function mutateAuthUnitContextService({
     saveSession,
   } = deps;
 
+  const normalizeRole = (value) => String(value || '').trim().toLowerCase();
+  const resolvePrivilegedRole = (authContext) => {
+    const globalRole = normalizeRole(authContext?.globalRole);
+    if (globalRole === 'master' || globalRole === 'admin') return globalRole;
+
+    const effectiveRole = normalizeRole(authContext?.effectiveRole);
+    if (effectiveRole === 'master' || effectiveRole === 'admin') return effectiveRole;
+
+    const sessionRole = normalizeRole(resolverOptions?.sessionUser?.role);
+    if (sessionRole === 'master' || sessionRole === 'admin') return sessionRole;
+
+    const authenticatedRole = normalizeRole(resolverOptions?.authenticatedUser?.role);
+    if (authenticatedRole === 'master' || authenticatedRole === 'admin') return authenticatedRole;
+
+    return null;
+  };
+
   const tryResolvePrivilegedGlobalMembership = async (authContext) => {
-    if (!authContext || (authContext?.globalRole !== 'master' && authContext?.globalRole !== 'admin')) {
+    const privilegedRole = resolvePrivilegedRole(authContext);
+    if (!authContext || !privilegedRole) {
       return null;
     }
 
@@ -36,7 +54,7 @@ export async function mutateAuthUnitContextService({
       unidadePrincipalId,
       papelContextual: 'gestor',
       funcionarioId: null,
-      legacyRole: authContext.globalRole,
+      legacyRole: privilegedRole,
     };
   };
 

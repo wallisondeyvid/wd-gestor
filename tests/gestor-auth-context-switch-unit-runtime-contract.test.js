@@ -281,6 +281,42 @@ test('switchAuthUnit permite fallback compativel para Master global quando o res
   assert.equal(response.session?.user?.unidade_id, '507f191e810c19729de860ac');
 });
 
+test('switchAuthUnit permite fallback legacy quando globalRole e nulo e effectiveRole e master', async () => {
+  const response = await invokeOwner({
+    body: { unidade_id: '507f191e810c19729de860ad' },
+    sessionUser: {
+      id: 'user-master-role-only',
+      email: 'master.role.only@gestor.test',
+      nome: 'Master Role Only',
+      role: 'master',
+    },
+    featureFlags: {
+      gestor_auth_context_resolver: false,
+    },
+    deps: {
+      async loadUnidadeById({ unidadeId }) {
+        return {
+          _id: unidadeId,
+          nome: 'Unidade Role Only',
+          codigo: 'URO',
+          is_principal: true,
+          unidade_principal_id: unidadeId,
+        };
+      },
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.body.ok, true);
+  assert.equal(response.body.source, 'legacy');
+  assert.equal(response.body.globalRole, null);
+  assert.equal(response.body.effectiveRole, 'master');
+  assert.equal(response.body.reason, 'success');
+  assert.equal(response.body.message, 'Unidade ativada com sucesso.');
+  assert.equal(response.session?.gestorAuthContext?.active_unidade_id, '507f191e810c19729de860ad');
+  assert.equal(response.session?.user?.unidade_id, '507f191e810c19729de860ad');
+});
+
 test('switchAuthUnit permite que Master global ative uma unidade valida sem memberships explicitas', async () => {
   const response = await invokeOwner({
     body: { unidade_id: '507f191e810c19729de860aa' },

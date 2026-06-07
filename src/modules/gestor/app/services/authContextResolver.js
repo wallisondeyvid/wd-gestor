@@ -228,11 +228,12 @@ function buildLegacyAuthContext({ authenticatedUser = null, sessionUser = null, 
   const unidadeId = normalizeId(sessionUser?.unidade_id || authenticatedUser?.unidade_id);
   const unidadePrincipalId = normalizeId(sessionUser?.unidade_principal_id || authenticatedUser?.unidade_principal_id);
   const funcionarioId = normalizeId(sessionUser?.funcionario_id || authenticatedUser?.funcionario_id);
+  const isPrivilegedEffectiveRole = effectiveRole === 'master' || effectiveRole === 'admin';
   const papelContextual = effectiveRole === 'diretor'
     ? 'gestor'
     : (effectiveRole === 'user'
         ? 'user'
-        : ((globalRole === 'master' || globalRole === 'admin') && unidadeId ? 'gestor' : null));
+        : ((isPrivilegedEffectiveRole || globalRole === 'master' || globalRole === 'admin') && unidadeId ? 'gestor' : null));
 
   const memberships = papelContextual && unidadeId
     ? [{
