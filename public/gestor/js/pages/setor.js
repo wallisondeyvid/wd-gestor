@@ -40,6 +40,15 @@
     const tbody       = document.querySelector('.wdg-setores-table tbody');
     const unidadeSelect = document.getElementById('unidade_id');
 
+    function getSetorUnidadeId(setor){
+      return String(
+        (setor && setor.unidade_id && (setor.unidade_id._id || setor.unidade_id.id))
+        || (setor && setor.unidade_id)
+        || (setor && setor.unidadeId)
+        || ''
+      ).trim();
+    }
+
     function entrarModoEdicao(){
       btnSubmit.textContent = 'Salvar';
       btnSubmit.classList.remove('btn-outline-primary');
@@ -59,6 +68,7 @@
 
   function linhaSetor(setor){
       let unidadeNome = setor.unidade_label || setor.unidade_nome || (setor.unidade_id && (setor.unidade_id.nome || setor.unidade_id.codigo)) || '—';
+      const setorUnidadeId = getSetorUnidadeId(setor);
       const temDesc = !!setor.descricao;
       const descEsc = temDesc ? (setor.descricao||'').replace(/"/g,'&quot;') : '';
       const nomeEsc = (setor.nome||'').replace(/"/g,'&quot;');
@@ -74,7 +84,7 @@
         `</td>
         <td class="col-acoes">
           <div class="d-flex gap-1 justify-content-center flex-nowrap">
-            <button type="button" class="wdg-icon-btn" data-action="editar" data-id="${setor._id}" title="Editar" aria-label="Editar">
+            <button type="button" class="wdg-icon-btn" data-action="editar" data-id="${setor._id}" data-unidade-id="${setorUnidadeId}" title="Editar" aria-label="Editar">
               <img src="${basePath}/images/editar.png" alt="Editar" onerror="this.onerror=null;this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'" />
             </button>
             <button type="button" class="wdg-icon-btn" data-action="excluir" data-id="${setor._id}" data-nome="${nomeEsc}" title="Excluir" aria-label="Excluir">
@@ -188,8 +198,14 @@
       }
     }
 
-  function editarHandler(id){
-  fetchJson(basePath + '/api/setores/' + id)
+  function editarHandler(id, unidadeId){
+      const scopedUnidadeId = String(unidadeId || '').trim();
+      if(!scopedUnidadeId){
+        toastError('Falha ao carregar setor: unidade não informada.');
+        return;
+      }
+      const query = '?unidade_id=' + encodeURIComponent(scopedUnidadeId);
+      fetchJson(basePath + '/api/setores/' + id + query)
         .then(res => {
           if(!res.ok) throw new Error(res.error||'Erro');
           const data = res.data || {};
@@ -220,7 +236,7 @@
       if(!btn) return;
       const action = btn.getAttribute('data-action');
       const id = btn.getAttribute('data-id');
-      if(action === 'editar' && id){ editarHandler(id); }
+      if(action === 'editar' && id){ editarHandler(id, btn.getAttribute('data-unidade-id') || ''); }
       if(action === 'excluir' && id){ excluirHandler(id, btn.getAttribute('data-nome')||''); }
     });
 

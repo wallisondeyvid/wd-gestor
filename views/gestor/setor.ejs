@@ -128,6 +128,7 @@
           <tbody>
             <% (setoresFiltrados || []).forEach(function(setor){ %>
               <tr>
+                <% const setorUnidadeId = String((setor.unidade_id && (setor.unidade_id._id || setor.unidade_id.id)) || setor.unidade_id || setor.unidadeId || '').trim(); %>
                 <td class="col-unid">
                   <% const unidadeTexto = (setor.unidade_nome) || (setor.unidade_id && (setor.unidade_id.nome || setor.unidade_id.codigo)); %>
                   <% if (unidadeTexto) { %>
@@ -148,7 +149,7 @@
                 </td>
                 <td class="col-acoes">
                   <div class="d-flex gap-1 justify-content-center flex-nowrap">
-                    <button type="button" class="wdg-icon-btn" data-action="editar" data-id="<%= setor._id %>" title="Editar" aria-label="Editar">
+                    <button type="button" class="wdg-icon-btn" data-action="editar" data-id="<%= setor._id %>" data-unidade-id="<%= setorUnidadeId %>" title="Editar" aria-label="Editar">
                       <img src="<%= _basePath %>/images/editar.png" alt="Editar" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'" />
                     </button>
                     <button type="button" class="wdg-icon-btn" data-action="excluir" data-id="<%= setor._id %>" data-nome="<%= (setor.nome||'').replace(/'/g,'&#39;') %>" title="Excluir" aria-label="Excluir">
