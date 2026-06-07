@@ -111,10 +111,20 @@
           </div>
         </div>
       </div>
-    <% } else if (unidadeAtivaGestao) { %>
+        <% } else if (unidadeAtivaGestao) { %>
       <div id="gestor-funcionarios-unidade-ativa-banner" class="alert alert-success py-2 px-3" role="status">
         <strong>Unidade ativa para gerenciamento:</strong>
         <span id="gestorFuncionariosUnidadeAtivaNome" data-unidade-ativa-id="<%= unidadeAtivaGestao.id %>"><%= unidadeAtivaRotulo %></span>
+        <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
+          <label for="gestorFuncionariosGlobalUnidadeSelect" class="form-label mb-0">Trocar unidade</label>
+          <select id="gestorFuncionariosGlobalUnidadeSelect" class="form-select form-select-sm" style="max-width: 260px;" aria-label="Selecionar unidade para troca">
+            <% unidadesGestao.forEach((unidade) => { %>
+              <option value="<%= unidade.id %>" <%= unidade.id === unidadeAtivaGestao.id ? 'selected' : '' %>><%= unidade.codigo ? unidade.codigo + ' - ' : '' %><%= unidade.nome || unidade.id %></option>
+            <% }) %>
+          </select>
+          <button type="button" id="gestorFuncionariosGlobalTrocarUnidadeBtn" class="btn btn-outline-primary btn-sm">Trocar unidade</button>
+          <div id="gestorFuncionariosGlobalSwitchFeedback" class="small ms-2 lh-sm text-muted" style="flex:1 1 auto"></div>
+        </div>
       </div>
     <% } %>
     <!-- Título padronizado -->

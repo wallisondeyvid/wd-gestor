@@ -27,41 +27,48 @@
     const globalMode = body?.getAttribute('data-funcionarios-global-consulta') === '1';
     if(!globalMode) return;
 
-    const select = document.getElementById('gestorFuncionariosGlobalUnidadeSelect');
-    const button = document.getElementById('gestorFuncionariosGlobalAtivarUnidadeBtn');
+        const select = document.getElementById('gestorFuncionariosGlobalUnidadeSelect');
+    const button = document.getElementById('gestorFuncionariosGlobalAtivarUnidadeBtn') || document.getElementById('gestorFuncionariosGlobalTrocarUnidadeBtn');
     const feedback = document.getElementById('gestorFuncionariosGlobalSwitchFeedback');
     if(!select || !button || !feedback) return;
 
     const setFeedback = (message, tone = 'muted') => {
-      feedback.textContent = message || '';
-      feedback.classList.remove('text-muted', 'text-danger', 'text-success');
-      feedback.classList.add(tone === 'danger' ? 'text-danger' : (tone === 'success' ? 'text-success' : 'text-muted'));
-    };
+        feedback.textContent = message || '';
+        feedback.classList.remove('text-muted', 'text-danger', 'text-success');
+        feedback.classList.add(tone === 'danger' ? 'text-danger' : (tone === 'success' ? 'text-success' : 'text-muted'));
+      };
 
-    const syncButtonState = () => {
-      const selectedUnitId = String(select.value || '').trim();
-      const busy = button.dataset.busy === '1';
-      const canSubmit = !!selectedUnitId && !busy;
-      button.disabled = !canSubmit;
-      button.setAttribute('aria-disabled', canSubmit ? 'false' : 'true');
-    };
+      const syncButtonState = () => {
+        const selectedUnitId = String(select.value || '').trim();
+        const busy = button.dataset.busy === '1';
+        const canSubmit = !!selectedUnitId && !busy;
+        button.disabled = !canSubmit;
+        button.setAttribute('aria-disabled', canSubmit ? 'false' : 'true');
+      };
 
-    select.addEventListener('change', () => {
-      const selectedUnitId = String(select.value || '').trim();
-      if (!selectedUnitId) {
-        setFeedback('Selecione uma unidade para habilitar cadastro e ações de gerenciamento.');
-      } else {
-        setFeedback('Clique em Ativar unidade para trocar o contexto de gerenciamento.');
-      }
-      syncButtonState();
-    });
+      select.addEventListener('change', () => {
+        const selectedUnitId = String(select.value || '').trim();
+        if (!selectedUnitId) {
+          setFeedback('Selecione uma unidade para continuar.');
+        } else if(selectedUnitId === select.dataset.currentUnitId){
+          setFeedback('Esta unidade já está ativa.', 'danger');
+        } else {
+          setFeedback('Clique em Trocar unidade para alterar o contexto de gerenciamento.');
+        }
+        syncButtonState();
+      });
 
-    button.addEventListener('click', async () => {
+        button.addEventListener('click', async () => {
       const unidadeId = String(select.value || '').trim();
       if(!unidadeId){
         setFeedback('Selecione uma unidade válida para continuar.', 'danger');
         syncButtonState();
         select.focus();
+        return;
+      }
+      if(unidadeId === select.dataset.currentUnitId){
+        setFeedback('Esta unidade já está ativa.', 'danger');
+        syncButtonState();
         return;
       }
 
