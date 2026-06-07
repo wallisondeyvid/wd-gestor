@@ -123,7 +123,8 @@ function resolveLegacyUnidadeId(req, { authContextEnabled = false, authContext =
   if (!user) return '';
 
   if (isPrivilegedGestorUser(user)) {
-    return requestUnidadeId;
+    const sessionDerivedUnidadeId = normalizeObjectIdString(user?.unidade_id);
+    return requestUnidadeId || sessionDerivedUnidadeId;
   }
 
   return '';
