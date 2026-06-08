@@ -768,22 +768,6 @@ export async function createServer(options = {}) {
       } catch (e) { return next(); }
     });
 
-// POST genérico antecipado: precisa vir antes da montagem dos módulos.
-// Ex.: /condominios/login deve autenticar via handler genérico antes de cair no app do módulo.
-app.post(
-  '/:seg/login',
-  express.urlencoded({ extended: true, limit: '12mb' }),
-  express.json({ limit: '12mb' }),
-  (req, res, next) => {
-    try {
-      const seg = resolveGenericPublicSegment(req.params.seg);
-      if (!seg) return next();
-      return handoffGenericSegmentLogin(req, res, next, seg);
-    } catch (e) {
-      return next();
-    }
-  },
-);
     app.get('/:seg/esquecisenha', async (req, res, next) => {
       try {
         const seg = resolveGenericPublicSegment(req.params.seg);
@@ -1014,6 +998,23 @@ try {
   // Cookies + remember restore
   app.use(cookieParser());
   app.use(rememberRestore);
+
+// POST genérico antecipado: precisa vir antes da montagem dos módulos.
+// Ex.: /condominios/login deve autenticar via handler genérico antes de cair no app do módulo.
+app.post(
+'/:seg/login',
+express.urlencoded({ extended: true, limit: '12mb' }),
+express.json({ limit: '12mb' }),
+(req, res, next) => {
+try {
+const seg = resolveGenericPublicSegment(req.params.seg);
+if (!seg) return next();
+return handoffGenericSegmentLogin(req, res, next, seg);
+} catch (e) {
+return next();
+}
+},
+);
 
   // Reidrata req.user a partir da sessão real (id/email) para middlewares/rotas que dependem de role/isMaster.
   // Não altera contrato da sessão: continua mínima em req.session.user.

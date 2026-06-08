@@ -93,7 +93,10 @@ test('rotas genericas delegam para as novas seams locais do corredor publico', (
   );
 });
 
-test('POST generico de login fica antes da montagem dos modulos', () => {
+test('POST generico de login fica depois da sessao e antes da montagem dos modulos', () => {
+  const sessionIndex = SOURCE.indexOf('app.use(session({');
+  assert.ok(sessionIndex >= 0, 'middleware de sessao deve existir no createServer.js');
+
   const postLoginMatch = /app\.post\(\s*'\/:seg\/login',[\s\S]*?handoffGenericSegmentLogin\(req, res, next, seg\);[\s\S]*?\);\s*/m.exec(SOURCE);
   assert.ok(postLoginMatch, 'POST /:seg/login generico deve existir no createServer.js');
 
@@ -102,8 +105,20 @@ test('POST generico de login fica antes da montagem dos modulos', () => {
   assert.ok(mountIndex >= 0, 'mountBootstrapRegistry deve existir no createServer.js');
 
   assert.ok(
+    sessionIndex < postLoginIndex,
+    'POST /:seg/login deve ser registrado depois de app.use(session(...)) para conseguir criar req.session.user e emitir wdg.sid',
+  );
+
+  assert.ok(
     postLoginIndex < mountIndex,
     'POST /:seg/login deve ser registrado antes de mountBootstrapRegistry para nao cair no 404 do app do modulo',
+  );
+
+  const sourceBeforeSession = SOURCE.slice(0, sessionIndex);
+  assert.doesNotMatch(
+    sourceBeforeSession,
+    /app\.post\(\s*'\/:seg\/login'/,
+    'nao deve haver POST /:seg/login antes do middleware de sessao',
   );
 
   const sourceAfterMount = SOURCE.slice(mountIndex);
