@@ -67,25 +67,50 @@ test('rotas genericas delegam para as novas seams locais do corredor publico', (
     /app\.get\('\/:seg\/login',\s*async\s*\(req,\s*res,\s*next\)\s*=>\s*\{[\s\S]*const seg = resolveGenericPublicSegment\(req\.params\.seg\);[\s\S]*if \(!seg\) return next\(\);[\s\S]*return renderGenericSegmentLogin\(req, res, next, seg\);[\s\S]*\}\);/,
     'GET /:seg/login deve delegar para resolveGenericPublicSegment e renderGenericSegmentLogin',
   );
+
   assert.match(
     SOURCE,
-    /app\.post\('\/:seg\/login',[\s\S]*const seg = resolveGenericPublicSegment\(req\.params\.seg\);[\s\S]*if \(!seg\) return next\(\);[\s\S]*return handoffGenericSegmentLogin\(req, res, next, seg\);[\s\S]*\}\);/,
+    /app\.post\(\s*'\/:seg\/login',[\s\S]*const seg = resolveGenericPublicSegment\(req\.params\.seg\);[\s\S]*if \(!seg\) return next\(\);[\s\S]*return handoffGenericSegmentLogin\(req, res, next, seg\);[\s\S]*\);\s*/m,
     'POST /:seg/login deve delegar para resolveGenericPublicSegment e handoffGenericSegmentLogin',
   );
+
   assert.match(
     SOURCE,
     /app\.get\('\/:seg\/primeiroacesso',\s*\(req,\s*res,\s*next\)\s*=>\s*\{[\s\S]*const seg = resolveGenericPublicSegment\(req\.params\.seg\);[\s\S]*if \(!seg\) return next\(\);[\s\S]*return renderGenericSegmentPrimeiroAcesso\(req, res, next, seg\);[\s\S]*\}\);/,
     'GET /:seg/primeiroacesso deve delegar para resolveGenericPublicSegment e renderGenericSegmentPrimeiroAcesso',
   );
+
   assert.match(
     SOURCE,
     /app\.post\('\/:seg\/primeiroacesso',[\s\S]*const seg = resolveGenericPublicSegment\(req\.params\.seg\);[\s\S]*if \(!seg\) return next\(\);[\s\S]*return handoffGenericSegmentPrimeiroAcesso\(req, res, next, seg\);[\s\S]*\}\);/,
     'POST /:seg/primeiroacesso deve delegar para resolveGenericPublicSegment e handoffGenericSegmentPrimeiroAcesso',
   );
+
   assert.match(
     SOURCE,
     /app\.get\('\/:seg\/esquecisenha',\s*async\s*\(req,\s*res,\s*next\)\s*=>\s*\{[\s\S]*const seg = resolveGenericPublicSegment\(req\.params\.seg\);[\s\S]*if \(!seg\) return next\(\);[\s\S]*return renderGenericSegmentEsqueciSenha\(req, res, next, seg\);[\s\S]*\}\);/,
     'GET /:seg/esquecisenha deve delegar para resolveGenericPublicSegment e renderGenericSegmentEsqueciSenha',
+  );
+});
+
+test('POST generico de login fica antes da montagem dos modulos', () => {
+  const postLoginMatch = /app\.post\(\s*'\/:seg\/login',[\s\S]*?handoffGenericSegmentLogin\(req, res, next, seg\);[\s\S]*?\);\s*/m.exec(SOURCE);
+  assert.ok(postLoginMatch, 'POST /:seg/login generico deve existir no createServer.js');
+
+  const postLoginIndex = postLoginMatch.index;
+  const mountIndex = SOURCE.indexOf('mountBootstrapRegistry({');
+  assert.ok(mountIndex >= 0, 'mountBootstrapRegistry deve existir no createServer.js');
+
+  assert.ok(
+    postLoginIndex < mountIndex,
+    'POST /:seg/login deve ser registrado antes de mountBootstrapRegistry para nao cair no 404 do app do modulo',
+  );
+
+  const sourceAfterMount = SOURCE.slice(mountIndex);
+  assert.doesNotMatch(
+    sourceAfterMount,
+    /app\.post\(\s*'\/:seg\/login'/,
+    'nao deve haver POST /:seg/login tardio depois da montagem dos modulos',
   );
 });
 

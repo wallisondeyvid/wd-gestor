@@ -766,6 +766,23 @@ export async function createServer(options = {}) {
         return renderGenericSegmentLogin(req, res, next, seg);
       } catch (e) { return next(); }
     });
+
+// POST genérico antecipado: precisa vir antes da montagem dos módulos.
+// Ex.: /condominios/login deve autenticar via handler genérico antes de cair no app do módulo.
+app.post(
+  '/:seg/login',
+  express.urlencoded({ extended: true, limit: '12mb' }),
+  express.json({ limit: '12mb' }),
+  (req, res, next) => {
+    try {
+      const seg = resolveGenericPublicSegment(req.params.seg);
+      if (!seg) return next();
+      return handoffGenericSegmentLogin(req, res, next, seg);
+    } catch (e) {
+      return next();
+    }
+  },
+);
     app.get('/:seg/esquecisenha', async (req, res, next) => {
       try {
         const seg = resolveGenericPublicSegment(req.params.seg);
@@ -1310,13 +1327,6 @@ export async function createServer(options = {}) {
   // Fallback quando módulo Escalas está desabilitado e alguma parte do front tenta /escalas/login
   // POST genérico para /:seg/login delegando para o controlador do Gestor
   try {
-    app.post('/:seg/login', express.urlencoded({ extended: true, limit: '12mb' }), express.json({ limit: '12mb' }), (req, res, next) => {
-      try {
-        const seg = resolveGenericPublicSegment(req.params.seg);
-        if (!seg) return next();
-        return handoffGenericSegmentLogin(req, res, next, seg);
-      } catch (e) { return next(); }
-    });
     // Logout genérico: limpa sessão básica e volta ao login do módulo
     app.get('/:seg/logout', (req, res, next) => {
       try {
