@@ -331,6 +331,7 @@ export async function createServer(options = {}) {
       try {
         res.setHeader('X-App-Mode', getEffectiveSkipDb() ? 'light' : 'full');
         res.setHeader('X-Mongo-State', String(mongoose.connection.readyState));
+        res.setHeader('X-Session-Store', String(app.locals.sessionStoreKind || 'memory'));
       } catch {
         /* noop */
       }
@@ -919,9 +920,10 @@ app.post(
     return safe;
   }
 
-  let store;
-  // Preferir MongoStore automaticamente em ambientes serverless (ex.: Vercel) quando houver MONGO_URI
-  const wantMongoStore = (
+let store;
+let sessionStoreKind = 'memory';
+// Preferir MongoStore automaticamente...
+const wantMongoStore = (
     (process.env.SESSION_STORE || '').toLowerCase() === 'mongo' ||
     ((process.env.SESSION_STORE || '').trim() === '' && !getEffectiveSkipDb() && (process.env.VERCEL || process.env.VERCEL_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL) && (config.mongoUri || process.env.MONGO_URI || process.env.MONGODB_URI))
   );
@@ -951,13 +953,19 @@ app.post(
             maxPoolSize: Number(process.env.MONGO_MAX_POOL_SIZE || 10),
           },
         });
-        store = wrapSessionStoreSafe(store);
-        console.log('[session] usando connect-mongo');
+store = wrapSessionStoreSafe(store);
+sessionStoreKind = 'mongo';
+console.log('[session] usando connect-mongo');
       }
     } catch (err) {
       console.warn('[session] falha ao habilitar connect-mongo:', err.message, '-> usando MemoryStore');
     }
   }
+try {
+  app.locals.sessionStoreKind = sessionStoreKind;
+} catch {
+  // noop
+}
 
   app.use(session({
     name: 'wdg.sid',
