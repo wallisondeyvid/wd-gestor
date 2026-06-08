@@ -53,8 +53,8 @@ test('Light mode roots não devem regredir para C:\\views', async () => {
   await Promise.resolve(built.registerErrorHandlers());
 
   try {
-    const r1 = await request(built.app).get('/condominios/dashboard').set('Accept', 'text/html');
-    assertNoLegacyViews('/condominios/dashboard', r1);
+    const r1 = await request(built.app).get('/condominios/login').set('Accept', 'text/html');
+    assertNoLegacyViews('/condominios/login', r1);
 
     const r2 = await request(built.app).get('/gestor/dashboard').set('Accept', 'text/html');
     assertNoLegacyViews('/gestor/dashboard', r2);

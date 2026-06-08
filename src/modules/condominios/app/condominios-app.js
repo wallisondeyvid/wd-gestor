@@ -20740,8 +20740,25 @@ app.delete('/api/habitacoes/:id', async (req, res) => {
 });
 
 // Dashboard inicial
-app.get('/', (req, res) => res.redirect((req.baseUrl || '/condominios') + '/dashboard'));
-app.get('/dashboard', (req, res) => {
+function requireCondominiosPageLogin(req, res, next) {
+  const ctxUser = getCtxUser(req);
+
+  if (ctxUser) {
+    req.user = req.user || ctxUser;
+    res.locals.user = res.locals.user || ctxUser;
+    return next();
+  }
+
+  const basePath = req.baseUrl || '/condominios';
+  const nextUrl = encodeURIComponent(String(req.originalUrl || req.url || `${basePath}/dashboard`));
+  return res.redirect(`${basePath}/login?next=${nextUrl}`);
+}
+
+app.get('/', requireCondominiosPageLogin, (req, res) => {
+  return res.redirect((req.baseUrl || '/condominios') + '/dashboard');
+});
+
+app.get('/dashboard', requireCondominiosPageLogin, (req, res) => {
   return res.render('dashboard', { moduleLabel: 'Gestão de Condomínios' });
 });
 
