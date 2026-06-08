@@ -849,6 +849,55 @@ app.use('/images', express.static(path.join(ROOT, 'images')));
 app.use('/img', express.static(path.join(ROOT, 'public/img')));
 app.use('/data', express.static(path.join(ROOT, 'public/data')));
 
+// Proteção geral das páginas HTML internas do módulo Condomínios.
+// Mantém públicas rotas de login/recuperação, assets e APIs; páginas internas exigem sessão.
+function isCondominiosPublicOrNonPageRequest(req) {
+  const method = String(req.method || 'GET').toUpperCase();
+
+  // Não transformar POST/API em redirect HTML aqui. Cada endpoint mantém sua própria regra.
+  if (method !== 'GET' && method !== 'HEAD') return true;
+
+  const pathOnly = String(req.path || req.url || '').split('?')[0] || '/';
+
+  // Raiz do módulo é página interna; deve cair no dashboard se logado ou login se deslogado.
+  if (pathOnly === '/') return false;
+
+  // Páginas públicas.
+  if (/^\/(?:login|logout|esquecisenha|esqueci-senha|primeiroacesso|reset-password)(?:\/|$)/i.test(pathOnly)) {
+    return true;
+  }
+
+  // APIs e assets.
+  if (/^\/(?:api|css|js|images|img|uploads|fonts|assets|data)(?:\/|$)/i.test(pathOnly)) {
+    return true;
+  }
+
+  if (/^\/favicon\.ico$/i.test(pathOnly)) {
+    return true;
+  }
+
+  return false;
+}
+
+app.use((req, res, next) => {
+  try {
+    if (isCondominiosPublicOrNonPageRequest(req)) return next();
+
+    const ctxUser = getCtxUser(req);
+    if (ctxUser) {
+      req.user = req.user || ctxUser;
+      res.locals.user = res.locals.user || ctxUser;
+      return next();
+    }
+
+    const basePath = req.baseUrl || '/condominios';
+    const nextUrl = encodeURIComponent(String(req.originalUrl || `${basePath}${req.url || ''}`));
+    return res.redirect(`${basePath}/login?next=${nextUrl}`);
+  } catch {
+    return next();
+  }
+});
+
 // GET /api/usuarios/foto?email=...|id=... — serve foto de perfil por e-mail ou id (Gestor ou Portal)
 // Motivo: `foto` pode estar salvo como caminho relativo e nem sempre está exposto por static.
 app.get('/api/usuarios/foto', async (req, res) => {
