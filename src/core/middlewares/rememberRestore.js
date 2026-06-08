@@ -62,9 +62,23 @@ export async function rememberRestore(req, res, next) {
     if (!user || !user.ativo) return next();
     if (!req.session) return next();
 
-    const sessPayload = { id: user._id, email: user.email, nome: user.nome, role: user.role, funcionario_id: user.funcionario_id || null, unidade_id: user.unidade_id || null };
+    const sessPayload = {
+      id: user._id,
+      email: user.email,
+      nome: user.nome,
+      role: user.role,
+      funcionario_id: user.funcionario_id || null,
+      unidade_id: user.unidade_id || null,
+    };
+
     const isEscalas = req.originalUrl && req.originalUrl.startsWith('/escalas');
-    if (isEscalas) req.session.escalasUser = sessPayload;
+
+    if (isEscalas) {
+      req.session.escalasUser = sessPayload;
+    } else {
+      req.session.user = sessPayload;
+    }
+
     await rememberSessionRepository.touchRememberTokenLastUsed(rt._id);
     return next();
   } catch (e) {
