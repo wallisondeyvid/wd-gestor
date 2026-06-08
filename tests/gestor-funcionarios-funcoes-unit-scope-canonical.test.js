@@ -666,7 +666,7 @@ test('Funcionários HTML: filial contextual renderiza apenas a unidade canônica
   });
 });
 
-test('Funcionários HTML: master sem unidade ativa recebe modo global de consulta explícito', async () => {
+test('Funcionários HTML: master sem unidade ativa não recebe seletor manual de unidade', async () => {
   await withHarness(async ({ app, unidadeA, unidadeB }) => {
     const masterEmail = uniqueEmail('master-global-consulta-funcionarios');
     const masterUser = await User.create({
@@ -708,16 +708,27 @@ test('Funcionários HTML: master sem unidade ativa recebe modo global de consult
 
     assert.equal(res.status, 200);
     assert.match(res.headers['content-type'] || '', /text\/html/i);
-    assert.match(res.text, /gestor-funcionarios-global-consulta-marker/);
-    assert.match(res.text, /Modo global de consulta/);
-    assert.match(res.text, /Unidade para gerenciamento/);
-    assert.match(res.text, /gestorFuncionariosGlobalUnidadeSelect/);
-    assert.match(res.text, /Gerenciar unidade|Ativar unidade/);
-    assert.match(res.text, /gestor-funcionarios-contextual-fieldset" class="gestor-global-consulta-disabled" disabled/);
-    assert.match(res.text, /data-funcionarios-global-consulta="1"/);
-    assert.match(res.text, /aria-label="Detalhes indisponíveis no modo global" disabled/);
-    assert.match(res.text, /aria-label="Editar indisponível no modo global" disabled/);
-    assert.match(res.text, /aria-label="Excluir indisponível no modo global" disabled/);
+
+    assert.match(res.text, /Cadastrar Funcionário/);
+    assert.match(res.text, /formFuncionario/);
+
+    assert.doesNotMatch(res.text, /gestor-funcionarios-global-consulta-marker/);
+    assert.doesNotMatch(res.text, /Modo global de consulta/);
+    assert.doesNotMatch(res.text, /Funcionários - Consulta Global/);
+    assert.doesNotMatch(res.text, /Unidade para gerenciamento/);
+    assert.doesNotMatch(res.text, /gestorFuncionariosGlobalUnidadeSelect/);
+    assert.doesNotMatch(res.text, /gestorFuncionariosGlobalAtivarUnidadeBtn/);
+    assert.doesNotMatch(res.text, /gestorFuncionariosGlobalTrocarUnidadeBtn/);
+    assert.doesNotMatch(res.text, /gestorFuncionariosGlobalSwitchFeedback/);
+    assert.doesNotMatch(res.text, /Gerenciar unidade|Ativar unidade/);
+    assert.doesNotMatch(res.text, /gestor-global-consulta-disabled/);
+    assert.doesNotMatch(res.text, /data-funcionarios-global-consulta="1"/);
+    assert.doesNotMatch(res.text, /aria-label="Detalhes indisponíveis no modo global" disabled/);
+    assert.doesNotMatch(res.text, /aria-label="Editar indisponível no modo global" disabled/);
+    assert.doesNotMatch(res.text, /aria-label="Excluir indisponível no modo global" disabled/);
+    assert.doesNotMatch(res.text, /data-action="detalhes-bloqueado"/);
+    assert.doesNotMatch(res.text, /data-action="editar-bloqueado"/);
+    assert.doesNotMatch(res.text, /data-action="excluir-bloqueado"/);
   });
 });
 
