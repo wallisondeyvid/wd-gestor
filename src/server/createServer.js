@@ -556,6 +556,8 @@ export async function createServer(options = {}) {
   // HARD-STOP: Renderização direta das páginas públicas críticas antes de qualquer
   // middleware que possa redirecionar. Isso elimina loops ocasionais no GET
   // /gestor/login e /gestor/primeiroacesso caso o entrypoint não intercepte.
+  let genericSegmentLoginPostHandler = null;
+
   try {
     const ROOT = process.cwd();
     function parseErroMensagem(isLogin, qs) {
@@ -759,16 +761,26 @@ export async function createServer(options = {}) {
         return renderDirectGestorLogin(req, res, next);
       } catch (e) { return next(); }
     });
-    // Login genérico: /:seg/login -> renderiza mesma view com basePath dinâmico
-    app.get('/:seg/login', async (req, res, next) => {
-      try {
-        const seg = resolveGenericPublicSegment(req.params.seg);
-        if (!seg) return next();
-        return renderGenericSegmentLogin(req, res, next, seg);
-      } catch (e) { return next(); }
-    });
+// Login genérico: /:seg/login -> renderiza mesma view com basePath dinâmico
+app.get('/:seg/login', async (req, res, next) => {
+  try {
+    const seg = resolveGenericPublicSegment(req.params.seg);
+    if (!seg) return next();
+    return renderGenericSegmentLogin(req, res, next, seg);
+  } catch (e) { return next(); }
+});
 
-    app.get('/:seg/esquecisenha', async (req, res, next) => {
+genericSegmentLoginPostHandler = (req, res, next) => {
+  try {
+    const seg = resolveGenericPublicSegment(req.params.seg);
+    if (!seg) return next();
+    return handoffGenericSegmentLogin(req, res, next, seg);
+  } catch (e) {
+    return next(e);
+  }
+};
+
+app.get('/:seg/esquecisenha', async (req, res, next) => {
       try {
         const seg = resolveGenericPublicSegment(req.params.seg);
         if (!seg) return next();
@@ -999,22 +1011,18 @@ try {
   app.use(cookieParser());
   app.use(rememberRestore);
 
-// POST genérico antecipado: precisa vir antes da montagem dos módulos.
-// Ex.: /condominios/login deve autenticar via handler genérico antes de cair no app do módulo.
-app.post(
-'/:seg/login',
-express.urlencoded({ extended: true, limit: '12mb' }),
-express.json({ limit: '12mb' }),
-(req, res, next) => {
-try {
-const seg = resolveGenericPublicSegment(req.params.seg);
-if (!seg) return next();
-return handoffGenericSegmentLogin(req, res, next, seg);
-} catch (e) {
-return next();
-}
-},
-);
+  // POST genérico para /:seg/login delegando para o controlador do Gestor.
+  // Deve rodar depois de session/cookieParser/rememberRestore e antes da montagem dos módulos,
+  // para que /condominios/login consiga criar req.session.user e emitir wdg.sid.
+  app.post(
+    '/:seg/login',
+    express.urlencoded({ extended: true, limit: '12mb' }),
+    express.json({ limit: '12mb' }),
+    (req, res, next) => {
+      if (typeof genericSegmentLoginPostHandler !== 'function') return next();
+      return genericSegmentLoginPostHandler(req, res, next);
+    },
+  );
 
   // Reidrata req.user a partir da sessão real (id/email) para middlewares/rotas que dependem de role/isMaster.
   // Não altera contrato da sessão: continua mínima em req.session.user.
@@ -1334,7 +1342,6 @@ return next();
   });
 
   // Fallback quando módulo Escalas está desabilitado e alguma parte do front tenta /escalas/login
-  // POST genérico para /:seg/login delegando para o controlador do Gestor
   try {
     // Logout genérico: limpa sessão básica e volta ao login do módulo
     app.get('/:seg/logout', (req, res, next) => {

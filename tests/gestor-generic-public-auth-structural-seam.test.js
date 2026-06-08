@@ -68,11 +68,23 @@ test('rotas genericas delegam para as novas seams locais do corredor publico', (
     'GET /:seg/login deve delegar para resolveGenericPublicSegment e renderGenericSegmentLogin',
   );
 
-  assert.match(
-    SOURCE,
-    /app\.post\(\s*'\/:seg\/login',[\s\S]*const seg = resolveGenericPublicSegment\(req\.params\.seg\);[\s\S]*if \(!seg\) return next\(\);[\s\S]*return handoffGenericSegmentLogin\(req, res, next, seg\);[\s\S]*\);\s*/m,
-    'POST /:seg/login deve delegar para resolveGenericPublicSegment e handoffGenericSegmentLogin',
-  );
+assert.match(
+  SOURCE,
+  /let genericSegmentLoginPostHandler = null;/,
+  'handler tardio do POST /:seg/login deve ser declarado fora do bloco do corredor publico',
+);
+
+assert.match(
+  SOURCE,
+  /genericSegmentLoginPostHandler = \(req, res, next\) => \{[\s\S]*const seg = resolveGenericPublicSegment\(req\.params\.seg\);[\s\S]*if \(!seg\) return next\(\);[\s\S]*return handoffGenericSegmentLogin\(req, res, next, seg\);[\s\S]*\};/,
+  'handler tardio do POST /:seg/login deve preservar resolveGenericPublicSegment e handoffGenericSegmentLogin',
+);
+
+assert.match(
+  SOURCE,
+  /app\.post\(\s*'\/:seg\/login',[\s\S]*if \(typeof genericSegmentLoginPostHandler !== 'function'\) return next\(\);[\s\S]*return genericSegmentLoginPostHandler\(req, res, next\);[\s\S]*\);\s*/m,
+  'POST /:seg/login deve delegar para o handler tardio preparado no escopo correto',
+);
 
   assert.match(
     SOURCE,
@@ -97,7 +109,7 @@ test('POST generico de login fica depois da sessao e antes da montagem dos modul
   const sessionIndex = SOURCE.indexOf('app.use(session({');
   assert.ok(sessionIndex >= 0, 'middleware de sessao deve existir no createServer.js');
 
-  const postLoginMatch = /app\.post\(\s*'\/:seg\/login',[\s\S]*?handoffGenericSegmentLogin\(req, res, next, seg\);[\s\S]*?\);\s*/m.exec(SOURCE);
+  const postLoginMatch = /app\.post\(\s*'\/:seg\/login',[\s\S]*?genericSegmentLoginPostHandler\(req, res, next\);[\s\S]*?\);\s*/m.exec(SOURCE);
   assert.ok(postLoginMatch, 'POST /:seg/login generico deve existir no createServer.js');
 
   const postLoginIndex = postLoginMatch.index;
