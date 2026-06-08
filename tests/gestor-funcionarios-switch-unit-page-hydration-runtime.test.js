@@ -465,7 +465,7 @@ function assertDoesNotContain(haystack, needle, message) {
   assert.equal(haystack.includes(needle), false, message || `Nao esperava encontrar: ${needle}`);
 }
 
-test('POST switch-unit real hidrata GET /gestor/funcionarios com a nova unidade ativa', async () => {
+test('POST switch-unit real não força banner ou seletor manual em GET /gestor/funcionarios', async () => {
   resetRuntimeState();
 
   const sessionUser = {
@@ -527,35 +527,29 @@ test('POST switch-unit real hidrata GET /gestor/funcionarios com a nova unidade 
   assert.equal(contextRes.body.activeContext?.unidadeId, IDS.unitB);
   assert.equal(contextRes.body.activeContext?.unidadePrincipalId, IDS.principalB);
 
-  const pageRes = await agent.get('/gestor/funcionarios');
+const pageRes = await agent.get('/gestor/funcionarios');
 
-  assert.equal(pageRes.status, 200);
-  assertContains(pageRes.text, 'id="gestor-funcionarios-unidade-ativa-banner"');
-  assertContains(pageRes.text, `data-unidade-ativa-id="${IDS.unitB}"`);
-  assertContains(pageRes.text, 'M0002 - Wd Gestor Filial');
-  assertDoesNotContain(pageRes.text, `data-unidade-ativa-id="${IDS.unitA}"`);
-  assertDoesNotContain(
-    pageRes.text,
-    `<span id="gestorFuncionariosUnidadeAtivaNome" data-unidade-ativa-id="${IDS.unitA}">M0001 - Wd Gestor</span>`,
-  );
+assert.equal(pageRes.status, 200);
+assertContains(pageRes.text, 'Cadastrar Funcionário');
+assertContains(pageRes.text, 'formFuncionario');
 
-  assert.match(
-    pageRes.text,
-    new RegExp(`<option value="${IDS.unitA}"[^>]*>\\s*M0001 - Wd Gestor\\s*</option>`),
-  );
-  assert.match(
-    pageRes.text,
-    new RegExp(`<option value="${IDS.unitB}"[^>]*selected[^>]*>\\s*M0002 - Wd Gestor Filial\\s*</option>`),
-  );
+assertDoesNotContain(pageRes.text, 'id="gestor-funcionarios-unidade-ativa-banner"');
+assertDoesNotContain(pageRes.text, 'gestorFuncionariosGlobalUnidadeSelect');
+assertDoesNotContain(pageRes.text, 'gestorFuncionariosGlobalTrocarUnidadeBtn');
+assertDoesNotContain(pageRes.text, 'gestorFuncionariosGlobalAtivarUnidadeBtn');
+assertDoesNotContain(pageRes.text, 'gestorFuncionariosGlobalSwitchFeedback');
+assertDoesNotContain(pageRes.text, 'Modo global de consulta');
+assertDoesNotContain(pageRes.text, 'Funcionários - Consulta Global');
+assertDoesNotContain(pageRes.text, 'data-unidade-ativa-id=');
 
-  assert.equal(runtimeState.scopedFuncionarioCalls.length, 1);
-  assert.equal(runtimeState.scopedFuncionarioCalls[0].filtro.unidade_id, IDS.unitB);
+assert.equal(runtimeState.scopedFuncionarioCalls.length, 1);
+assert.equal(runtimeState.scopedFuncionarioCalls[0].filtro.unidade_id, IDS.unitB);
 
-  assert.equal(runtimeState.scopedSetorCalls.length, 1);
-  assert.equal(runtimeState.scopedSetorCalls[0].unidadeId, IDS.unitB);
+assert.equal(runtimeState.scopedSetorCalls.length, 1);
+assert.equal(runtimeState.scopedSetorCalls[0].unidadeId, IDS.unitB);
 
-  assert.equal(runtimeState.scopedFuncaoCalls.length, 1);
-  assert.equal(runtimeState.scopedFuncaoCalls[0].unidadePrincipalId, IDS.principalB);
+assert.equal(runtimeState.scopedFuncaoCalls.length, 1);
+assert.equal(runtimeState.scopedFuncaoCalls[0].unidadePrincipalId, IDS.principalB);
 
-  assert.equal(runtimeState.privilegedUnidadeCalls.length, 1);
+assert.equal(runtimeState.privilegedUnidadeCalls.length, 1);
 });

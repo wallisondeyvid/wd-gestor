@@ -11,127 +11,6 @@
 
   console.log('[FUNC_INDEX][unificado] carregado basePath =', basePath);
 
-  function resolveGlobalSwitchUnitError(code){
-    switch(String(code || '').trim()){
-      case 'GESTOR_INVALID_UNIDADE_ID': return 'Selecione uma unidade válida para continuar.';
-      case 'GESTOR_UNIT_NOT_ALLOWED': return 'A unidade escolhida não está disponível para este usuário global.';
-      case 'GESTOR_UNAUTHORIZED': return 'Sua sessão expirou. Faça login novamente.';
-      case 'GESTOR_AUTH_CONTEXT_SWITCH_DISABLED': return 'A ativação de unidade não está disponível neste ambiente.';
-      case 'GESTOR_AUTH_CONTEXT_SWITCH_ERROR': return 'Não foi possível ativar a unidade agora.';
-      default: return 'Não foi possível ativar a unidade selecionada.';
-    }
-  }
-
-function initGlobalConsultaUnitSwitcher(){
-  const body = document.body;
-  const globalMode = body?.getAttribute('data-funcionarios-global-consulta') === '1';
-
-  const select = document.getElementById('gestorFuncionariosGlobalUnidadeSelect');
-  const ativarButton = document.getElementById('gestorFuncionariosGlobalAtivarUnidadeBtn');
-  const trocarButton = document.getElementById('gestorFuncionariosGlobalTrocarUnidadeBtn');
-  const button = ativarButton || trocarButton;
-  const feedback = document.getElementById('gestorFuncionariosGlobalSwitchFeedback');
-
-  const hasSwitchUi = !!select && !!button && !!feedback;
-  if (!globalMode && !hasSwitchUi) return;
-  if (!hasSwitchUi) return;
-
-  const setFeedback = (message, tone = 'muted') => {
-    feedback.textContent = message || '';
-    feedback.classList.remove('text-muted', 'text-danger', 'text-success');
-    feedback.classList.add(
-      tone === 'danger'
-        ? 'text-danger'
-        : (tone === 'success' ? 'text-success' : 'text-muted'),
-    );
-  };
-
-  const syncButtonState = () => {
-    const selectedUnitId = String(select.value || '').trim();
-    const busy = button.dataset.busy === '1';
-    const canSubmit = !!selectedUnitId && !busy;
-
-    button.disabled = !canSubmit;
-    button.setAttribute('aria-disabled', canSubmit ? 'false' : 'true');
-  };
-
-  select.addEventListener('change', () => {
-    const selectedUnitId = String(select.value || '').trim();
-
-    if (!selectedUnitId) {
-      setFeedback('Selecione uma unidade para continuar.');
-    } else if (selectedUnitId === select.dataset.currentUnitId) {
-      setFeedback('Esta unidade já está ativa.', 'danger');
-    } else {
-      setFeedback('Clique em Trocar unidade para alterar o contexto de gerenciamento.');
-    }
-
-    syncButtonState();
-  });
-
-  button.addEventListener('click', async () => {
-    const unidadeId = String(select.value || '').trim();
-
-    if (!unidadeId) {
-      setFeedback('Selecione uma unidade válida para continuar.', 'danger');
-      syncButtonState();
-      select.focus();
-      return;
-    }
-
-    if (unidadeId === select.dataset.currentUnitId) {
-      setFeedback('Esta unidade já está ativa.', 'danger');
-      syncButtonState();
-      return;
-    }
-
-    const originalLabel = button.textContent;
-    button.dataset.busy = '1';
-    button.disabled = true;
-    button.textContent = 'Ativando...';
-    setFeedback('Ativando unidade de gerenciamento...', 'muted');
-
-    try {
-      const response = await fetch(`${basePath}/auth/switch-unit`, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({ unidade_id: unidadeId }),
-      });
-
-      const payload = await response.json().catch(() => ({}));
-
-      if (response.ok && payload?.ok) {
-        setFeedback('Unidade ativada. Recarregando a página...', 'success');
-        window.location.reload();
-        return;
-      }
-
-      if (response.status === 401) {
-        window.location.assign(`${basePath}/login`);
-        return;
-      }
-
-      setFeedback(
-        String(payload?.message || '').trim() || resolveGlobalSwitchUnitError(payload?.code),
-        'danger',
-      );
-    } catch (err) {
-      console.error('[FUNC_INDEX][unificado] erro ao ativar unidade global', err);
-      setFeedback('Não foi possível ativar a unidade agora.', 'danger');
-    } finally {
-      button.dataset.busy = '0';
-      button.textContent = originalLabel;
-      syncButtonState();
-    }
-  });
-
-  syncButtonState();
-}
-
   /* ================= WIZARD / ABAS (fallback) =================
    * O script completo (public/js/funcionarios/funcionarios_index.js) implementa
    * navegação entre abas e botões Próximo/Voltar. Caso ele ainda não tenha sido
@@ -201,7 +80,6 @@ function initGlobalConsultaUnitSwitcher(){
   // Tenta inicializar cedo e re-testa após pequeno atraso (caso DOM das abas demore)
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', __fallbackWizardInit); else __fallbackWizardInit();
   setTimeout(__fallbackWizardInit, 1200);
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initGlobalConsultaUnitSwitcher); else initGlobalConsultaUnitSwitcher();
 
   function normalizeText(v){
     return String(v ?? '').replace(/\s+/g, ' ').trim();

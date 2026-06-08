@@ -50,10 +50,9 @@
     #fDeleteConfirmModal .modal-header{ background:#ffffff !important; color:#212529 !important; }
     #fDeleteConfirmModal .modal-title{ color:inherit !important; }
     #fDeleteConfirmModal .btn-close{ filter:none !important; }
-    .gestor-global-consulta-disabled { opacity:.58; }
   </style>
 </head>
-  <body class="wdg-layout" data-unidade-default="<%= unidadeContextualId || (user && user.unidade_id ? user.unidade_id.toString() : '') %>" data-base-path="<%= _basePath %>" data-funcionarios-global-consulta="<%= isGlobalConsultaMode ? '1' : '0' %>">
+  <body class="wdg-layout" data-unidade-default="<%= unidadeContextualId || (user && user.unidade_id ? user.unidade_id.toString() : '') %>" data-base-path="<%= _basePath %>">
   <% const unidadesGestao = Array.isArray(unidadesFiltradas)
     ? unidadesFiltradas
         .map((unidade) => ({
@@ -78,64 +77,15 @@
   <%- include('../../shared/partials/perfil-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
 
   <div class="wdg-page">
-    <% if (isGlobalConsultaMode) { %>
-      <div id="gestor-funcionarios-global-consulta-marker" class="alert alert-info" role="status">
-        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-          <div>
-            <strong>Modo global de consulta</strong>
-            <div class="small mt-1">
-              A lista global de funcionários está disponível para consulta, mas criar, editar, excluir, abrir detalhes, foto e anexos permanecem indisponíveis até a seleção de uma unidade.
-            </div>
-          </div>
-        </div>
-        <div class="row g-2 align-items-end mt-2" id="gestor-funcionarios-global-consulta-switcher">
-          <div class="col-12 col-lg-7">
-            <label for="gestorFuncionariosGlobalUnidadeSelect" class="form-label mb-1">Unidade para gerenciamento</label>
-            <select id="gestorFuncionariosGlobalUnidadeSelect" class="form-select" <%= unidadesGestao.length ? '' : 'disabled aria-disabled="true"' %>>
-              <option value="">Selecione uma unidade...</option>
-              <% unidadesGestao.forEach((unidade) => { %>
-                <option value="<%= unidade.id %>"><%= unidade.codigo ? unidade.codigo + ' - ' : '' %><%= unidade.nome || unidade.id %></option>
-              <% }) %>
-            </select>
-          </div>
-          <div class="col-12 col-lg-auto">
-            <button
-              type="button"
-              id="gestorFuncionariosGlobalAtivarUnidadeBtn"
-              class="btn btn-outline-primary"
-              <%= unidadesGestao.length ? 'disabled aria-disabled="true"' : 'disabled aria-disabled="true"' %>
-            >Ativar unidade</button>
-          </div>
-          <div class="col-12">
-            <div id="gestorFuncionariosGlobalSwitchFeedback" class="small text-muted"><%= unidadesGestao.length ? 'Selecione uma unidade para habilitar cadastro e ações de gerenciamento.' : 'Nenhuma unidade ativa disponível para gerenciamento.' %></div>
-          </div>
-        </div>
-      </div>
-        <% } else if (unidadeAtivaGestao) { %>
-      <div id="gestor-funcionarios-unidade-ativa-banner" class="alert alert-success py-2 px-3" role="status">
-        <strong>Unidade ativa para gerenciamento:</strong>
-        <span id="gestorFuncionariosUnidadeAtivaNome" data-unidade-ativa-id="<%= unidadeAtivaGestao.id %>"><%= unidadeAtivaRotulo %></span>
-        <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
-          <label for="gestorFuncionariosGlobalUnidadeSelect" class="form-label mb-0">Trocar unidade</label>
-          <select id="gestorFuncionariosGlobalUnidadeSelect" class="form-select form-select-sm" style="max-width: 260px;" aria-label="Selecionar unidade para troca">
-            <% unidadesGestao.forEach((unidade) => { %>
-              <option value="<%= unidade.id %>" <%= unidade.id === unidadeAtivaGestao.id ? 'selected' : '' %>><%= unidade.codigo ? unidade.codigo + ' - ' : '' %><%= unidade.nome || unidade.id %></option>
-            <% }) %>
-          </select>
-          <button type="button" id="gestorFuncionariosGlobalTrocarUnidadeBtn" class="btn btn-outline-primary btn-sm">Trocar unidade</button>
-          <div id="gestorFuncionariosGlobalSwitchFeedback" class="small ms-2 lh-sm text-muted" style="flex:1 1 auto"></div>
-        </div>
-      </div>
-    <% } %>
     <!-- Título padronizado -->
-    <h4 class="mb-3 text-center page-main-title" id="tituloFormFuncionario"><%= isGlobalConsultaMode ? 'Funcionários - Consulta Global' : 'Cadastrar Funcionário' %></h4>
+    <h4 class="mb-3 text-center page-main-title" id="tituloFormFuncionario">Cadastrar Funcionário</h4>
     <div class="gestor-divider"></div>
 
     <div class="wdg-card content wdg-card-hover mb-4">
       <div class="wdg-card-body wdg-form wdg-tight">
         <div id="alertArea" class="mb-2" aria-live="polite"></div>
   <form id="formFuncionario" action="<%= _basePath %>/api/funcionarios" method="POST" enctype="multipart/form-data" autocomplete="off" novalidate>
-          <fieldset id="gestor-funcionarios-contextual-fieldset" class="<%= isGlobalConsultaMode ? 'gestor-global-consulta-disabled' : '' %>" <%= isGlobalConsultaMode ? 'disabled aria-disabled="true"' : '' %>>
+          <fieldset id="gestor-funcionarios-contextual-fieldset">
           <ul class="nav nav-tabs flex-wrap" id="tabsFuncionario" role="tablist" aria-label="Abas do cadastro de funcionário">
             <li class="nav-item" role="presentation">
               <button id="tab-aba1" class="nav-link active" type="button"
@@ -283,17 +233,6 @@
                   </td>
                   <td class="col-acoes">
                     <div class="d-flex gap-1 justify-content-center flex-nowrap">
-                      <% if (isGlobalConsultaMode) { %>
-                        <button type="button" class="wdg-icon-btn btn-detalhes-func" data-action="detalhes-bloqueado" title="Selecione uma unidade para abrir detalhes" aria-label="Detalhes indisponíveis no modo global" disabled>
-                          <img src="<%= _basePath %>/images/detalhe.png" alt="Detalhes indisponíveis" onerror="this.outerHTML='&lt;i class=\'bi bi-info-circle\'&gt;&lt;/i&gt;'">
-                        </button>
-                        <button type="button" class="wdg-icon-btn btn-edit-func" data-action="editar-bloqueado" title="Selecione uma unidade para editar" aria-label="Editar indisponível no modo global" disabled>
-                          <img src="<%= _basePath %>/images/editar.png" alt="Editar indisponível" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'">
-                        </button>
-                        <button type="button" class="wdg-icon-btn" data-action="excluir-bloqueado" title="Selecione uma unidade para excluir" aria-label="Excluir indisponível no modo global" disabled>
-                          <img src="<%= _basePath %>/images/excluir.png" alt="Excluir indisponível" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'">
-                        </button>
-                      <% } else { %>
                         <button type="button" class="wdg-icon-btn btn-detalhes-func" data-action="detalhes" data-id="<%= f._id %>" title="Detalhes" aria-label="Detalhes">
                           <img src="<%= _basePath %>/images/detalhe.png" alt="Detalhes" onerror="this.outerHTML='&lt;i class=\'bi bi-info-circle\'&gt;&lt;/i&gt;'">
                         </button>
@@ -305,7 +244,6 @@
                             <img src="<%= _basePath %>/images/excluir.png" alt="Excluir" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'">
                           </button>
                         </form>
-                      <% } %>
                     </div>
                   </td>
                 </tr>
