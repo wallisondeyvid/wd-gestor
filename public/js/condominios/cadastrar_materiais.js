@@ -465,10 +465,43 @@
           if(pub && pub.success && pub.data){ var d=pub.data; ctx.unidade = { nome: d.nome||ctx.unidade.nome||'', codigo: ctx.unidade.codigo||'', razao: d.razaoSocial||d.razao||ctx.unidade.razao||'', cnpj: d.cnpj||ctx.unidade.cnpj||'', endereco: d.endereco||ctx.unidade.endereco||'', telefone: d.telefone||ctx.unidade.telefone||'', logo: d.logo||ctx.unidade.logo||'' }; }
         }
       }catch(_enrich){}
-      // Tenta carregar QR persistido do servidor
-      (async function(){ var qrDoc = await getJson(basePath + '/api/materiais/' + encodeURIComponent(mq._id) + '/qrcode'); if(qrDoc && !qrDoc.error){ ctx.material.qrData = { url: qrDoc.url || '', payload: qrDoc.payload || {}, imgUrl: qrDoc.img || '' }; }
+      // Tenta carregar QR persistido do servidor.
+      // 404 significa apenas que ainda não existe QR salvo para este material.
+      (async function(){
+        var qrDoc = null;
+        try {
+          var qrUrl = basePath + '/api/materiais/' + encodeURIComponent(mq._id) + '/qrcode';
+          var qrRes = await fetch(qrUrl, { cache: 'no-store' });
+
+          if(qrRes && qrRes.ok){
+            qrDoc = await qrRes.json().catch(function(){ return null; });
+          } else if(qrRes && qrRes.status !== 404){
+            console.warn('[materiais] GET QR falhou', qrUrl, 'HTTP ' + qrRes.status);
+          }
+        } catch(e){
+          console.warn('[materiais] GET QR falhou', e);
+        }
+
+        if(qrDoc && !qrDoc.error){
+          ctx.material.qrData = {
+            url: qrDoc.url || '',
+            payload: qrDoc.payload || {},
+            imgUrl: qrDoc.img || ''
+          };
+        }
+
         if(window.WDG_MAT_QR && typeof window.WDG_MAT_QR.abrir==='function'){
-          window.WDG_MAT_QR.abrir(ctx, async function(updated){ try{ var qr = (updated && updated.qrData) || {}; var body = { url: qr.url || '', payload: qr.payload || {} }; if(qr.imgDataUrl){ body.img = qr.imgDataUrl; } var saved = await sendJson(basePath + '/api/materiais/' + encodeURIComponent(mq._id) + '/qrcode', 'POST', body); if(saved && saved.img){ showToast('QR Code salvo.','success'); } }catch(_){ showToast('Falha ao salvar QR.','danger'); } });
+          window.WDG_MAT_QR.abrir(ctx, async function(updated){
+            try{
+              var qr = (updated && updated.qrData) || {};
+              var body = { url: qr.url || '', payload: qr.payload || {} };
+              if(qr.imgDataUrl){ body.img = qr.imgDataUrl; }
+              var saved = await sendJson(basePath + '/api/materiais/' + encodeURIComponent(mq._id) + '/qrcode', 'POST', body);
+              if(saved && saved.img){ showToast('QR Code salvo.','success'); }
+            }catch(_){
+              showToast('Falha ao salvar QR.','danger');
+            }
+          });
         }
       })();
       return; }
