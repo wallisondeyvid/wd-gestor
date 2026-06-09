@@ -71,12 +71,21 @@ export async function rememberRestore(req, res, next) {
       unidade_id: user.unidade_id || null,
     };
 
-    const isEscalas = req.originalUrl && req.originalUrl.startsWith('/escalas');
+    const originalUrl = String(req.originalUrl || req.url || '');
+    const isEscalas = originalUrl.startsWith('/escalas');
+    const isLoginPage = /\/login(?:[?#].*)?$/i.test(originalUrl);
 
     if (isEscalas) {
       req.session.escalasUser = sessPayload;
-    } else {
-      req.session.user = sessPayload;
+    } else if (isLoginPage) {
+      const rememberedUser = {
+        id: sessPayload.id,
+        email: sessPayload.email,
+        nome: sessPayload.nome || null,
+      };
+
+      req.rememberedUser = rememberedUser;
+      res.locals.rememberedUser = rememberedUser;
     }
 
     await rememberSessionRepository.touchRememberTokenLastUsed(rt._id);
