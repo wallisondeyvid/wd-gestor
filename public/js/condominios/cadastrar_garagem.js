@@ -510,7 +510,9 @@
   }
 
 // Handler salvar (API)
-var GARAGEM_FOTO_MAX_BYTES = 1400 * 1024;
+var GARAGEM_FOTO_MAX_BYTES = 900 * 1024;
+var GARAGEM_FOTO_MAX_DATA_URL_LENGTH = 1600 * 1024;
+var GARAGEM_PAYLOAD_MAX_JSON_LENGTH = 1800 * 1024;
 
 async function readFileAsDataURL(file){
   return new Promise(function(resolve,reject){
@@ -533,7 +535,7 @@ function validateGaragemFotoFile(file){
   }
 
   if(Number(file.size || 0) > GARAGEM_FOTO_MAX_BYTES){
-    showToast('Imagem muito grande. Reduza a foto ou selecione uma imagem de até 1,4 MB.', 'warning');
+    showToast('Imagem muito grande. Reduza a foto ou selecione uma imagem de até 900 KB.', 'warning');
     return false;
   }
 
@@ -575,16 +577,35 @@ gSalvar && gSalvar.addEventListener('click', async function(){
     obs:gObs.value||''
   };
 
-  if(gFoto && gFoto.files && gFoto.files[0]){
-    if(!validateGaragemFotoFile(gFoto.files[0])) return;
+if(gFoto && gFoto.files && gFoto.files[0]){
+  if(!validateGaragemFotoFile(gFoto.files[0])) return;
 
-    try{
-      payload.foto = await readFileAsDataURL(gFoto.files[0]);
-    }catch(_e){
-      showToast('Falha ao ler imagem.','danger');
+  try{
+    var fotoDataUrl = await readFileAsDataURL(gFoto.files[0]);
+
+    if(fotoDataUrl.length > GARAGEM_FOTO_MAX_DATA_URL_LENGTH){
+      showToast('Imagem muito grande após conversão. Reduza a foto ou selecione uma imagem menor.', 'warning');
       return;
     }
+
+    payload.foto = fotoDataUrl;
+  }catch(_e){
+    showToast('Falha ao ler imagem.','danger');
+    return;
   }
+}
+
+var payloadJsonLength = 0;
+try{
+  payloadJsonLength = JSON.stringify(payload).length;
+}catch(_e){
+  payloadJsonLength = GARAGEM_PAYLOAD_MAX_JSON_LENGTH + 1;
+}
+
+if(payloadJsonLength > GARAGEM_PAYLOAD_MAX_JSON_LENGTH){
+  showToast('Imagem muito grande para envio. Reduza a foto ou selecione uma imagem menor.', 'warning');
+  return;
+}
 
   var resp;
   if(editIndex>=0){
