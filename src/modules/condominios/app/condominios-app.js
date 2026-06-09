@@ -12907,14 +12907,43 @@ app.get('/api/habitacoes/busca', async (req, res) => {
     if(andar) filtro.andar_id = andar;
     if(numero) filtro.numero = { $regex: numero, $options: 'i' };
 
-    const habs = await CondHabitacao.find(filtro).lean();
+    const light = String(req.query.light || '').trim() === '1';
+
+    const habQuery = CondHabitacao.find(filtro);
+    if(light){
+      habQuery.select('_id unidade_id bloco_id andar_id numero tipo');
+    }
+
+    const habs = await habQuery.lean();
     // Pré-carregar maps para reduzir queries repetidas
     const blocoIds = [...new Set(habs.map(h => h.bloco_id).filter(Boolean))];
     const andarIds = [...new Set(habs.map(h => h.andar_id).filter(Boolean))];
     const propIds = [...new Set(habs.map(h => h.proprietario_id).filter(Boolean))];
     const habIds = habs.map(h => h._id).filter(Boolean);
     const unitIds = [...new Set(habs.map(h => h.unidade_id).filter(Boolean))];
+    if(light){
+      const [blocosLight, andaresLight] = await Promise.all([
+        blocoIds.length ? CondBloco.find({ _id: { $in: blocoIds } }).select('_id nome codigo').lean() : [],
+        andarIds.length ? CondAndar.find({ _id: { $in: andarIds } }).select('_id nome codigo').lean() : []
+      ]);
 
+      const blocoLightMap = new Map(blocosLight.map(b => [String(b._id), b]));
+      const andarLightMap = new Map(andaresLight.map(a => [String(a._id), a]));
+
+      return res.json(habs.map(h => ({
+        _id: h._id,
+        id: h._id ? String(h._id) : '',
+        unidade_id: h.unidade_id || null,
+        unidadeId: h.unidade_id || null,
+        unidade: { _id: h.unidade_id || null },
+        bloco: h.bloco_id ? (blocoLightMap.get(String(h.bloco_id)) || null) : null,
+        andar: h.andar_id ? (andarLightMap.get(String(h.andar_id)) || null) : null,
+        bloco_id: h.bloco_id || null,
+        andar_id: h.andar_id || null,
+        tipo: h.tipo || '',
+        numero: h.numero || ''
+      })));
+    }
     const unidadeSelectFields = '_id codigo nome razaoSocial cnpj cpf pessoaTipo inscricaoEstadual inscricaoMunicipal cnaePrincipal cnaeSecundarios regimeTributario naturezaJuridica tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal diretor_usuario_id pixChave tipoPix banco agencia contaCorrente is_principal subunidade unidade_principal_id dataAbertura';
 
     const habIdStrings = habIds.map(h => String(h));

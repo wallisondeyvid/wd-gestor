@@ -277,7 +277,7 @@
   }
   async function carregarHabitacoes(unidadeId){ if(!unidadeId){ habs=[]; syncVincSelect(); return; }
     if(habCache[unidadeId]){ habs = habCache[unidadeId]; syncVincSelect(); return; }
-    try{ var url = basePath + '/api/habitacoes/busca?unidade=' + encodeURIComponent(unidadeId); var res = await fetch(url,{ cache:'no-store' }); if(!res.ok) throw new Error('HTTP '+res.status); var data = await res.json(); habs = Array.isArray(data)? data : []; habCache[unidadeId]=habs; syncVincSelect(); }
+    try{ var url = basePath + '/api/habitacoes/busca?unidade=' + encodeURIComponent(unidadeId) + '&light=1'; var res = await fetch(url,{ cache:'no-store' }); if(!res.ok) throw new Error('HTTP '+res.status); var data = await res.json(); habs = Array.isArray(data)? data : []; habCache[unidadeId]=habs; syncVincSelect(); }
     catch(e){ console.warn('[garagens] Falha ao carregar habitações', e); showToast('Não foi possível carregar habitações para vínculo.','warning'); habs=[]; syncVincSelect(); }
   }
   gUnidade && gUnidade.addEventListener('change', async function(){
