@@ -280,7 +280,10 @@
     try{ var url = basePath + '/api/habitacoes/busca?unidade=' + encodeURIComponent(unidadeId); var res = await fetch(url,{ cache:'no-store' }); if(!res.ok) throw new Error('HTTP '+res.status); var data = await res.json(); habs = Array.isArray(data)? data : []; habCache[unidadeId]=habs; syncVincSelect(); }
     catch(e){ console.warn('[garagens] Falha ao carregar habitações', e); showToast('Não foi possível carregar habitações para vínculo.','warning'); habs=[]; syncVincSelect(); }
   }
-  gUnidade && gUnidade.addEventListener('change', async function(){ refreshUnitLogo(); await carregarHabitacoes(gUnidade.value); await listarVagas(); });
+  gUnidade && gUnidade.addEventListener('change', async function(){
+  refreshUnitLogo();
+  await listarVagas();
+});
 
   // Picker do vínculo (single-select)
   if(gVincPickerBox){
@@ -401,8 +404,10 @@
   if(unidades.length===1 && gUnidade){ gUnidade.value=unidades[0]._id; }
   refreshUnitLogo();
   refreshVincPickerFromSelect();
-  // Carregar habitações iniciais se já houver unidade
-  (async function(){ if(gUnidade && gUnidade.value){ await carregarHabitacoes(gUnidade.value); } else { syncVincSelect(); } })();
+  // Carregamento inicial de habitações ocorre em listarVagas()
+  if(!(gUnidade && gUnidade.value)){
+    syncVincSelect();
+  }
   
   // Helpers HTTP e integração com API
 async function getJson(url){ try{ var res=await fetch(url,{ cache:'no-store' }); if(res.status===503){ showToast('Banco indisponível.','warning'); return null; } if(!res.ok) throw new Error('HTTP '+res.status); return await res.json(); }catch(e){ console.warn('[cadastrar_garagem] GET falhou', url, e); showToast('Falha ao carregar','danger'); return null; } }
