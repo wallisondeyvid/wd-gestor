@@ -455,16 +455,29 @@ async function sendGaragem(url, method, payload, fotoFile){
   }
 }
 
-async function listarVagas(){ var uid=gUnidade && gUnidade.value ? gUnidade.value : ''; var url = basePath + '/api/garagens/busca' + (uid? ('?unidade='+encodeURIComponent(uid)) : ''); var data=await getJson(url); garagens = Array.isArray(data)? data : []; garPage=0; renderGarPage(garPage); }
-  
-  function buildGarDeleteLabel(g){
-    if(!g) return '—';
-    var nome = String(g.nome || '').trim();
-    var uidLabel = unidadeLabelByObj(g.unidade) || unidadeLabel(g.unidadeId);
-    var label = nome || 'Vaga';
-    if(uidLabel) label += ' · ' + uidLabel;
-    return label || '—';
+async function listarVagas(){
+  var uid = gUnidade && gUnidade.value ? gUnidade.value : '';
+
+  if(uid){
+    await carregarHabitacoes(uid);
   }
+
+  var url = basePath + '/api/garagens/busca' + (uid ? ('?unidade=' + encodeURIComponent(uid)) : '');
+  var data = await getJson(url);
+
+  garagens = Array.isArray(data) ? data : [];
+  garPage = 0;
+  renderGarPage(garPage);
+}
+
+function buildGarDeleteLabel(g){
+  if(!g) return '—';
+  var nome = String(g.nome || '').trim();
+  var uidLabel = unidadeLabelByObj(g.unidade) || unidadeLabel(g.unidadeId);
+  var label = nome || 'Vaga';
+  if(uidLabel) label += ' · ' + uidLabel;
+  return label || '—';
+}
 
   function askGarDeleteConfirm(gLabel){
     var modalEl = byId('garDeleteConfirmModal');
