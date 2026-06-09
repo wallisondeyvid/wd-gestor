@@ -11218,6 +11218,18 @@
   }
 
   async function init() {
+    const hasMessageShell = !!(
+      qs('#msgBody') ||
+      qs('#msgMenu') ||
+      qs('#msgMailboxSelect') ||
+      qs('[data-msg-root]') ||
+      qs('[data-wdg-msg-root]')
+    );
+
+    if(!hasMessageShell){
+      return;
+    }
+
     ensureMsgDropdownOverlayFix();
     ensureMsgMarkerDropdownPortalFix();
 
