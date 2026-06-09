@@ -509,21 +509,104 @@
     try{ var m = bootstrap.Modal.getOrCreateInstance(el); m.show(); }catch(_){ }
   }
 
-  // Handler salvar (API)
-  async function readFileAsDataURL(file){ return new Promise(function(resolve,reject){ var fr=new FileReader(); fr.onload=function(){ resolve(String(fr.result||'')); }; fr.onerror=function(e){ reject(e); }; fr.readAsDataURL(file); }); }
-  gSalvar && gSalvar.addEventListener('click', async function(){ var uid=gUnidade.value; var nome=(gNome.value||'').trim(); var vincVal=gVinc.value||''; if(!uid){ alert('Selecione o condomínio.'); return; } if(!nome){ alert('Informe o nome da vaga.'); return; }
-    var dup = garagens.some(function(x,idx){ return String( (x.unidade && x.unidade._id) || x.unidadeId || x.unidade_id )===String(uid) && (x.nome||'').toLowerCase()===nome.toLowerCase() && idx!==editIndex; });
-    if(dup){ alert('Já existe uma vaga com este nome neste condomínio.'); return; }
-    var link_type='', link_id=null; if(vincVal){ if(vincVal.startsWith('hab:')){ link_type='hab'; link_id=vincVal.substring(4); } else if(vincVal.startsWith('area:')){ link_type='area'; link_id=vincVal.substring(5); } }
-    var payload={ unidade_id: uid, nome:nome, link_type:link_type, link_id:link_id, obs:gObs.value||'' };
-    if(gFoto && gFoto.files && gFoto.files[0]){ try{ payload.foto = await readFileAsDataURL(gFoto.files[0]); }catch(_e){ showToast('Falha ao ler imagem.','danger'); return; } }
-    var resp;
-    if(editIndex>=0){ var current = garagens[editIndex]; resp = await sendJson(basePath + '/api/garagens/' + encodeURIComponent(current._id), 'PUT', payload); editIndex=-1; setEditMode(false); }
-    else { resp = await sendJson(basePath + '/api/garagens', 'POST', payload); }
-    if(resp && payload.foto && !resp.foto_saved){ showToast('Imagem não salva (upload indisponível).','warning'); }
-    if(resp && resp.blob_missing_token){ showToast('Configurar token Blob para salvar imagens.','warning'); }
-    await listarVagas(); clearForm();
+// Handler salvar (API)
+var GARAGEM_FOTO_MAX_BYTES = 1400 * 1024;
+
+async function readFileAsDataURL(file){
+  return new Promise(function(resolve,reject){
+    var fr=new FileReader();
+    fr.onload=function(){ resolve(String(fr.result||'')); };
+    fr.onerror=function(e){ reject(e); };
+    fr.readAsDataURL(file);
   });
+}
+
+function validateGaragemFotoFile(file){
+  if(!file) return true;
+
+  var allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+  var mime = String(file.type || '').toLowerCase();
+
+  if(allowed.indexOf(mime) < 0){
+    showToast('Tipo de imagem não suportado. Use PNG, JPG ou WEBP.', 'warning');
+    return false;
+  }
+
+  if(Number(file.size || 0) > GARAGEM_FOTO_MAX_BYTES){
+    showToast('Imagem muito grande. Reduza a foto ou selecione uma imagem de até 1,4 MB.', 'warning');
+    return false;
+  }
+
+  return true;
+}
+
+gSalvar && gSalvar.addEventListener('click', async function(){
+  var uid=gUnidade.value;
+  var nome=(gNome.value||'').trim();
+  var vincVal=gVinc.value||'';
+
+  if(!uid){ alert('Selecione o condomínio.'); return; }
+  if(!nome){ alert('Informe o nome da vaga.'); return; }
+
+  var dup = garagens.some(function(x,idx){
+    return String((x.unidade && x.unidade._id) || x.unidadeId || x.unidade_id)===String(uid)
+      && (x.nome||'').toLowerCase()===nome.toLowerCase()
+      && idx!==editIndex;
+  });
+
+  if(dup){ alert('Já existe uma vaga com este nome neste condomínio.'); return; }
+
+  var link_type='', link_id=null;
+  if(vincVal){
+    if(vincVal.startsWith('hab:')){
+      link_type='hab';
+      link_id=vincVal.substring(4);
+    } else if(vincVal.startsWith('area:')){
+      link_type='area';
+      link_id=vincVal.substring(5);
+    }
+  }
+
+  var payload={
+    unidade_id: uid,
+    nome:nome,
+    link_type:link_type,
+    link_id:link_id,
+    obs:gObs.value||''
+  };
+
+  if(gFoto && gFoto.files && gFoto.files[0]){
+    if(!validateGaragemFotoFile(gFoto.files[0])) return;
+
+    try{
+      payload.foto = await readFileAsDataURL(gFoto.files[0]);
+    }catch(_e){
+      showToast('Falha ao ler imagem.','danger');
+      return;
+    }
+  }
+
+  var resp;
+  if(editIndex>=0){
+    var current = garagens[editIndex];
+    resp = await sendJson(basePath + '/api/garagens/' + encodeURIComponent(current._id), 'PUT', payload);
+    editIndex=-1;
+    setEditMode(false);
+  } else {
+    resp = await sendJson(basePath + '/api/garagens', 'POST', payload);
+  }
+
+  if(resp && payload.foto && !resp.foto_saved){
+    showToast('Imagem não salva (upload indisponível).','warning');
+  }
+
+  if(resp && resp.blob_missing_token){
+    showToast('Configurar token Blob para salvar imagens.','warning');
+  }
+
+  await listarVagas();
+  clearForm();
+});
 
   // Toast util
   function showToast(msg,type){ var c=document.getElementById('toastContainerGar'); if(!c){ c=document.createElement('div'); c.id='toastContainerGar'; c.style.position='fixed'; c.style.top='1rem'; c.style.right='1rem'; c.style.zIndex='1060'; document.body.appendChild(c); } var el=document.createElement('div'); el.className='toast align-items-center text-bg-'+(type||'secondary')+' border-0 show'; el.innerHTML='<div class="d-flex"><div class="toast-body">'+escapeHtml(msg)+'</div><button type="button" class="btn-close btn-close-white me-2 m-auto" aria-label="Fechar"></button></div>'; c.appendChild(el); setTimeout(function(){ try{ el.remove(); }catch(_){} }, 4000); var btn=el.querySelector('.btn-close'); btn && btn.addEventListener('click', function(){ try{ el.remove(); }catch(_){} }); }
