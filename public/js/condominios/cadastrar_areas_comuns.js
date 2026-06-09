@@ -66,7 +66,7 @@
     if(!uid) return ['/images/unidade.png', basePath + '/images/unidade.png'];
     var base = basePath || '';
     var raw = [];
-    raw.push('/gestor/api/unidades/' + encodeURIComponent(uid) + '/logo');
+    raw.push(base.replace(/\/+$/, '') + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
     raw.push(base + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
     raw.push('/api/unidades/' + encodeURIComponent(uid) + '/logo');
     raw.push('/images/unidade.png');

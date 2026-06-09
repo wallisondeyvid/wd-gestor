@@ -121,7 +121,7 @@
     var raw = [];
     for(var i=0;i<fromList.length;i++) raw.push(fromList[i]);
 
-    raw.push('/gestor/api/unidades/' + encodeURIComponent(uid) + '/logo');
+    raw.push(base.replace(/\/+$/, '') + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
     raw.push(base + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
     raw.push('/api/unidades/' + encodeURIComponent(uid) + '/logo');
 

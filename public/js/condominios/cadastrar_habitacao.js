@@ -74,10 +74,10 @@
     var raw = [];
     for(var i=0;i<fromList.length;i++) raw.push(fromList[i]);
 
-    // Mesmo padrão da Dirigência
-    raw.push('/gestor/api/unidades/' + encodeURIComponent(uid) + '/logo');
-    raw.push(base + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
-    raw.push('/api/unidades/' + encodeURIComponent(uid) + '/logo');
+// No módulo Condomínios, priorizar o endpoint do próprio módulo.
+// Evita cair em /gestor/api/unidades/:id/logo sem escopo contextual e gerar 400.
+raw.push(base.replace(/\/+$/, '') + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
+raw.push('/api/unidades/' + encodeURIComponent(uid) + '/logo');
 
     // fallback final
     raw.push('/images/unidade.png');

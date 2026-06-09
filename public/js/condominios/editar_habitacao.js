@@ -133,7 +133,7 @@
     const raw = [];
     for(const item of fromList) raw.push(item);
 
-    raw.push('/gestor/api/unidades/' + encodeURIComponent(uid) + '/logo');
+    raw.push(base.replace(/\/+$/, '') + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
     raw.push(base + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
     raw.push('/api/unidades/' + encodeURIComponent(uid) + '/logo');
 
