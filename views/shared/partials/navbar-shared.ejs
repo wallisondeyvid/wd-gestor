@@ -1065,26 +1065,10 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
         } catch { /* ignore */ }
       }
 
-      function isNavbarMsgPollingAllowed(){
-        try {
-          var p = String(location && location.pathname ? location.pathname : '');
-          var base = String(__NB_API_BASE || '').replace(/\/+$/, '');
-
-          return (
-            p.indexOf(base + '/administracao/caixa-de-mensagem') === 0 ||
-            p.indexOf(base + '/caixa-de-mensagem') === 0 ||
-            p.indexOf(base + '/caixa_de_mensagem') === 0
-          );
-        } catch(_) {
-          return false;
-        }
-      }
-
       function schedule(){
         try {
           if(timer) clearTimeout(timer);
           if(msgApiUnauthorized) return;
-          if(!isNavbarMsgPollingAllowed()) return;
           var isMsgPage = false;
           try {
             var p = String(location && location.pathname ? location.pathname : '');
@@ -1112,7 +1096,6 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
 
       document.addEventListener('visibilitychange', function(){
         if(msgApiUnauthorized) return;
-        if(!isNavbarMsgPollingAllowed()) return;
         try {
           if(!document.hidden) { void tick(); }
         } catch(_){ }
@@ -1120,7 +1103,6 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
       });
       window.addEventListener('focus', function(){
         if(msgApiUnauthorized) return;
-        if(!isNavbarMsgPollingAllowed()) return;
         try { void tick(); } catch(_){ }
         schedule();
       });
@@ -1145,11 +1127,9 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
         setBadge(cached);
         lastUnread = cached;
       }
-      // primeira leitura rápida apenas nas telas de mensagem
-      if(isNavbarMsgPollingAllowed()){
-        tick();
-        schedule();
-      }
+      // primeira leitura rápida
+      tick();
+      schedule();
     } catch(e){ console.warn('[navbar-shared] notify error', e); }
   });
 </script>
