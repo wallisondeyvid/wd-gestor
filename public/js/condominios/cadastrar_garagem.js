@@ -121,9 +121,9 @@
     var raw = [];
     for(var i=0;i<fromList.length;i++) raw.push(fromList[i]);
 
-    raw.push(base.replace(/\/+$/, '') + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
-    raw.push(base + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
-    raw.push('/api/unidades/' + encodeURIComponent(uid) + '/logo');
+raw.push(base.replace(/\/+$/, '') + '/api/unidades/' + encodeURIComponent(uid) + '/logo' + '?direct=1');
+raw.push(base + '/api/unidades/' + encodeURIComponent(uid) + '/logo' + '?direct=1');
+raw.push('/api/unidades/' + encodeURIComponent(uid) + '/logo' + '?direct=1');
 
     raw.push('/images/unidade.png');
     raw.push(base + '/images/unidade.png');

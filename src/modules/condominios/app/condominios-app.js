@@ -1320,8 +1320,15 @@ app.get('/api/unidades/:id/logo', async (req, res) => {
 
     const logo = String(unidade.logo || '').trim();
 
-    // 0) URL pública (S3/Blob/etc): proxy server-side (evita bloqueio por hotlink/CORS no print)
+    // 0) URL pública (S3/Blob/etc)
     if (/^https?:\/\//i.test(logo)) {
+      const direct = String(req.query.direct || '').trim() === '1';
+
+      if(direct){
+        res.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+        return res.redirect(302, logo);
+      }
+
       try {
         const ctl = new AbortController();
         const t = setTimeout(() => ctl.abort(), 4500);
