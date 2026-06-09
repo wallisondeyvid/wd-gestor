@@ -11294,6 +11294,19 @@ app.get('/api/msg/messages', async (req, res) => {
     const end = start + pageSize;
     docs = (Array.isArray(docs) ? docs : []).slice(start, end);
 
+    const lightBadge = String(req.query.lightBadge || req.query.badge || '').trim() === '1';
+    if (lightBadge) {
+      return res.json({
+        ok: true,
+        items: [],
+        total,
+        page,
+        pageSize,
+        pages,
+        lightBadge: true
+      });
+    }
+
     // Enriquecimento do thread (bloco): count + flags reply/forward.
     // Importante: o item raiz (thread) pode ter respostas na Saída; por isso
     // usamos um filtro de acesso que inclui enviados + recebidos (scope) para contar.

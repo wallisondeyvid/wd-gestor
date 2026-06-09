@@ -1024,7 +1024,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
           // Usa paginação mínima e lê `total` para detectar mudanças mesmo com muitas não lidas.
           var mbId = await resolvePersonalMailboxId();
           var mailboxId = (mbId && String(mbId).trim()) ? String(mbId).trim() : 'pessoal';
-          var url = __NB_API_BASE + '/api/msg/messages?mailboxId=' + encodeURIComponent(mailboxId) + '&folder=entrada&status=nao_lidas&page=1&pageSize=1&_ts=' + Date.now();
+          var url = __NB_API_BASE + '/api/msg/messages?mailboxId=' + encodeURIComponent(mailboxId) + '&folder=entrada&status=nao_lidas&page=1&pageSize=1&lightBadge=1&_ts=' + Date.now();
           var r = await fetch(url, {
             credentials:'same-origin',
             cache:'no-store',
