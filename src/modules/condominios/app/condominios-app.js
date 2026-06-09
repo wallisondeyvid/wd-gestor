@@ -7920,6 +7920,18 @@ app.get('/api/msg/mailboxes', async (req, res) => {
           }
           return false;
         });
+    const light = String(req.query.light || req.query.lightNavbar || '').trim() === '1';
+    if (light) {
+      const outLight = (visible || [])
+        .map(d => ({
+          id: String(d?._id || d?.id || ''),
+          name: String(d?.name || ''),
+          type: String(d?.type || 'grupo')
+        }))
+        .filter(d => d.id);
+
+      return res.json(outLight);
+    }
 
     // Resolve nomes de operadores (para UI exibir nome ao invés de e-mail/ID).
     // Importante: só usa chaves já presentes em caixas visíveis.

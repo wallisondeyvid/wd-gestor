@@ -661,7 +661,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
 
           personalMailboxPromise = (async function(){
             try {
-              const url = __NB_API_BASE + '/api/msg/mailboxes?_ts=' + Date.now();
+              const url = __NB_API_BASE + '/api/msg/mailboxes?light=1&_ts=' + Date.now();
               const r = await fetch(url, {
                 credentials: 'same-origin',
                 cache: 'no-store',
