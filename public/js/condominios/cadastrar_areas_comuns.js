@@ -144,6 +144,51 @@
       return payload;
     }catch(e){ console.warn('[areas-comuns] '+(method||'POST')+' falhou', url, e); showToast('Operação falhou','danger'); return null; }
   }
+
+  async function sendAreaComum(url, method, payload, fotoFile){
+    if(!fotoFile){
+      return sendJson(url, method, payload);
+    }
+
+    var fd = new FormData();
+
+    Object.keys(payload || {}).forEach(function(key){
+      var value = payload[key];
+      if(value === undefined || value === null) return;
+      fd.append(key, String(value));
+    });
+
+    fd.append('foto', fotoFile);
+
+    try{
+      var res = await fetch(url, {
+        method: method || 'POST',
+        body: fd,
+        credentials: 'same-origin',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      var text = await res.text();
+      var data = null;
+      try{ data = text ? JSON.parse(text) : null; }catch(_e){ data = null; }
+
+      if(!res.ok){
+        var msg = (data && (data.error || data.detail || data.message)) || ('HTTP ' + res.status);
+        showToast(String(msg), res.status>=500 ? 'danger' : 'warning');
+        return null;
+      }
+
+      showToast(method==='PUT' ? 'Alterado.' : 'Salvo.', 'success');
+      return data;
+    }catch(e){
+      console.warn('[areas-comuns] '+(method||'POST')+' multipart falhou', url, e);
+      showToast((e && e.message) ? e.message : 'Operação falhou', 'danger');
+      return null;
+    }
+  }
+
   // Lista sem filtro por unidade: backend aplica escopo do usuário (admin/master vê tudo; user/diretor vê somente suas unidades)
   async function listarAreas(){ var url=basePath + '/api/areas-comuns/busca'; var data=await getJson(url); areas = Array.isArray(data)? data : []; acPage=0; renderACPage(acPage); }
 
@@ -211,14 +256,27 @@
   acSalvar && acSalvar.addEventListener('click', async function(){ var uid=acUnidade.value; var nome=(acNome.value||'').trim(); if(!uid){ alert('Selecione o condomínio.'); return; } if(!nome){ alert('Informe o nome da área.'); return; }
     var dup = areas.some(function(x,idx){ var xuid=(x.unidade && x.unidade._id) || x.unidade_id || x.unidadeId; return String(xuid)===String(uid) && (x.nome||'').toLowerCase()===nome.toLowerCase() && idx!==editIndex; });
     if(dup){ alert('Já existe uma área com este nome neste condomínio.'); return; }
-  var areaStr = (acArea && typeof acArea.value==='string') ? acArea.value.replace(',', '.') : '';
-  var capValue = getCapacidadeValue();
-  var payload={ unidade_id: uid, nome:nome, area_m2: areaStr || '', capacidade: capValue!=null ? capValue : null, obs: acObs.value || '' };
-    if(acFoto && acFoto.files && acFoto.files[0]){ try{ payload.foto = await readFileAsDataURL(acFoto.files[0]); }catch(_e){ showToast('Falha ao ler imagem.','danger'); return; } }
+    var areaStr = (acArea && typeof acArea.value==='string') ? acArea.value.replace(',', '.') : '';
+    var capValue = getCapacidadeValue();
+    var payload={ unidade_id: uid, nome:nome, area_m2: areaStr || '', capacidade: capValue!=null ? capValue : null, obs: acObs.value || '' };
+    var fotoFile = null;
+
+    if(acFoto && acFoto.files && acFoto.files[0]){
+      fotoFile = acFoto.files[0];
+    }
+
     var resp;
-    if(editIndex>=0){ var current=areas[editIndex]; resp = await sendJson(basePath + '/api/areas-comuns/' + encodeURIComponent(current._id), 'PUT', payload); editIndex=-1; setEditMode(false); }
-    else { resp = await sendJson(basePath + '/api/areas-comuns', 'POST', payload); }
-    if(resp && payload.foto && !resp.foto_saved){ showToast('Imagem não salva (upload indisponível).','warning'); }
+    if(editIndex>=0){
+      var current=areas[editIndex];
+      resp = await sendAreaComum(basePath + '/api/areas-comuns/' + encodeURIComponent(current._id), 'PUT', payload, fotoFile);
+      editIndex=-1;
+      setEditMode(false);
+    }
+    else {
+      resp = await sendAreaComum(basePath + '/api/areas-comuns', 'POST', payload, fotoFile);
+    }
+
+    if(resp && fotoFile && !resp.foto_saved){ showToast('Imagem não salva (upload indisponível).','warning'); }
     if(resp && resp.blob_missing_token){ showToast('Configurar token Blob para salvar imagens.','warning'); }
     await listarAreas(); clearForm();
   });
