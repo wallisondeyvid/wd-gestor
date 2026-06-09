@@ -405,9 +405,57 @@
   (async function(){ if(gUnidade && gUnidade.value){ await carregarHabitacoes(gUnidade.value); } else { syncVincSelect(); } })();
   
   // Helpers HTTP e integração com API
-  async function getJson(url){ try{ var res=await fetch(url,{ cache:'no-store' }); if(res.status===503){ showToast('Banco indisponível.','warning'); return null; } if(!res.ok) throw new Error('HTTP '+res.status); return await res.json(); }catch(e){ console.warn('[cadastrar_garagem] GET falhou', url, e); showToast('Falha ao carregar','danger'); return null; } }
-  async function sendJson(url, method, body){ try{ var res=await fetch(url,{ method:method||'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body||{}) }); if(res.status===503){ showToast('Banco indisponível.','warning'); return null; } if(!res.ok) throw new Error('HTTP '+res.status); var data=await res.json(); showToast(method==='DELETE'? 'Excluído.' : (method==='PUT'? 'Alterado.' : 'Salvo.'),'success'); return data; }catch(e){ console.warn('[cadastrar_garagem] '+(method||'POST')+' falhou', url, e); showToast('Operação falhou','danger'); return null; } }
-  async function listarVagas(){ var uid=gUnidade && gUnidade.value ? gUnidade.value : ''; var url = basePath + '/api/garagens/busca' + (uid? ('?unidade='+encodeURIComponent(uid)) : ''); var data=await getJson(url); garagens = Array.isArray(data)? data : []; garPage=0; renderGarPage(garPage); }
+async function getJson(url){ try{ var res=await fetch(url,{ cache:'no-store' }); if(res.status===503){ showToast('Banco indisponível.','warning'); return null; } if(!res.ok) throw new Error('HTTP '+res.status); return await res.json(); }catch(e){ console.warn('[cadastrar_garagem] GET falhou', url, e); showToast('Falha ao carregar','danger'); return null; } }
+async function sendJson(url, method, body){ try{ var res=await fetch(url,{ method:method||'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body||{}) }); if(res.status===503){ showToast('Banco indisponível.','warning'); return null; } if(!res.ok) throw new Error('HTTP '+res.status); var data=await res.json(); showToast(method==='DELETE'? 'Excluído.' : (method==='PUT'? 'Alterado.' : 'Salvo.'),'success'); return data; }catch(e){ console.warn('[cadastrar_garagem] '+(method||'POST')+' falhou', url, e); showToast('Operação falhou','danger'); return null; } }
+
+async function sendGaragem(url, method, payload, fotoFile){
+  if(!fotoFile){
+    return sendJson(url, method, payload);
+  }
+
+  var fd = new FormData();
+
+  Object.keys(payload || {}).forEach(function(key){
+    var value = payload[key];
+    if(value === undefined || value === null) return;
+    fd.append(key, String(value));
+  });
+
+  fd.append('foto', fotoFile);
+
+  try{
+    var res = await fetch(url, {
+      method: method,
+      body: fd,
+      credentials: 'same-origin',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    if(res.status === 503){
+      showToast('Banco indisponível.','warning');
+      return null;
+    }
+
+    var data = null;
+    try{ data = await res.json(); }catch(_e){ data = null; }
+
+    if(!res.ok){
+      var msg = (data && (data.error || data.message)) || ('HTTP ' + res.status);
+      throw new Error(msg);
+    }
+
+    showToast(method==='PUT' ? 'Alterado.' : 'Salvo.', 'success');
+    return data;
+  }catch(e){
+    console.warn('[cadastrar_garagem] '+(method||'POST')+' multipart falhou', url, e);
+    showToast((e && e.message) ? e.message : 'Operação falhou', 'danger');
+    return null;
+  }
+}
+
+async function listarVagas(){ var uid=gUnidade && gUnidade.value ? gUnidade.value : ''; var url = basePath + '/api/garagens/busca' + (uid? ('?unidade='+encodeURIComponent(uid)) : ''); var data=await getJson(url); garagens = Array.isArray(data)? data : []; garPage=0; renderGarPage(garPage); }
   
   function buildGarDeleteLabel(g){
     if(!g) return '—';
@@ -510,18 +558,7 @@
   }
 
 // Handler salvar (API)
-var GARAGEM_FOTO_MAX_BYTES = 900 * 1024;
-var GARAGEM_FOTO_MAX_DATA_URL_LENGTH = 1600 * 1024;
-var GARAGEM_PAYLOAD_MAX_JSON_LENGTH = 1800 * 1024;
-
-async function readFileAsDataURL(file){
-  return new Promise(function(resolve,reject){
-    var fr=new FileReader();
-    fr.onload=function(){ resolve(String(fr.result||'')); };
-    fr.onerror=function(e){ reject(e); };
-    fr.readAsDataURL(file);
-  });
-}
+var GARAGEM_FOTO_MAX_BYTES = 2 * 1024 * 1024;
 
 function validateGaragemFotoFile(file){
   if(!file) return true;
@@ -535,7 +572,7 @@ function validateGaragemFotoFile(file){
   }
 
   if(Number(file.size || 0) > GARAGEM_FOTO_MAX_BYTES){
-    showToast('Imagem muito grande. Reduza a foto ou selecione uma imagem de até 900 KB.', 'warning');
+    showToast('Imagem muito grande. Reduza a foto ou selecione uma imagem de até 2 MB.', 'warning');
     return false;
   }
 
@@ -577,47 +614,24 @@ gSalvar && gSalvar.addEventListener('click', async function(){
     obs:gObs.value||''
   };
 
-if(gFoto && gFoto.files && gFoto.files[0]){
-  if(!validateGaragemFotoFile(gFoto.files[0])) return;
+  var fotoFile = null;
 
-  try{
-    var fotoDataUrl = await readFileAsDataURL(gFoto.files[0]);
-
-    if(fotoDataUrl.length > GARAGEM_FOTO_MAX_DATA_URL_LENGTH){
-      showToast('Imagem muito grande após conversão. Reduza a foto ou selecione uma imagem menor.', 'warning');
-      return;
-    }
-
-    payload.foto = fotoDataUrl;
-  }catch(_e){
-    showToast('Falha ao ler imagem.','danger');
-    return;
+  if(gFoto && gFoto.files && gFoto.files[0]){
+    if(!validateGaragemFotoFile(gFoto.files[0])) return;
+    fotoFile = gFoto.files[0];
   }
-}
-
-var payloadJsonLength = 0;
-try{
-  payloadJsonLength = JSON.stringify(payload).length;
-}catch(_e){
-  payloadJsonLength = GARAGEM_PAYLOAD_MAX_JSON_LENGTH + 1;
-}
-
-if(payloadJsonLength > GARAGEM_PAYLOAD_MAX_JSON_LENGTH){
-  showToast('Imagem muito grande para envio. Reduza a foto ou selecione uma imagem menor.', 'warning');
-  return;
-}
 
   var resp;
   if(editIndex>=0){
     var current = garagens[editIndex];
-    resp = await sendJson(basePath + '/api/garagens/' + encodeURIComponent(current._id), 'PUT', payload);
+    resp = await sendGaragem(basePath + '/api/garagens/' + encodeURIComponent(current._id), 'PUT', payload, fotoFile);
     editIndex=-1;
     setEditMode(false);
   } else {
-    resp = await sendJson(basePath + '/api/garagens', 'POST', payload);
+    resp = await sendGaragem(basePath + '/api/garagens', 'POST', payload, fotoFile);
   }
 
-  if(resp && payload.foto && !resp.foto_saved){
+  if(resp && fotoFile && !resp.foto_saved){
     showToast('Imagem não salva (upload indisponível).','warning');
   }
 

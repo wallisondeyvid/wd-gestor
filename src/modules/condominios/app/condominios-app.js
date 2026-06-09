@@ -15848,13 +15848,87 @@ app.get('/api/garagens/busca', async (req, res) => {
   } catch(e){ console.error('[api/garagens/busca] erro GET', e); return res.status(200).json([]); }
 });
 
+const garagemFotoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/webp']);
+    if (!file || !file.mimetype) return cb(null, true);
+    if (allowed.has(file.mimetype)) return cb(null, true);
+    return cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', String(file.fieldname || 'foto')));
+  }
+});
+
+function parseGaragemBody(req, res, next) {
+  try {
+    if (req && typeof req.is === 'function' && req.is('multipart/form-data')) {
+      return garagemFotoUpload.single('foto')(req, res, (err) => {
+        if (!err) return next();
+
+        const msg = err && err.code === 'LIMIT_FILE_SIZE'
+          ? 'Imagem muito grande (limite 2MB)'
+          : 'Imagem inválida. Use PNG, JPG, JPEG ou WEBP.';
+
+        return res.status(err && err.code === 'LIMIT_FILE_SIZE' ? 413 : 400).json({ error: msg });
+      });
+    }
+
+    return express.json({ limit: '2mb' })(req, res, next);
+  } catch (_e) {
+    return res.status(400).json({ error: 'Payload inválido' });
+  }
+}
+
+async function uploadGaragemFotoFile(file) {
+  if (!file || !file.buffer) return '';
+
+  const mime = String(file.mimetype || '').toLowerCase();
+  const allowed = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/webp']);
+  if (!allowed.has(mime)) {
+    const err = new Error('Tipo não suportado');
+    err.status = 400;
+    throw err;
+  }
+
+  const extMap = {
+    'image/png': 'png',
+    'image/jpeg': 'jpg',
+    'image/jpg': 'jpg',
+    'image/webp': 'webp'
+  };
+
+  const ext = extMap[mime] || 'bin';
+  const fileName = `garagens/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+  const blobToken = process.env.BLOB_READ_WRITE_TOKEN || process.env.WDGESTOR_DB_DADOS_READ_WRITE_TOKEN || process.env.VERCEL_BLOB_RW_TOKEN || '';
+
+  const uploaded = await put(fileName, file.buffer, {
+    access: 'public',
+    contentType: mime,
+    cacheControl: 'public, max-age=31536000, immutable',
+    ...(blobToken ? { token: blobToken } : {})
+  });
+
+  return uploaded.url;
+}
+
 // Criar vaga
-app.post('/api/garagens', express.json({ limit: '2mb' }), async (req, res) => {
+app.post('/api/garagens', parseGaragemBody, async (req, res) => {
   try {
     const { unidade_id, nome, link_type, link_id, obs, foto } = req.body || {};
     if(!unidade_id || !nome) return res.status(400).json({ error: 'unidade_id e nome são obrigatórios' });
+
     let fotoUrl=''; let blobFailed=false; let blobMissingToken=false; let blobTried=false;
-    if(typeof foto === 'string' && foto.startsWith('data:')){
+
+    if (req.file) {
+      blobTried = true;
+      try {
+        fotoUrl = await uploadGaragemFotoFile(req.file);
+      } catch (e) {
+        console.error('[api/garagens] POST upload blob erro', e);
+        blobFailed = true;
+        if (e && /No token found/i.test(e.message || '')) blobMissingToken = true;
+      }
+    } else if(typeof foto === 'string' && foto.startsWith('data:')){
       if(foto.length > 2_000_000) return res.status(413).json({ error: 'Imagem muito grande (~2MB limite)' });
       blobTried=true;
       try{
@@ -15869,16 +15943,38 @@ app.post('/api/garagens', express.json({ limit: '2mb' }), async (req, res) => {
         const blobToken = process.env.BLOB_READ_WRITE_TOKEN || process.env.WDGESTOR_DB_DADOS_READ_WRITE_TOKEN || process.env.VERCEL_BLOB_RW_TOKEN || '';
         const uploaded = await put(fileName, buf, { access:'public', contentType:mime, cacheControl:'public, max-age=31536000, immutable', ...(blobToken?{token:blobToken}:{}) });
         fotoUrl = uploaded.url;
-      }catch(e){ console.error('[api/garagens] erro upload blob', e); blobFailed=true; if(e && /No token found/i.test(e.message||'')) blobMissingToken=true; }
+      }catch(e){
+        console.error('[api/garagens] erro upload blob', e);
+        blobFailed=true;
+        if(e && /No token found/i.test(e.message||'')) blobMissingToken=true;
+      }
     }
-    const doc = await CondVagaGaragem.create({ unidade_id, nome: String(nome).trim(), link_type: link_type||'', link_id: link_id||null, obs: (obs||'').toString(), foto: fotoUrl });
+
+    const doc = await CondVagaGaragem.create({
+      unidade_id,
+      nome: String(nome).trim(),
+      link_type: link_type||'',
+      link_id: link_id||null,
+      obs: (obs||'').toString(),
+      foto: fotoUrl
+    });
+
     const plain = doc.toObject();
-    res.status(201).json({ ...plain, foto_saved: !!plain.foto, blob_tried: blobTried, blob_failed: blobFailed, blob_missing_token: blobMissingToken });
-  } catch(e){ console.error('[api/garagens] POST erro', e); res.status(500).json({ error:'Falha ao criar vaga', detail: e.message }); }
+    res.status(201).json({
+      ...plain,
+      foto_saved: !!plain.foto,
+      blob_tried: blobTried,
+      blob_failed: blobFailed,
+      blob_missing_token: blobMissingToken
+    });
+  } catch(e){
+    console.error('[api/garagens] POST erro', e);
+    res.status(500).json({ error:'Falha ao criar vaga', detail: e.message });
+  }
 });
 
 // Atualizar vaga
-app.put('/api/garagens/:id', express.json({ limit: '2mb' }), async (req, res) => {
+app.put('/api/garagens/:id', parseGaragemBody, async (req, res) => {
   try{
     const id = req.params.id; const { unidade_id, nome, link_type, link_id, obs, foto } = req.body || {};
     const upd = {};
@@ -15888,7 +15984,23 @@ app.put('/api/garagens/:id', express.json({ limit: '2mb' }), async (req, res) =>
     if(link_id!==undefined) upd.link_id = link_id||null;
     if(obs!=null) upd.obs = String(obs);
     let blobFailed=false; let blobMissingToken=false; let blobTried=false;
-    if(foto!==undefined){
+
+    if(req.file){
+      blobTried = true;
+      try{
+        const atual = await CondVagaGaragem.findById(id).select('foto').lean();
+        upd.foto = await uploadGaragemFotoFile(req.file);
+
+        const blobToken = process.env.BLOB_READ_WRITE_TOKEN || process.env.WDGESTOR_DB_DADOS_READ_WRITE_TOKEN || process.env.VERCEL_BLOB_RW_TOKEN || '';
+        if(process.env.ENABLE_DELETE_OLD_BLOB === '1' && atual && atual.foto && /vercel-storage\.com/.test(atual.foto)){
+          try{ await del(atual.foto, blobToken ? { token: blobToken } : undefined); }catch(_e){}
+        }
+      }catch(e){
+        console.error('[api/garagens] PUT upload blob erro', e);
+        blobFailed = true;
+        if(e && /No token found/i.test(e.message || '')) blobMissingToken = true;
+      }
+    } else if(foto!==undefined){
       if(foto==='' || foto===null){ upd.foto=''; }
       else if(typeof foto==='string' && foto.startsWith('data:')){
         if(foto.length > 2_000_000) return res.status(413).json({ error:'Imagem muito grande (~2MB limite)' });
