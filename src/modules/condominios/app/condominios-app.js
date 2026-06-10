@@ -19902,8 +19902,18 @@ app.get('/api/materiais/:id/qrcode', async (req, res) => {
     const materialId = req.params.id;
     if(!isValidObjectId(materialId)) return res.status(400).json({ error:'ID do material inválido' });
     const doc = await CondQRCodeMaterial.findOne({ material_id: materialId }).lean();
-    if(!doc) return res.status(404).json({ error:'QR Code não encontrado' });
-    return res.json({ _id: doc._id, material_id: doc.material_id, unidade_id: doc.unidade_id, url: doc.url||'', payload: doc.payload||{}, img: doc.img||'', formato: doc.formato||'png', createdAt: doc.createdAt, updatedAt: doc.updatedAt });
+    if(!doc) {
+      return res.json({
+        ok: true,
+        exists: false,
+        material_id: materialId,
+        url: '',
+        payload: {},
+        img: '',
+        formato: 'png'
+      });
+    }
+    return res.json({ ok: true, exists: true, _id: doc._id, material_id: doc.material_id, unidade_id: doc.unidade_id, url: doc.url||'', payload: doc.payload||{}, img: doc.img||'', formato: doc.formato||'png', createdAt: doc.createdAt, updatedAt: doc.updatedAt });
   }catch(e){ console.error('[api/materiais/:id/qrcode] GET erro', e); return res.status(500).json({ error:'Falha ao obter QR Code' }); }
 });
 
