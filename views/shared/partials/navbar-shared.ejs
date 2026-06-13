@@ -546,36 +546,15 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
             return '<li><span class="dropdown-item active module-switch-current">✓ ' + escapeHtml(label) + '</span></li>';
           }
 
-          return '<li><button type="button" class="dropdown-item module-switch-link" data-module-href="' + escapeHtml(href) + '">' + escapeHtml(label) + '</button></li>';
+          return '<li><a class="dropdown-item module-switch-link" data-module-href="' + escapeHtml(href) + '" href="' + escapeHtml(href) + '">' + escapeHtml(label) + '</a></li>';
           }).join('');
       }
-      document.addEventListener('click', function(ev){
+      function navigateModuleFromEvent(ev){
         try {
-          var target = ev.target && ev.target.closest
+          var link = ev.target && ev.target.closest
             ? ev.target.closest('#nbModuleSwitcherMenu .module-switch-link')
             : null;
 
-          if(!target) return;
-
-          var href = String(target.getAttribute('data-module-href') || '').trim();
-          if(!href || href === '#') return;
-
-          ev.preventDefault();
-          ev.stopPropagation();
-          if(typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
-
-          closeModuleMenu();
-          window.location.href = href;
-        } catch(e){
-          console.warn('[navbar-shared] falha ao alternar módulo', e);
-        }
-      }, true);
-
-      menu.innerHTML = '<li><span class="dropdown-item-text text-muted">Carregando módulos...</span></li>';
-
-      menu.addEventListener('click', function(ev){
-        try {
-          var link = ev.target && ev.target.closest ? ev.target.closest('.module-switch-link') : null;
           if(!link) return;
 
           var href = String(link.getAttribute('data-module-href') || link.getAttribute('href') || '').trim();
@@ -583,12 +562,21 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
 
           ev.preventDefault();
           ev.stopPropagation();
+          if(typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
 
-          window.location.assign(href);
+          closeModuleMenu();
+
+          console.log('[navbar-shared] alternando módulo:', href);
+          window.location.href = href;
         } catch(e){
           console.warn('[navbar-shared] falha ao alternar módulo', e);
         }
-      }, true);
+      }
+
+      menu.addEventListener('pointerdown', navigateModuleFromEvent, true);
+      menu.addEventListener('click', navigateModuleFromEvent, true);
+
+      menu.innerHTML = '<li><span class="dropdown-item-text text-muted">Carregando módulos...</span></li>';
 
       fetch(__NB_BASE + '/api/modulos', {
         credentials: 'same-origin',
@@ -1402,38 +1390,6 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   }
   .navbar-module-switcher{
     position: relative;
-  }
-
-  .navbar-module-switcher{
-    position: relative;
-  }
-
-  .navbar-module-switcher .module-switch-btn{
-    display: inline-flex;
-    align-items: center;
-    gap: .35rem;
-    height: 26px;
-    padding: 0 .55rem;
-    border: 1px solid rgba(255,255,255,.55);
-    border-radius: 999px;
-    background: rgba(255,255,255,.12);
-    color: #fff;
-    font-size: .78rem;
-    font-weight: 700;
-    line-height: 1;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.16);
-  }
-
-  .navbar-module-switcher .module-switch-btn:hover,
-  .navbar-module-switcher .module-switch-btn:focus{
-    background: rgba(255,255,255,.22);
-    border-color: rgba(255,255,255,.85);
-    color: #fff;
-    outline: none;
-  }
-
-  .navbar-module-switcher{
-    position: relative;
     display: inline-block;
   }
 
@@ -1476,10 +1432,12 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
     min-width: 260px;
     text-align: left;
     z-index: 3000;
+    pointer-events: auto !important;
   }
 
   .module-switch-menu.show{
     display: block !important;
+    pointer-events: auto !important;
   }
 
   .module-switch-current{
@@ -1490,10 +1448,11 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
     opacity: .55;
   }
 
-    .module-switch-link{
+  .module-switch-link{
     width: 100%;
     text-align: left;
     cursor: pointer;
+    pointer-events: auto !important;
   }
 
   /* Cronômetro de inatividade: tamanho e contraste no tema da navbar */
