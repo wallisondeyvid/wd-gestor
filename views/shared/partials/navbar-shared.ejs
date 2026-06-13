@@ -546,9 +546,30 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
             return '<li><span class="dropdown-item active module-switch-current">✓ ' + escapeHtml(label) + '</span></li>';
           }
 
-          return '<li><a class="dropdown-item module-switch-link" data-module-href="' + escapeHtml(href) + '" href="' + escapeHtml(href) + '">' + escapeHtml(label) + '</a></li>';
-        }).join('');
+          return '<li><button type="button" class="dropdown-item module-switch-link" data-module-href="' + escapeHtml(href) + '">' + escapeHtml(label) + '</button></li>';
+          }).join('');
       }
+      document.addEventListener('click', function(ev){
+        try {
+          var target = ev.target && ev.target.closest
+            ? ev.target.closest('#nbModuleSwitcherMenu .module-switch-link')
+            : null;
+
+          if(!target) return;
+
+          var href = String(target.getAttribute('data-module-href') || '').trim();
+          if(!href || href === '#') return;
+
+          ev.preventDefault();
+          ev.stopPropagation();
+          if(typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+
+          closeModuleMenu();
+          window.location.href = href;
+        } catch(e){
+          console.warn('[navbar-shared] falha ao alternar módulo', e);
+        }
+      }, true);
 
       menu.innerHTML = '<li><span class="dropdown-item-text text-muted">Carregando módulos...</span></li>';
 
@@ -1467,6 +1488,12 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
 
   .module-switch-disabled{
     opacity: .55;
+  }
+
+    .module-switch-link{
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
   }
 
   /* Cronômetro de inatividade: tamanho e contraste no tema da navbar */
