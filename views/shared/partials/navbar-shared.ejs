@@ -1388,27 +1388,21 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   @media (max-width: 575.98px){
     .navbar-wd .navbar-nav > .nav-item > .nav-link { height: 36px; }
   }
-  .navbar-module-switcher{
-    position: relative;
-    display: inline-block;
-  }
-
   .navbar-module-switcher .module-switch-btn{
     display: inline-flex;
     align-items: center;
-    border: 1px solid rgba(255,255,255,.45);
-    border-radius: 999px;
-    padding: .22rem .75rem;
+    border: 0;
+    padding: 0;
     margin: 0;
-    background:
-      linear-gradient(135deg, rgba(255,255,255,.22), rgba(255,255,255,.08));
-    color: #fff;
+    background: transparent;
+    color: inherit;
     cursor: pointer;
     pointer-events: auto !important;
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.25),
-      0 2px 8px rgba(0,0,0,.14);
-    transition: background .15s ease, border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+
+  .navbar-module-switcher .module-switch-btn:hover,
+  .navbar-module-switcher .module-switch-btn:focus{
+    outline: none;
   }
 
   .navbar-module-switcher .module-switch-btn:hover,
@@ -1427,24 +1421,30 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
     display: inline-flex;
     align-items: center;
     gap: .45rem;
-    pointer-events: none;
+    min-height: 28px;
+    padding: .22rem .8rem;
+    border: 1px solid rgba(255,255,255,.45);
+    border-radius: 999px;
+    background: rgba(255,255,255,.16);
+    color: #fff;
     font-size: .78rem;
     font-weight: 800;
     letter-spacing: .01em;
     white-space: nowrap;
+    pointer-events: none;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.20);
+  }
+
+  .navbar-module-switcher .module-switch-btn:hover .module-switch-chip,
+  .navbar-module-switcher .module-switch-btn:focus .module-switch-chip{
+    background: rgba(255,255,255,.24);
+    border-color: rgba(255,255,255,.72);
   }
 
   .navbar-module-switcher .module-switch-icon{
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.25rem;
-    height: 1.25rem;
-    border-radius: 999px;
-    background: rgba(255,255,255,.22);
-    font-size: .82rem;
+    font-size: .9rem;
     line-height: 1;
-    opacity: 1;
+    opacity: .95;
   }
 
   .module-switch-menu{
