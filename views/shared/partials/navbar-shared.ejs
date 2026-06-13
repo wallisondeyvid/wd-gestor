@@ -289,22 +289,25 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
           </ul>
         </li>
       </ul>
-<div class="flex-grow-1 text-center navbar-wd-center">
-  <div class="dropdown d-inline-flex align-items-center gap-1 navbar-module-switcher">
-    <button
-      id="nbModuleSwitcherBtn"
-      class="btn btn-sm btn-outline-light module-switch-btn"
-      type="button"
-      data-bs-toggle="dropdown"
-      aria-expanded="false"
-      title="Alternar módulo"
-      aria-label="Alternar módulo"
-    >::</button>
-    <ul id="nbModuleSwitcherMenu" class="dropdown-menu dropdown-menu-dark module-switch-menu"></ul>
-    <span class="center-chip">Módulo <%= moduleLabel %></span>
-  </div>
-  <span id="nbIdleTimer" class="idle-timer badge rounded-pill bg-warning text-dark ms-2" title="Tempo restante para sair por inatividade" style="vertical-align:middle; display:none;">30:00</span>
-</div>
+      <div class="flex-grow-1 text-center navbar-wd-center">
+        <div class="navbar-module-switcher">
+          <button
+            id="nbModuleSwitcherBtn"
+            class="module-switch-btn"
+            type="button"
+            aria-expanded="false"
+            title="Alternar módulo"
+            aria-label="Alternar módulo"
+          >
+            <span class="center-chip module-switch-chip">
+              <span class="module-switch-icon">☷</span>
+              <span>Módulo <%= moduleLabel %></span>
+            </span>
+          </button>
+          <ul id="nbModuleSwitcherMenu" class="dropdown-menu dropdown-menu-dark module-switch-menu"></ul>
+        </div>
+        <span id="nbIdleTimer" class="idle-timer badge rounded-pill bg-warning text-dark ms-2" title="Tempo restante para sair por inatividade" style="vertical-align:middle; display:none;">30:00</span>
+      </div>
   <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center navbar-wd-actions">
         <% if (user) { %>
           <% if (['/condominios', '/condominio'].includes(__nbBase)) { %>
@@ -428,13 +431,54 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   var __NB_HAS_USER = (function(){ var nav = document.querySelector('.navbar.navbar-wd'); return !!(nav && nav.getAttribute('data-has-user')==='1'); })();
 
   // Seletor global de módulos no centro da navbar
-  document.addEventListener('DOMContentLoaded', function(){
+  function __initModuleSwitcher(){
     try {
       if(!__NB_HAS_USER) return;
 
       var btn = document.getElementById('nbModuleSwitcherBtn');
       var menu = document.getElementById('nbModuleSwitcherMenu');
       if(!btn || !menu) return;
+      if(btn.dataset.moduleSwitcherBound === '1') return;
+      btn.dataset.moduleSwitcherBound = '1';
+
+      function closeModuleMenu(){
+        menu.classList.remove('show');
+        menu.style.display = 'none';
+        btn.setAttribute('aria-expanded', 'false');
+      }
+
+      function openModuleMenu(){
+        menu.classList.add('show');
+        menu.style.display = 'block';
+        btn.setAttribute('aria-expanded', 'true');
+      }
+
+      function toggleModuleMenu(ev){
+        if(ev){
+          ev.preventDefault();
+          ev.stopPropagation();
+          if(typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+        }
+
+        if(menu.style.display === 'block' || menu.classList.contains('show')) closeModuleMenu();
+        else openModuleMenu();
+      }
+
+      btn.addEventListener('click', toggleModuleMenu, true);
+      btn.addEventListener('pointerdown', function(ev){
+        ev.stopPropagation();
+      }, true);
+
+      document.addEventListener('click', function(ev){
+        try {
+          if(ev.target && ev.target.closest && ev.target.closest('.navbar-module-switcher')) return;
+          closeModuleMenu();
+        } catch(_){ closeModuleMenu(); }
+      });
+
+      document.addEventListener('keydown', function(ev){
+        if(ev && ev.key === 'Escape') closeModuleMenu();
+      });
 
       var currentBase = String(__NB_BASE || '').trim();
       if(currentBase.length > 1 && currentBase.endsWith('/')) currentBase = currentBase.slice(0, -1);
@@ -472,7 +516,15 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
 
       function isInternalModule(item){
         var b = normalizeBase(item && item.url_base);
-        return !!b && b !== '/portal-morador' && b !== '/portal_morador';
+        var status = moduleStatus(item);
+
+        if(!b) return false;
+        if(b === '/portal-morador' || b === '/portal_morador') return false;
+
+        // Só exibe módulos ativos. Planejado, inativo, suspenso etc. não aparecem.
+        if(status !== 'ativo') return false;
+
+        return true;
       }
 
       function renderItems(items){
@@ -488,24 +540,34 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
           var label = moduleLabel(item);
           var status = moduleStatus(item);
           var current = base && base === currentBase;
-          var activeStatus = !status || status === 'ativo';
-          var enabled = activeStatus && !!base && !current;
           var href = moduleDashboardUrl(base);
 
           if(current){
             return '<li><span class="dropdown-item active module-switch-current">✓ ' + escapeHtml(label) + '</span></li>';
           }
 
-          if(!enabled){
-            var reason = status && status !== 'ativo' ? (' — ' + status) : ' — indisponível';
-            return '<li><span class="dropdown-item disabled module-switch-disabled" aria-disabled="true">' + escapeHtml(label + reason) + '</span></li>';
-          }
-
-          return '<li><a class="dropdown-item module-switch-link" href="' + escapeHtml(href) + '">' + escapeHtml(label) + '</a></li>';
+          return '<li><a class="dropdown-item module-switch-link" data-module-href="' + escapeHtml(href) + '" href="' + escapeHtml(href) + '">' + escapeHtml(label) + '</a></li>';
         }).join('');
       }
 
       menu.innerHTML = '<li><span class="dropdown-item-text text-muted">Carregando módulos...</span></li>';
+
+      menu.addEventListener('click', function(ev){
+        try {
+          var link = ev.target && ev.target.closest ? ev.target.closest('.module-switch-link') : null;
+          if(!link) return;
+
+          var href = String(link.getAttribute('data-module-href') || link.getAttribute('href') || '').trim();
+          if(!href || href === '#') return;
+
+          ev.preventDefault();
+          ev.stopPropagation();
+
+          window.location.assign(href);
+        } catch(e){
+          console.warn('[navbar-shared] falha ao alternar módulo', e);
+        }
+      }, true);
 
       fetch(__NB_BASE + '/api/modulos', {
         credentials: 'same-origin',
@@ -524,7 +586,13 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
     } catch(e){
       console.warn('[navbar-shared] module switcher error', e);
     }
-  });
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', __initModuleSwitcher);
+  } else {
+    __initModuleSwitcher();
+  }
 
   function __resolveAvatarUrl(foto){
     if(!foto) return __NB_BASE + '/img/user-placeholder.svg';
@@ -1311,28 +1379,92 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   @media (max-width: 575.98px){
     .navbar-wd .navbar-nav > .nav-item > .nav-link { height: 36px; }
   }
-  .navbar-module-switcher .module-switch-btn{
-    --bs-btn-padding-y: .08rem;
-    --bs-btn-padding-x: .38rem;
-    --bs-btn-font-size: .72rem;
-    line-height: 1.05;
-    border-color: rgba(255,255,255,.55);
-    color: #fff;
-    font-weight: 800;
-    letter-spacing: -1px;
+  .navbar-module-switcher{
+    position: relative;
   }
+
+  .navbar-module-switcher{
+    position: relative;
+  }
+
+  .navbar-module-switcher .module-switch-btn{
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    height: 26px;
+    padding: 0 .55rem;
+    border: 1px solid rgba(255,255,255,.55);
+    border-radius: 999px;
+    background: rgba(255,255,255,.12);
+    color: #fff;
+    font-size: .78rem;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.16);
+  }
+
   .navbar-module-switcher .module-switch-btn:hover,
   .navbar-module-switcher .module-switch-btn:focus{
-    background: rgba(255,255,255,.16);
+    background: rgba(255,255,255,.22);
+    border-color: rgba(255,255,255,.85);
     color: #fff;
+    outline: none;
   }
+
+  .navbar-module-switcher{
+    position: relative;
+    display: inline-block;
+  }
+
+  .navbar-module-switcher .module-switch-btn{
+    display: inline-flex;
+    align-items: center;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    pointer-events: auto !important;
+  }
+
+  .navbar-module-switcher .module-switch-btn:hover,
+  .navbar-module-switcher .module-switch-btn:focus{
+    outline: none;
+    filter: brightness(1.08);
+  }
+
+  .navbar-module-switcher .module-switch-chip{
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    pointer-events: none;
+  }
+
+  .navbar-module-switcher .module-switch-icon{
+    font-size: .95rem;
+    line-height: 1;
+    opacity: .95;
+  }
+
   .module-switch-menu{
-    min-width: 240px;
+    display: none;
+    position: absolute;
+    top: calc(100% + .4rem);
+    left: 0;
+    min-width: 260px;
     text-align: left;
+    z-index: 3000;
   }
+
+  .module-switch-menu.show{
+    display: block !important;
+  }
+
   .module-switch-current{
     font-weight: 700;
   }
+
   .module-switch-disabled{
     opacity: .55;
   }
