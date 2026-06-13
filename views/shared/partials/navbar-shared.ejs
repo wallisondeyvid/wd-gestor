@@ -289,10 +289,22 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
           </ul>
         </li>
       </ul>
-      <div class="flex-grow-1 text-center navbar-wd-center">
-        <span class="center-chip">Módulo <%= moduleLabel %></span>
-        <span id="nbIdleTimer" class="idle-timer badge rounded-pill bg-warning text-dark ms-2" title="Tempo restante para sair por inatividade" style="vertical-align:middle; display:none;">30:00</span>
-      </div>
+<div class="flex-grow-1 text-center navbar-wd-center">
+  <div class="dropdown d-inline-flex align-items-center gap-1 navbar-module-switcher">
+    <button
+      id="nbModuleSwitcherBtn"
+      class="btn btn-sm btn-outline-light module-switch-btn"
+      type="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="false"
+      title="Alternar módulo"
+      aria-label="Alternar módulo"
+    >::</button>
+    <ul id="nbModuleSwitcherMenu" class="dropdown-menu dropdown-menu-dark module-switch-menu"></ul>
+    <span class="center-chip">Módulo <%= moduleLabel %></span>
+  </div>
+  <span id="nbIdleTimer" class="idle-timer badge rounded-pill bg-warning text-dark ms-2" title="Tempo restante para sair por inatividade" style="vertical-align:middle; display:none;">30:00</span>
+</div>
   <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center navbar-wd-actions">
         <% if (user) { %>
           <% if (['/condominios', '/condominio'].includes(__nbBase)) { %>
@@ -414,6 +426,106 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
     } catch(_){ }
   })();
   var __NB_HAS_USER = (function(){ var nav = document.querySelector('.navbar.navbar-wd'); return !!(nav && nav.getAttribute('data-has-user')==='1'); })();
+
+  // Seletor global de módulos no centro da navbar
+  document.addEventListener('DOMContentLoaded', function(){
+    try {
+      if(!__NB_HAS_USER) return;
+
+      var btn = document.getElementById('nbModuleSwitcherBtn');
+      var menu = document.getElementById('nbModuleSwitcherMenu');
+      if(!btn || !menu) return;
+
+      var currentBase = String(__NB_BASE || '').trim();
+      if(currentBase.length > 1 && currentBase.endsWith('/')) currentBase = currentBase.slice(0, -1);
+
+      function normalizeBase(value){
+        var b = String(value || '').trim();
+        if(!b) return '';
+        if(b.charAt(0) !== '/') b = '/' + b;
+        if(b.length > 1 && b.endsWith('/')) b = b.slice(0, -1);
+        return b;
+      }
+
+      function escapeHtml(value){
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function moduleDashboardUrl(base){
+        var b = normalizeBase(base);
+        if(!b) return '#';
+        return b + '/dashboard';
+      }
+
+      function moduleLabel(item){
+        return String(item && (item.nome || item.name || item.label) || '').trim() || 'Módulo';
+      }
+
+      function moduleStatus(item){
+        return String(item && item.status || '').trim().toLowerCase();
+      }
+
+      function isInternalModule(item){
+        var b = normalizeBase(item && item.url_base);
+        return !!b && b !== '/portal-morador' && b !== '/portal_morador';
+      }
+
+      function renderItems(items){
+        var list = Array.isArray(items) ? items.filter(isInternalModule) : [];
+
+        if(!list.length){
+          menu.innerHTML = '<li><span class="dropdown-item-text text-muted">Nenhum módulo disponível</span></li>';
+          return;
+        }
+
+        menu.innerHTML = list.map(function(item){
+          var base = normalizeBase(item.url_base);
+          var label = moduleLabel(item);
+          var status = moduleStatus(item);
+          var current = base && base === currentBase;
+          var activeStatus = !status || status === 'ativo';
+          var enabled = activeStatus && !!base && !current;
+          var href = moduleDashboardUrl(base);
+
+          if(current){
+            return '<li><span class="dropdown-item active module-switch-current">✓ ' + escapeHtml(label) + '</span></li>';
+          }
+
+          if(!enabled){
+            var reason = status && status !== 'ativo' ? (' — ' + status) : ' — indisponível';
+            return '<li><span class="dropdown-item disabled module-switch-disabled" aria-disabled="true">' + escapeHtml(label + reason) + '</span></li>';
+          }
+
+          return '<li><a class="dropdown-item module-switch-link" href="' + escapeHtml(href) + '">' + escapeHtml(label) + '</a></li>';
+        }).join('');
+      }
+
+      menu.innerHTML = '<li><span class="dropdown-item-text text-muted">Carregando módulos...</span></li>';
+
+      fetch(__NB_BASE + '/api/modulos', {
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { Accept: 'application/json', 'X-Requested-With': 'fetch' }
+      })
+        .then(function(r){ return r && r.ok ? r.json() : null; })
+        .then(function(json){
+          var items = Array.isArray(json) ? json : (json && Array.isArray(json.data) ? json.data : []);
+          renderItems(items);
+        })
+        .catch(function(e){
+          console.warn('[navbar-shared] falha ao carregar módulos', e);
+          menu.innerHTML = '<li><span class="dropdown-item-text text-warning">Falha ao carregar módulos</span></li>';
+        });
+    } catch(e){
+      console.warn('[navbar-shared] module switcher error', e);
+    }
+  });
+
   function __resolveAvatarUrl(foto){
     if(!foto) return __NB_BASE + '/img/user-placeholder.svg';
     if(typeof window.buildUserFotoUrl === 'function') return window.buildUserFotoUrl(foto);
@@ -1199,6 +1311,32 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   @media (max-width: 575.98px){
     .navbar-wd .navbar-nav > .nav-item > .nav-link { height: 36px; }
   }
+  .navbar-module-switcher .module-switch-btn{
+    --bs-btn-padding-y: .08rem;
+    --bs-btn-padding-x: .38rem;
+    --bs-btn-font-size: .72rem;
+    line-height: 1.05;
+    border-color: rgba(255,255,255,.55);
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: -1px;
+  }
+  .navbar-module-switcher .module-switch-btn:hover,
+  .navbar-module-switcher .module-switch-btn:focus{
+    background: rgba(255,255,255,.16);
+    color: #fff;
+  }
+  .module-switch-menu{
+    min-width: 240px;
+    text-align: left;
+  }
+  .module-switch-current{
+    font-weight: 700;
+  }
+  .module-switch-disabled{
+    opacity: .55;
+  }
+
   /* Cronômetro de inatividade: tamanho e contraste no tema da navbar */
   .idle-timer{ font-weight:700; letter-spacing:.3px; }
   @media (max-width:575.98px){ #nbIdleTimer{ display:none !important; } }
