@@ -62,26 +62,50 @@ app.get('/js/pages/login.js', (req,res)=>{
   }
 });
 
-// Popular req.user a partir da sessão
-app.use(async (req, _res, next) => {
+// Popular req.user e req.session.escalasUser a partir da sessão global
+app.use((req, res, next) => {
   try {
-    if (req.skipAuth) return next();
-    if (req.user) return next();
-  const sessionUser = req.session?.escalasUser;
-    if (!sessionUser?.email) return next();
-    const userDoc = await User.findOne({ email: sessionUser.email.toLowerCase() }).lean();
-    if (userDoc) {
-      req.user = {
-        id: userDoc._id,
-        nome: userDoc.nome,
-        email: userDoc.email,
-        role: userDoc.role,
-        isMaster: userDoc.role === 'master',
-        unidade_id: userDoc.unidade_id || null,
-        foto: userDoc.foto || null
+    const escalasUser = req.session?.escalasUser || null;
+    const globalUser = req.session?.user || null;
+    const sessionUser = escalasUser || globalUser || req.user || null;
+
+    if (sessionUser) {
+      const role = String(
+        sessionUser.role ||
+        sessionUser.globalRole ||
+        sessionUser.global_role ||
+        sessionUser.effectiveRole ||
+        'user'
+      ).toLowerCase();
+
+      const normalizedUser = {
+        id: sessionUser.id || sessionUser._id || null,
+        _id: sessionUser._id || sessionUser.id || null,
+        email: sessionUser.email || null,
+        nome: sessionUser.nome || sessionUser.name || 'Usuário',
+        role,
+        isMaster: !!(sessionUser.isMaster || role === 'master')
       };
+
+      if (sessionUser.unidade_id) normalizedUser.unidade_id = sessionUser.unidade_id;
+      if (sessionUser.unidadeId) normalizedUser.unidadeId = sessionUser.unidadeId;
+      if (sessionUser.unidade_principal_id) normalizedUser.unidade_principal_id = sessionUser.unidade_principal_id;
+      if (sessionUser.funcionario_id) normalizedUser.funcionario_id = sessionUser.funcionario_id;
+      if (sessionUser.telefone) normalizedUser.telefone = sessionUser.telefone;
+      if (sessionUser.foto) normalizedUser.foto = sessionUser.foto;
+      if (sessionUser.cpf) normalizedUser.cpf = sessionUser.cpf;
+
+      req.user = req.user || normalizedUser;
+
+      // Compatibilidade: rotas antigas do Escalas ainda exigem req.session.escalasUser
+      if (req.session && !req.session.escalasUser) {
+        req.session.escalasUser = normalizedUser;
+      }
     }
-  } catch (e) { console.warn('[escalas][populateUser] falha:', e.message); }
+  } catch (e) {
+    console.warn('[escalas][auth-bridge] falha ao hidratar sessão global', e.message);
+  }
+
   next();
 });
 
