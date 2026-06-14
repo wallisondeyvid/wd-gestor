@@ -9,9 +9,17 @@ const router = express.Router();
 console.log('[Escalas][recursosApi] router carregado');
 
 function resolveUsuarioBaseEscalas(req) {
-  const usuario = req.session?.escalasUser || {};
-  const role = usuario.role || usuario.perfil || 'user';
-  const isPrivileged = role === 'master' || role === 'admin';
+  const usuario = req.user || req.session?.escalasUser || req.session?.user || {};
+  const role = String(
+    usuario.role ||
+    usuario.perfil ||
+    usuario.globalRole ||
+    usuario.global_role ||
+    usuario.effectiveRole ||
+    'user'
+  ).toLowerCase();
+
+  const isPrivileged = ['master', 'admin', 'administrador'].includes(role) || !!usuario.isMaster;
 
   return {
     usuario,
@@ -192,8 +200,8 @@ async function resolveRecursoDetalhePayload(req, id) {
 router.get('/api/recursos', async (req,res)=>{
   console.log('[Escalas][recursosApi] HIT /api/recursos query=', req.query, 'sessionUser?', !!req.session?.escalasUser);
   try {
-    if(!req.session?.escalasUser){
-      return res.status(401).json({ error:'Não autenticado' });
+    if(!req.user && !req.session?.escalasUser && !req.session?.user){
+      return res.status(401).json({ error:'nao_autenticado' });
     }
     const data = await resolveRecursosListPayload(req);
     return res.json(data);
@@ -206,7 +214,7 @@ router.get('/api/recursos', async (req,res)=>{
 // GET /escalas/api/recursos/:id — detalhes de um recurso por ID usando a sessão do módulo Escalas
 router.get('/api/recursos/:id', async (req,res)=>{
   try {
-    if(!req.session?.escalasUser){
+    if(!req.user && !req.session?.escalasUser && !req.session?.user){
       return res.status(401).json({ error:'nao_autenticado' });
     }
     const id = (req.params.id||'').trim();
@@ -222,7 +230,9 @@ router.get('/api/recursos/:id', async (req,res)=>{
 // DELETE /escalas/api/recursos/:id — remoção simples respeitando escopo de unidades
 router.delete('/api/recursos/:id', async (req,res)=>{
   try {
-    if(!req.session?.escalasUser){ return res.status(401).json({ error:'nao_autenticado' }); }
+    if(!req.user && !req.session?.escalasUser && !req.session?.user){
+      return res.status(401).json({ error:'nao_autenticado' });
+    }
     const su = req.session.escalasUser || {};
     const role = su.role || su.perfil || 'user';
     const id = req.params.id;
