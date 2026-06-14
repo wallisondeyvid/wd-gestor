@@ -851,8 +851,6 @@ async function relatorioDiariaHandler(req,res){
                 });
               }
             }catch(_){ }
-            const fora = coletarForaEquipeDiaTurno(eq, dia, turno);
-            if(Array.isArray(fora) && fora.length){ membros = membros.concat(fora.map(f=> ({ id:f.id, nome: f.nome? `${f.nome} (fora)`: '(fora)' }))); }
             // Deduplicar por id/codigo/nome e mesclar atribuições
             membros = mergeMembrosDedup(membros);
             membros.forEach(m=>{ const id=m && (m.id||m.funcionarioId||m.funcionario_id); if(id) idsParaResolver.add(String(id)); });
@@ -866,11 +864,26 @@ async function relatorioDiariaHandler(req,res){
             });
             addedForEq++;
           }
-          // Linha para "fora" sem recurso (apenas adições pontuais)
+          // Linha para "fora" sem recurso: só quem NÃO está em recurso neste mesmo dia/turno
+          const idsEmRecurso = new Set();
+
+          for(const ln of linhas){
+            if(ln && ln._eq === eq && ln.recurso && ln.recurso !== '—' && Array.isArray(ln.membros)){
+              for(const m of ln.membros){
+                const id = m && (m.id || m.funcionarioId || m.funcionario_id);
+                if(id) idsEmRecurso.add(String(id));
+              }
+            }
+          }
+
           const fora = coletarForaEquipeDiaTurno(eq, dia, turno);
-          if(Array.isArray(fora) && fora.length){
-            fora.forEach(f=>{ if(f&&f.id) idsParaResolver.add(String(f.id)); });
-            const membros = fora.map(f=> ({ id:f.id, nome:f.nome||null, atribuicao:null }));
+          const foraFiltrado = Array.isArray(fora)
+            ? fora.filter(f => f && f.id && !idsEmRecurso.has(String(f.id)))
+            : [];
+
+          if(foraFiltrado.length){
+            foraFiltrado.forEach(f=>{ if(f && f.id) idsParaResolver.add(String(f.id)); });
+            const membros = foraFiltrado.map(f=> ({ id:f.id, nome:f.nome||null, atribuicao:null }));
             linhas.push({ equipe: eq.nome||eq.id||'-', membros, recurso:'—', notasRecurso:'—', notasEquipe:null, _eq:eq });
             addedForEq++;
           }
