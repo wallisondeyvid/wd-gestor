@@ -71,7 +71,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
       if(!has) _admin.push({ path: '/feedback', label: 'Feedback' });
     } catch(_e){ /* noop */ }
   })();
-  const __menuLabel = (typeof menuLabel === 'string' && menuLabel) ? menuLabel : 'Cadastros Gerais';
+  const __menuLabel = (typeof menuLabel === 'string' && menuLabel) ? menuLabel : 'Menu';
   // menuTree pode não ser fornecido em módulos antigos; faça verificação segura para evitar ReferenceError
   function ensureServicesEntry(tree){
     if(!Array.isArray(tree)) return tree;
@@ -354,7 +354,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   </div>
   <div class="offcanvas-body p-0">
     <div class="px-3 py-2 text-uppercase small fw-semibold text-light opacity-75 border-bottom border-white border-opacity-25 text-center">
-      <%= (typeof menuLabel === 'string' && menuLabel) ? menuLabel : 'Cadastros Gerais' %>
+      <%= (typeof menuLabel === 'string' && menuLabel) ? menuLabel : 'Menu' %>
     </div>
     <div class="menu-tree-mobile py-1">
       <% let __ocAutoId = 0; function __nextOcId(){ __ocAutoId++; return 'ocgrp-' + __ocAutoId; } %>
