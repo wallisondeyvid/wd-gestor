@@ -27,6 +27,390 @@
   .rc-grid .rc-nomes .grid-func { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; }
   .rc-grid .rc-nomes .grid-func .func-atr { margin-left: 0; color: #6c757d; font-size: 0.85em; }
   .rc-grid .rc-nomes .grid-func .rc-toolbar { margin-top: 4px; }
+        /* ==========================
+           Diária — visual moderno
+        ========================== */
+
+        .escala-card-title {
+          background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+          border: 1px solid #d6e4f5;
+          border-radius: 10px;
+          padding: 10px 12px;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        .escala-content {
+          margin-top: 10px;
+        }
+
+        .grid-turno {
+          border-radius: 12px;
+          overflow: hidden;
+          border: 1px solid #d8e4f2;
+          background: #ffffff;
+          box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+        }
+
+        .grid-turno > header {
+          background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 100%);
+          color: #ffffff;
+          font-weight: 700;
+          letter-spacing: .2px;
+          padding: 12px 16px;
+          text-align: center;
+        }
+
+        .turno-head {
+          background: #0f2f63;
+          color: #ffffff;
+          font-weight: 700;
+          letter-spacing: .2px;
+        }
+
+        .turno-head > div {
+          padding: 10px 12px;
+        }
+
+        .turno-table {
+          border-radius: 14px;
+          overflow: hidden;
+          border: 1px solid #d8e4f2;
+          background: #fff;
+          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+        }
+
+        .turno-row {
+          min-height: 126px;
+          background: #ffffff;
+        }
+
+        .turno-cell {
+          padding: 14px 14px;
+          vertical-align: middle;
+          background: #fff;
+        }
+
+        .turno-cell.equipe {
+          background: linear-gradient(180deg, #f7fbff 0%, #edf4fb 100%);
+          width: 140px;
+          min-width: 140px;
+          padding: 18px 18px;
+          border-right: 1px solid #dce7f5;
+        }
+
+        .turno-cell.recurso {
+          padding-left: 5px !important;
+          padding-right: 24px !important;
+          overflow: visible;
+        }
+
+        .turno-row > .turno-cell:last-child {
+          padding-left: 18px;
+          padding-right: 18px;
+        }
+
+        .eq-tools {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+        }
+
+        .eq-toolbar,
+        .rc-toolbar {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .eq-toolbar {
+          margin-top: 12px;
+          padding-left: 4px;
+          padding-right: 4px;
+        }
+
+        .rc-toolbar {
+          margin-top: 0;
+        }
+
+        .diaria-icon-btn {
+          width: 28px;
+          height: 28px;
+          min-width: 28px;
+          min-height: 28px;
+          max-width: 28px;
+          max-height: 28px;
+          border: 0;
+          background: #ffffff;
+          padding: 0;
+          margin: 0;
+          line-height: 1;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          border-radius: 9px;
+          vertical-align: middle;
+          box-shadow: 0 1px 3px rgba(15, 23, 42, 0.10);
+          transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+          overflow: hidden;
+        }
+
+        .diaria-icon-btn:hover {
+          background: #eef6ff;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 10px rgba(15, 23, 42, 0.14);
+        }
+
+        .diaria-icon-danger:hover {
+          background: #fff1f2;
+        }
+
+        .diaria-icon-btn:active {
+          transform: translateY(0);
+          box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+        }
+
+        .diaria-icon-btn:disabled {
+          opacity: .45;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .diaria-action-icon,
+        .diaria-icon-btn img.diaria-action-icon {
+          width: 18px !important;
+          height: 18px !important;
+          min-width: 18px !important;
+          min-height: 18px !important;
+          max-width: 18px !important;
+          max-height: 18px !important;
+          object-fit: contain !important;
+          display: block !important;
+          flex: 0 0 auto !important;
+        }
+        .diaria-inline-icon {
+          width: 16px !important;
+          height: 16px !important;
+          min-width: 16px !important;
+          min-height: 16px !important;
+          max-width: 16px !important;
+          max-height: 16px !important;
+          object-fit: contain !important;
+          display: inline-block !important;
+          vertical-align: -3px;
+          margin-right: 4px;
+        }
+
+        .btn-toggle-escala {
+          border: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          padding: 2px !important;
+          width: 28px;
+          height: 28px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .btn-toggle-escala:hover {
+          background: rgba(13, 110, 253, 0.08) !important;
+          border-radius: 8px;
+        }
+
+        .diaria-toggle-icon {
+          width: 22px !important;
+          height: 22px !important;
+          min-width: 22px !important;
+          min-height: 22px !important;
+          max-width: 22px !important;
+          max-height: 22px !important;
+          object-fit: contain !important;
+          display: block !important;
+        }
+
+        .rc-stack {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .rc-box {
+          border: 1px solid #dbe7f4;
+          border-radius: 14px;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+          background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+          overflow: hidden;
+          max-width: 100%;
+        }
+
+        .rc-head {
+          color: #52647a;
+          font-size: 12px;
+          font-weight: 700;
+          padding-bottom: 6px;
+          background: #f7faff;
+          border-bottom: 1px solid #e2ecf8;
+        }
+
+        .rc-head > div {
+          padding: 8px 10px;
+          text-align: center;
+        }
+
+        .rc-grid {
+          align-items: center;
+          row-gap: 10px;
+          column-gap: 12px;
+          min-height: 76px;
+        }
+
+        .rc-grid > div {
+          padding: 10px 12px;
+        }
+
+        .rc-grid > div:not(:last-child) {
+          border-right: 1px solid #eef3fa;
+        }
+
+        .rc-nomes {
+          gap: 7px !important;
+          min-width: 0;
+        }
+
+        .grid-func {
+          background: transparent;
+          padding: 0;
+          min-width: 0;
+        }
+
+        .func-line {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 0;
+        }
+
+        .func-nome {
+          font-size: 14px;
+          color: #1f2937;
+          font-weight: 600;
+          line-height: 1.25;
+        }
+
+        .func-atr {
+          font-size: 12px !important;
+          color: #6b7280 !important;
+          margin-top: 3px;
+        }
+
+        .rc-badge {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-width: 0;
+        }
+
+        .rc-badge .badge-recurso,
+        .badge-recurso.rc-badge {
+          background: #eaf2ff;
+          color: #1d4ed8;
+          border: 1px solid #c7dcff;
+          border-radius: 999px;
+          padding: 5px 14px;
+          font-size: 13px;
+          font-weight: 700;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 82px;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+        }
+
+        .rc-badge-sub {
+          margin-top: 6px;
+          font-size: 12px;
+          color: #64748b !important;
+          line-height: 1.15;
+        }
+
+        .rc-actions {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .rc-notes {
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+        }
+
+        .rc-notes .rc-notes-box,
+        .notas-box {
+          border: 1px dashed #d7e2f2;
+          border-radius: 10px;
+          padding: 8px 12px;
+          background: #fff;
+          display: inline-block;
+          min-width: 72px;
+          max-width: 220px;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+          color: #334155;
+        }
+
+        .rc-meals-box {
+          font-size: 12px;
+          color: #4b5563;
+        }
+
+        .form-text.text-muted {
+          font-size: 12px;
+          margin-top: 7px !important;
+        }
+
+        /* Funcionários sem recurso */
+        .fora-wrap {
+          margin-top: 8px;
+        }
+
+        .fora-wrap .rc-box {
+          background: linear-gradient(180deg, #fbfdff 0%, #f8fbff 100%);
+          border: 1px dashed #cbdff5;
+          box-shadow: none;
+        }
+
+        .grid-func-solo {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          width: 100%;
+          min-width: 0;
+          padding: 10px 14px;
+        }
+
+        .grid-func-solo .func-nome {
+          flex: 0 1 auto;
+          min-width: 0;
+          max-width: 320px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          display: block;
+          text-align: center;
+        }
+
+        .grid-func-solo .rc-toolbar {
+          flex: 0 0 auto;
+          margin-left: 8px;
+        }
 
   /* Mantém layout padrão; coluna de ações fica oculta com d-none quando não usada */
     /* Notas da equipe em coluna própria: preservar quebras de linha e evitar overflow */
@@ -51,6 +435,21 @@
     setTimeout(()=>{ if(div.isConnected){ div.classList.remove('show'); setTimeout(()=>div.remove(),300); } }, timeout);
   }
   function escapeHtml(str){ return (str||'').replace(/[&<>"']/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s])); }
+    const DIARIA_ICON_BASE = '/escalas/img/icons/';
+
+  function diariaIcon(nome, alt) {
+    return `<img src="${DIARIA_ICON_BASE}${nome}" alt="${escapeHtml(alt || '')}" class="diaria-action-icon">`;
+  }
+
+  function diariaIconButton({ title, icon, onclick, danger = false }) {
+    const dangerClass = danger ? ' diaria-icon-danger' : '';
+    return `<button type="button" class="diaria-icon-btn${dangerClass}" title="${escapeHtml(title)}" onclick="${onclick}">
+      ${diariaIcon(icon, title)}
+    </button>`;
+  }
+  function diariaIconInline(icon, alt) {
+  return `<img src="${DIARIA_ICON_BASE}${icon}" alt="${escapeHtml(alt || '')}" class="diaria-inline-icon">`;
+}
   // Monta rótulo do recurso a partir de placa/marca/modelo para uso na Diária
   function comporRotuloRecurso(r){
     if(!r) return '';
@@ -189,6 +588,81 @@
       }
     } catch(_s) { try { setTimeout(()=> hydrateNomes(container), 16); } catch(_){} }
   }
+    function limparForaVazios(scope){
+    try {
+      const root = scope || resultado || document;
+      root.querySelectorAll('.fora-wrap').forEach((wrap)=>{
+        const temFuncionario = !!wrap.querySelector('.grid-func-solo');
+        if(!temFuncionario){
+          wrap.remove();
+        }
+      });
+    } catch(_){}
+  }
+
+  function capturarEscalasExpandidas(){
+    const ids = new Set();
+
+    try {
+      document.querySelectorAll('#resultado .btn-toggle-escala[aria-expanded="true"]').forEach((btn)=>{
+        const card = btn.closest('[data-escala-id]');
+        const targetId = btn.getAttribute('data-target');
+        const content = targetId ? document.getElementById(targetId) : null;
+
+        if(card && content && !content.classList.contains('d-none')){
+          const id = card.getAttribute('data-escala-id');
+          if(id) ids.add(String(id));
+        }
+      });
+    } catch(_){}
+
+    return ids;
+  }
+
+  function restaurarEscalasExpandidas(ids){
+    try {
+      if(!ids || !ids.size) return;
+
+      ids.forEach((id)=>{
+        const card = resultado?.querySelector(`[data-escala-id="${cssEscapeSel(String(id))}"]`);
+        if(!card) return;
+
+        const btn = card.querySelector('.btn-toggle-escala');
+        if(!btn) return;
+
+        const targetId = btn.getAttribute('data-target');
+        const content = targetId ? document.getElementById(targetId) : null;
+        if(!content) return;
+
+        content.classList.remove('d-none');
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('title', 'Recolher');
+        btn.innerHTML = `<img src="${DIARIA_ICON_BASE}zoommenos.png" alt="Recolher" class="diaria-toggle-icon">`;
+
+        try { scheduleHydrate(content); } catch(_){}
+      });
+    } catch(_){}
+  }
+
+  async function pesquisarPreservandoExpansao(){
+    const expandidas = capturarEscalasExpandidas();
+
+    if(typeof pesquisar !== 'function') return;
+
+    await pesquisar();
+
+    restaurarEscalasExpandidas(expandidas);
+  }
+
+  function sincronizarDiariaLeve(delay = 250){
+    try {
+      setTimeout(()=>{
+        pesquisarPreservandoExpansao().catch((err)=>{
+          console.warn('[escala-diaria] falha ao sincronizar preservando expansão', err);
+        });
+      }, delay);
+    } catch(_){}
+  }
   function renderEscala(esc){
   const titulo = `${escapeHtml(esc.descricao||'-')} — ${(esc.unidade_codigo? escapeHtml(esc.unidade_codigo)+' - ':'')+escapeHtml(esc.unidade_nome||'')}`;
   const escIdVal = esc.id || esc._id || '';
@@ -197,10 +671,12 @@
     // Botão Detalhes: segue a convenção de pesquisar_escala (abre /ordinaria/nova? id=... ou /extraordinaria/nova)
     const tipo = (String(esc.classificacao||'').toUpperCase().includes('EXTRA')) ? 'extraordinaria' : 'ordinaria';
     const rotaBase = `/escalas/${tipo}/nova`;
-  const btnDetalhes = `<a class="btn btn-outline-primary btn-sm" href="${rotaBase}?id=${encodeURIComponent(escIdVal)}" title="Detalhes / Editar"><i class="bi bi-pencil"></i> Detalhes</a>`;
+  const btnDetalhes = `<a class="btn btn-outline-primary btn-sm" href="${rotaBase}?id=${encodeURIComponent(escIdVal)}" title="Detalhes / Editar">${diariaIconInline('lapisedit.png', 'Detalhes')} Detalhes</a>`;
     // Botão recolher/expandir: inicia recolhido (+)
   const contentId = `esc_body_${escapeHtml(String(escIdVal))}`;
-    const btnToggle = `<button type="button" class="btn btn-outline-dark btn-sm btn-toggle-escala" data-target="${contentId}" aria-expanded="false" title="Expandir">+</button>`;
+    const btnToggle = `<button type="button" class="btn-toggle-escala" data-target="${contentId}" aria-expanded="false" title="Expandir">
+  <img src="${DIARIA_ICON_BASE}zoommais.png" alt="Expandir" class="diaria-toggle-icon">
+</button>`;
     // Checkbox de inclusão no relatório (inicia marcado)
   const chkId = `esc_chk_${escapeHtml(String(escIdVal))}`;
   const chkChecked = hasConteudoDia ? 'checked' : '';
@@ -290,10 +766,23 @@
       const atrib = it.atribuicao? `(${escapeHtml(it.atribuicao)})` : '';
       const nomeEl = `<span class=\"func-nome\" title=\"${escapeHtml(fidRaw || (it.nome||''))}\">${nome}</span>`;
       const atribEl = atrib? `<div class=\"func-atr\">${atrib}</div>` : '';
-        const buttons = `<div class=\"rc-toolbar\">`
-          + `<button type=\"button\" class=\"btn btn-outline-danger btn-sm\" title=\"Remover (excluir da alocação)\" onclick=\"window.es_diaria_removerAtribuicao('${eq}','${rid}','${fidRaw}', false)\"><i class=\"bi bi-x\"></i></button>`
-          + `<button type=\"button\" class=\"btn btn-outline-primary btn-sm\" title=\"Extrair efetivo (mover para sem recurso)\" onclick=\"window.es_diaria_removerAtribuicao('${eq}','${rid}','${fid}', true)\"><i class=\"bi bi-box-arrow-up\"></i></button>`
-          + `<button type=\"button\" class=\"btn btn-outline-secondary btn-sm\" title=\"Editar atribuição\" onclick=\"window.es_diaria_editarAtribuicao('${eq}','${rid}','${fid}')\"><i class=\"bi bi-pencil-square\"></i></button>`
+                const buttons = `<div class=\"rc-toolbar\">`
+          + diariaIconButton({
+              title: 'Remover (excluir da alocação)',
+              icon: 'menos.png',
+              danger: true,
+              onclick: `window.es_diaria_removerAtribuicao('${eq}','${rid}','${fidRaw}', false)`
+            })
+          + diariaIconButton({
+              title: 'Extrair efetivo (mover para sem recurso)',
+              icon: 'extrair.png',
+              onclick: `window.es_diaria_removerAtribuicao('${eq}','${rid}','${fid}', true)`
+            })
+          + diariaIconButton({
+              title: 'Editar atribuição',
+              icon: 'editar.png',
+              onclick: `window.es_diaria_editarAtribuicao('${eq}','${rid}','${fid}')`
+            })
           + `</div>`;
       // Layout solicitado: Nome (linha 1), (atribuição) (linha 2), Botões (linha 3)
       return `<div class=\"grid-func\" data-funcionario-id=\"${fid}\"><div class=\"func-line\">${nomeEl}</div>${atribEl}${buttons}</div>`;
@@ -305,10 +794,27 @@
       const eid = escapeHtml(String(equipeId||''));
       const escId = escapeHtml(String(escalaId||''));
       return `<div class=\"eq-toolbar\">`
-        + `<button type=\"button\" class=\"btn btn-outline-danger btn-sm\" title=\"Excluir equipe\" onclick=\"window.es_diaria_excluirEquipe('${n}')\"><i class=\"bi bi-trash\"></i></button>`
-        + `<button type=\"button\" class=\"btn btn-outline-secondary btn-sm\" title=\"Editar notas\" onclick=\"window.es_diaria_editarNotas('${escId}','${eid}','${n}')\"><i class=\"bi bi-stickies\"></i></button>`
-        + `<button type=\"button\" class=\"btn btn-outline-primary btn-sm\" title=\"Inserir efetivo\" onclick=\"window.es_diaria_inserirEfetivo('${n}')\"><i class=\"bi bi-person-plus\"></i></button>`
-        + `<button type=\"button\" class=\"btn btn-outline-primary btn-sm\" title=\"Inserir recurso\" onclick=\"window.es_diaria_inserirRecurso('${n}')\"><i class=\"bi bi-truck\"></i></button>`
+        + diariaIconButton({
+            title: 'Excluir equipe',
+            icon: 'excluir.png',
+            danger: true,
+            onclick: `window.es_diaria_excluirEquipe('${n}')`
+          })
+        + diariaIconButton({
+            title: 'Editar notas',
+            icon: 'notas.png',
+            onclick: `window.es_diaria_editarNotas('${escId}','${eid}','${n}')`
+          })
+        + diariaIconButton({
+            title: 'Inserir efetivo',
+            icon: 'adicionar-pessoa.png',
+            onclick: `window.es_diaria_inserirEfetivo('${n}')`
+          })
+        + diariaIconButton({
+            title: 'Inserir recurso',
+            icon: 'veiculo.png',
+            onclick: `window.es_diaria_inserirRecurso('${n}')`
+          })
       + `</div>`;
     }
     function cellEquipe(text, desc, toolbarHtml){
@@ -325,11 +831,32 @@
       const escId = escapeHtml(String(escalaId||''));
       const rid = escapeHtml(String(recursoId||''));
       return `<div class=\"rc-toolbar\">`
-        + `<button type=\"button\" class=\"btn btn-outline-secondary btn-sm\" title=\"Editar recurso\" onclick=\"window.es_diaria_editarRecurso('${n}','${rid}')\"><i class=\"bi bi-pencil\"></i></button>`
-        + `<button type=\"button\" class=\"btn btn-outline-danger btn-sm\" title=\"Excluir recurso\" onclick=\"window.es_diaria_excluirRecurso('${n}','${rid}')\"><i class=\"bi bi-trash\"></i></button>`
-        + `<button type=\"button\" class=\"btn btn-outline-primary btn-sm\" title=\"Inserir efetivo\" onclick=\"window.es_diaria_inserirEfetivoRecurso('${n}','${rid}')\"><i class=\"bi bi-person-plus\"></i></button>`
-        + `<button type=\"button\" class=\"btn btn-outline-secondary btn-sm\" title=\"Editar notas do recurso\" onclick=\"window.es_diaria_editarNotasRecurso('${escId}','${eid}','${rid}')\"><i class=\"bi bi-stickies\"></i></button>`
-        + `<button type=\"button\" class=\"btn btn-outline-secondary btn-sm\" title=\"Editar refeições desta alocação\" onclick=\"window.es_diaria_editarRefeicoes('${escId}','${eid}','${rid}','${escapeHtml(String(turnoToken||''))}')\"><i class=\"bi bi-cup\"></i></button>`
+        + diariaIconButton({
+            title: 'Editar recurso',
+            icon: 'lapisedit.png',
+            onclick: `window.es_diaria_editarRecurso('${n}','${rid}')`
+          })
+        + diariaIconButton({
+            title: 'Excluir recurso',
+            icon: 'excluir.png',
+            danger: true,
+            onclick: `window.es_diaria_excluirRecurso('${n}','${rid}')`
+          })
+        + diariaIconButton({
+            title: 'Inserir efetivo',
+            icon: 'adicionar-pessoa.png',
+            onclick: `window.es_diaria_inserirEfetivoRecurso('${n}','${rid}')`
+          })
+        + diariaIconButton({
+            title: 'Editar notas do recurso',
+            icon: 'notas.png',
+            onclick: `window.es_diaria_editarNotasRecurso('${escId}','${eid}','${rid}')`
+          })
+        + diariaIconButton({
+            title: 'Editar refeições desta alocação',
+            icon: 'refeicao.png',
+            onclick: `window.es_diaria_editarRefeicoes('${escId}','${eid}','${rid}','${escapeHtml(String(turnoToken||''))}')`
+          })
       + `</div>`;
     }
     function recursoBox(r, turnoToken){
@@ -413,7 +940,12 @@
         if(looksHexObjectId(rawId)) nome = nome || '—';
         const t = escapeHtml(String(nome||'—'));
         const fid = id;
-          const btn = fid ? `<button type="button" class="btn btn-outline-danger btn-sm" title="Remover" onclick="window.es_diaria_removerFora('${escId}','${eqId}','${fid}')"><i class="bi bi-x"></i></button>` : '';
+        const btn = fid ? diariaIconButton({
+          title: 'Remover',
+          icon: 'menos.png',
+          danger: true,
+          onclick: `window.es_diaria_removerFora('${escId}','${eqId}','${fid}')`
+        }) : '';
           const tools = btn ? `<div class="rc-toolbar ms-2">${btn}</div>` : '';
           return `<div class="grid-func-solo" data-funcionario-id="${fid}"><span class="func-nome" title="${t}">${t}</span>${tools}</div>`;
       }).join('');
@@ -549,7 +1081,12 @@
             const eqId = row.getAttribute('data-equipe-id');
             const fid = escapeHtml(String(js.componente.id||''));
             const nomeMostrado = escapeHtml(String(js.componente.nome||'—'));
-            const btn = fid ? `<button type="button" class="btn btn-outline-danger btn-sm" title="Remover" onclick="window.es_diaria_removerFora('${escapeHtml(escId)}','${escapeHtml(eqId)}','${fid}')"><i class="bi bi-x"></i></button>` : '';
+            const btn = fid ? diariaIconButton({
+              title: 'Remover',
+              icon: 'menos.png',
+              danger: true,
+              onclick: `window.es_diaria_removerFora('${escapeHtml(escId)}','${escapeHtml(eqId)}','${fid}')`
+            }) : '';
             const tools = btn ? `<div class="rc-toolbar ms-2">${btn}</div>` : '';
             const rowHtml = `<div class="grid-func-solo" data-funcionario-id="${fid}"><span class="func-nome" title="${nomeMostrado}">${nomeMostrado}</span>${tools}</div>`;
             grid.insertAdjacentHTML('beforeend', rowHtml);
@@ -560,6 +1097,8 @@
             }
           }
           alertTop('Funcionário inserido na equipe (sem recurso).', 'success');
+          limparForaVazios(row);
+          sincronizarDiariaLeve(250);
           hydrateNomes(resultado);
         } catch(err){ console.error('[escala-diaria] inserir efetivo', err); alertTop('Erro ao inserir funcionário na equipe.', 'danger'); }
       }});
@@ -757,7 +1296,12 @@
             js.moved.forEach(it=>{
             const nome = escapeHtml(String(it.nome || '—'));
             const fid = escapeHtml(String(it.id || ''));
-            const btn = fid ? `<button type="button" class="btn btn-outline-danger btn-sm" title="Remover" onclick="window.es_diaria_removerFora('${escapeHtml(escId)}','${escapeHtml(eqId)}','${fid}')"><i class="bi bi-x"></i></button>` : '';
+            const btn = fid ? diariaIconButton({
+              title: 'Remover',
+              icon: 'menos.png',
+              danger: true,
+              onclick: `window.es_diaria_removerFora('${escapeHtml(escId)}','${escapeHtml(eqId)}','${fid}')`
+            }) : '';
             const tools = btn ? `<div class="rc-toolbar ms-2">${btn}</div>` : '';
             const rowHtml = `<div class="grid-func-solo" data-funcionario-id="${fid}"><span class="func-nome" title="${nome}">${nome}</span>${tools}</div>`;
             grid.insertAdjacentHTML('beforeend', rowHtml);
@@ -998,10 +1542,23 @@
               const eq = escapeHtml(String(equipe||''));
               const rid = escapeHtml(String(recursoId));
               const btns = `<div class="rc-toolbar ms-2">`
-                + `<button type=\"button\" class=\"btn btn-outline-danger btn-sm\" title=\"Remover (excluir da alocação)\" onclick=\"window.es_diaria_removerAtribuicao('${eq}','${rid}','${fidStr}', false)\"><i class=\"bi bi-x\"></i></button>`
-                + `<button type=\"button\" class=\"btn btn-outline-primary btn-sm\" title=\"Extrair efetivo (mover para sem recurso)\" onclick=\"window.es_diaria_removerAtribuicao('${eq}','${rid}','${fidStr}', true)\"><i class=\"bi bi-box-arrow-up\"></i></button>`
-                + `<button type=\"button\" class=\"btn btn-outline-secondary btn-sm\" title=\"Editar atribuição\" onclick=\"window.es_diaria_editarAtribuicao('${eq}','${rid}','${fidStr}')\"><i class=\"bi bi-pencil-square\"></i></button>`
-                + `</div>`;
+  + diariaIconButton({
+      title: 'Remover (excluir da alocação)',
+      icon: 'menos.png',
+      danger: true,
+      onclick: `window.es_diaria_removerAtribuicao('${eq}','${rid}','${fidStr}', false)`
+    })
+  + diariaIconButton({
+      title: 'Extrair efetivo (mover para sem recurso)',
+      icon: 'extrair.png',
+      onclick: `window.es_diaria_removerAtribuicao('${eq}','${rid}','${fidStr}', true)`
+    })
+  + diariaIconButton({
+      title: 'Editar atribuição',
+      icon: 'editar.png',
+      onclick: `window.es_diaria_editarAtribuicao('${eq}','${rid}','${fidStr}')`
+    })
+  + `</div>`;
               const rowHtml = `<div class=\"grid-func\" data-funcionario-id=\"${fidEsc}\"><div class=\"func-line\">`
                 + `<span class=\"func-nome\" title=\"${nomeMostrado}\">${nomeMostrado}</span>${btns}</div>`
                 + (atribTxt? `<div class=\"func-atr\">${atribTxt}</div>`: '')
@@ -1023,8 +1580,11 @@
               if(alvo) alvo.remove();
             }
           }catch(_){ }
+
+          limparForaVazios(row);
           hydrateNomes(resultado);
           alertTop('Funcionário atribuído ao recurso nesta alocação.', 'success');
+          sincronizarDiariaLeve(250);
         } catch(err){ console.error('[escala-diaria] inserir efetivo no recurso', err); alertTop('Erro ao inserir funcionário no recurso.', 'danger'); }
       });
     }catch(e){ console.error('[escala-diaria] abrir inserir efetivo no recurso', e); alertTop('Não foi possível abrir a pesquisa de efetivo.', 'danger'); }
@@ -1113,7 +1673,12 @@
           const escId = row.getAttribute('data-escala-id'); const eqId = row.getAttribute('data-equipe-id');
           const nome = escapeHtml(String(js.moved.nome || '—'));
           const fid = escapeHtml(String(js.moved.id || ''));
-          const btn = fid ? `<button type="button" class="btn btn-outline-danger btn-sm" title="Remover" onclick="window.es_diaria_removerFora('${escapeHtml(escId)}','${escapeHtml(eqId)}','${fid}')"><i class="bi bi-x"></i></button>` : '';
+          const btn = fid ? diariaIconButton({
+            title: 'Remover',
+            icon: 'menos.png',
+            danger: true,
+            onclick: `window.es_diaria_removerFora('${escapeHtml(escId)}','${escapeHtml(eqId)}','${fid}')`
+          }) : '';
           const tools = btn ? `<div class="rc-toolbar ms-2">${btn}</div>` : '';
           const rowHtml = `<div class="grid-func-solo" data-funcionario-id="${fid}"><span class="func-nome" title="${nome}">${nome}</span>${tools}</div>`;
           grid.insertAdjacentHTML('beforeend', rowHtml);
@@ -1221,6 +1786,7 @@
               break;
             }
           }
+          limparForaVazios(row);
         }
         alertTop('Funcionário removido da equipe.', 'success');
       } else { throw new Error('Resposta inválida'); }
@@ -1271,20 +1837,34 @@
   function init(){
     initCalendars();
     carregarUnidades();
+
     const btnPesq = $('btnPesquisar');
     if(btnPesq){
       btnPesq.addEventListener('click', (ev)=>{
         try { ev.preventDefault(); } catch(_){ }
-        // Feedback rápido no botão e agenda a busca para fora do handler de click
-        const prevTxt = btnPesq.textContent;
-        btnPesq.disabled = true; btnPesq.textContent = 'Carregando…';
+
+        const prevHtml = btnPesq.innerHTML;
+        btnPesq.disabled = true;
+        btnPesq.innerHTML = 'Carregando…';
+
         setTimeout(async ()=>{
           console.time('[diaria] pesquisar');
-          try { await pesquisar(); scheduleHydrate(resultado); } finally { console.timeEnd('[diaria] pesquisar'); btnPesq.disabled = false; btnPesq.textContent = prevTxt; }
+          try {
+            await pesquisar();
+            scheduleHydrate(resultado);
+          } finally {
+            console.timeEnd('[diaria] pesquisar');
+            btnPesq.disabled = false;
+            btnPesq.innerHTML = prevHtml;
+          }
         }, 0);
       });
     }
-    $('btnRelatorio').onclick = abrirRelatorio;
+
+    const btnRelatorio = $('btnRelatorio');
+    if(btnRelatorio){
+      btnRelatorio.onclick = abrirRelatorio;
+    }
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
 
@@ -1301,13 +1881,13 @@
       if(isHidden){
         el.classList.remove('d-none');
         btn.setAttribute('aria-expanded','true');
-        btn.textContent = '-';
+        btn.innerHTML = `<img src="${DIARIA_ICON_BASE}zoommenos.png" alt="Recolher" class="diaria-toggle-icon">`;
         btn.setAttribute('title','Recolher');
         try { scheduleHydrate(el); } catch(_) {}
       } else {
         el.classList.add('d-none');
         btn.setAttribute('aria-expanded','false');
-        btn.textContent = '+';
+        btn.innerHTML = `<img src="${DIARIA_ICON_BASE}zoommais.png" alt="Expandir" class="diaria-toggle-icon">`;
         btn.setAttribute('title','Expandir');
       }
     });
@@ -1322,7 +1902,7 @@
       if(!recurso){ return; }
       if(!ctx){
         // Sem contexto (inserção fora do fluxo da diária): recarrega a pesquisa para refletir mudanças
-        try { alertTop('Sincronizando diária…', 'info', 1500); if(typeof pesquisar==='function') pesquisar(); } catch(_){ }
+        try { alertTop('Sincronizando diária…', 'info', 1500); if(typeof pesquisarPreservandoExpansao === 'function') pesquisarPreservandoExpansao(); } catch(_){ }
         return;
       }
       // Tolerância: o modal pode ter normalizado equipeId para um ObjectId, enquanto a diária usa um rótulo (ex.: "A").
@@ -1337,7 +1917,7 @@
       const row = document.querySelector(`.turno-row[data-escala-id="${cssEscapeSel(String(ctx.escalaId))}"][data-equipe-id="${cssEscapeSel(String(ctx.equipeId))}"][data-turno-id="${cssEscapeSel(String(ctx.turnoId))}"]`);
       if(!row){
         // Como fallback, reconsultar a diária para atualizar a tela inteira
-        try { alertTop('Sincronizando diária…', 'info', 1500); if(typeof pesquisar==='function') pesquisar(); } catch(_){ }
+        try { alertTop('Sincronizando diária…', 'info', 1500); if(typeof pesquisarPreservandoExpansao === 'function') pesquisarPreservandoExpansao(); } catch(_){ }
         return;
       }
       // Garantir que exista o container de pilha de recursos; quando a equipe não possui recursos, a UI exibe um placeholder sem .rc-stack
@@ -1351,7 +1931,7 @@
       }
       if(!stack){
         // Como último recurso, sincronizar tudo
-        try { alertTop('Sincronizando diária…', 'info', 1500); if(typeof pesquisar==='function') pesquisar(); } catch(_){ }
+        try { alertTop('Sincronizando diária…', 'info', 1500); if(typeof pesquisarPreservandoExpansao === 'function') pesquisarPreservandoExpansao(); } catch(_){ }
         return;
       }
   const rid = String(recurso.id || recurso._id || recurso.referenciaGestorId || recurso.placa || '').trim();
@@ -1372,11 +1952,28 @@
       const escId = ctx.escalaId; const eqId = ctx.equipeId; const eqNome = ctx.equipeNome || '';
       const badgeInner = `<span class="badge-recurso rc-badge">${escapeHtml(String(recurso.nome || recurso.placa || rid))}</span>`;
       const actions = `<div class="rc-toolbar">`
-        + `<button type="button" class="btn btn-outline-secondary btn-sm" title="Editar recurso" onclick="window.es_diaria_editarRecurso('${escapeHtml(eqNome)}','${escapeHtml(rid)}')"><i class="bi bi-pencil"></i></button>`
-        + `<button type="button" class="btn btn-outline-danger btn-sm" title="Excluir recurso" onclick="window.es_diaria_excluirRecurso('${escapeHtml(eqNome)}','${escapeHtml(rid)}')"><i class="bi bi-trash"></i></button>`
-        + `<button type="button" class="btn btn-outline-primary btn-sm" title="Inserir efetivo" onclick="window.es_diaria_inserirEfetivoRecurso('${escapeHtml(eqNome)}','${escapeHtml(rid)}')"><i class="bi bi-person-plus"></i></button>`
-        + `<button type="button" class="btn btn-outline-secondary btn-sm" title="Editar notas do recurso" onclick="window.es_diaria_editarNotasRecurso('${escapeHtml(escId)}','${escapeHtml(eqId)}','${escapeHtml(rid)}')"><i class="bi bi-stickies"></i></button>`
-        + `</div>`;
+  + diariaIconButton({
+      title: 'Editar recurso',
+      icon: 'lapisedit.png',
+      onclick: `window.es_diaria_editarRecurso('${escapeHtml(eqNome)}','${escapeHtml(rid)}')`
+    })
+  + diariaIconButton({
+      title: 'Excluir recurso',
+      icon: 'excluir.png',
+      danger: true,
+      onclick: `window.es_diaria_excluirRecurso('${escapeHtml(eqNome)}','${escapeHtml(rid)}')`
+    })
+  + diariaIconButton({
+      title: 'Inserir efetivo',
+      icon: 'adicionar-pessoa.png',
+      onclick: `window.es_diaria_inserirEfetivoRecurso('${escapeHtml(eqNome)}','${escapeHtml(rid)}')`
+    })
+  + diariaIconButton({
+      title: 'Editar notas do recurso',
+      icon: 'notas.png',
+      onclick: `window.es_diaria_editarNotasRecurso('${escapeHtml(escId)}','${escapeHtml(eqId)}','${escapeHtml(rid)}')`
+    })
+  + `</div>`;
       const head = `<div class="rc-head"><div>Funcionário</div><div>Nome do Recurso</div><div>Ações</div><div>Notas do recurso</div></div>`;
       const nomes = `<div class="rc-nomes text-muted small">—</div>`;
   // No modo diária, o recurso recém-inserido não deve exibir refeições
