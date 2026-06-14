@@ -112,6 +112,19 @@
     .btn-primary:hover{ background: linear-gradient(180deg, var(--c-primary-700), var(--c-primary-600)); border-color: var(--c-primary-700); box-shadow: var(--shadow-md); transform: translateY(-1px); }
     .btn-outline-secondary{ border-color: #9fb6dd; color:#204a87; }
     .btn-outline-secondary:hover{ background:#e9f2ff; border-color:#7aa0da; color:#163b74; }
+        /* Ícones inline carregados já no HTML: evita aparecerem grandes antes do JS injetar estilos */
+    .diaria-inline-icon {
+      width: 16px !important;
+      height: 16px !important;
+      min-width: 16px !important;
+      min-height: 16px !important;
+      max-width: 16px !important;
+      max-height: 16px !important;
+      object-fit: contain !important;
+      display: inline-block !important;
+      vertical-align: -3px;
+      margin-right: 4px;
+    }
     /* Responsividade */
     @media (max-width: 1024px){ .turno-table{ grid-template-columns: 160px 1fr 1fr; } .turno-head > div:nth-child(n+4), .turno-row > div:nth-child(n+4){ display:none; } }
     @media (max-width: 640px){ .turno-table{ grid-template-columns: 140px 1fr; } .turno-head > div:nth-child(2), .turno-row > div:nth-child(2){ display:none; } .turno-head > div:nth-child(n+3), .turno-row > div:nth-child(n+3){ display:none; } }
@@ -199,10 +212,10 @@
           <div class="row mt-2">
             <div class="col-12 d-flex justify-content-end gap-2">
               <button type="button" id="btnRelatorio" class="btn btn-outline-secondary btn-sm">
-                <img src="/escalas/img/icons/relatorio.png" class="diaria-inline-icon" alt="Relatório"> Relatório
+                <img src="/escalas/img/icons/relatorio.png" class="diaria-inline-icon" alt="Relatório" width="16" height="16"> Relatório
               </button>
               <button type="button" id="btnPesquisar" class="btn btn-primary btn-sm">
-                <img src="/escalas/img/icons/pesquisar.png" class="diaria-inline-icon" alt="Pesquisar"> Pesquisar
+                <img src="/escalas/img/icons/pesquisar.png" class="diaria-inline-icon" alt="Pesquisar" width="16" height="16"> Pesquisar
               </button>
             </div>
           </div>
