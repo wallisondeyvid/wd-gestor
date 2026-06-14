@@ -72,8 +72,13 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
     } catch(_e){ /* noop */ }
   })();
   const __menuLabel = (typeof menuLabel === 'string' && menuLabel) ? menuLabel : 'Menu';
+  function isCondominiosModule(){
+  return ['/condominios', '/condominio'].includes(__nbBase);
+  }
+
   // menuTree pode não ser fornecido em módulos antigos; faça verificação segura para evitar ReferenceError
   function ensureServicesEntry(tree){
+    if(!isCondominiosModule()) return tree;
     if(!Array.isArray(tree)) return tree;
     const normalizeLabel = (label) => (label||'').toString().trim().toLowerCase();
     const desiredPath = '/servicos/servicos';
@@ -93,6 +98,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   }
 
   function ensureEnquetesEntry(tree){
+    if(!isCondominiosModule()) return tree;
     if(!Array.isArray(tree)) return tree;
     const normalizeLabel = (label) => (label||'').toString().trim().toLowerCase();
     const desiredPath = '/administracao/enquetes';
@@ -109,7 +115,8 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   }
 
   function ensureComunicadosEntry(tree){
-    if(!Array.isArray(tree)) return tree;
+    if(!isCondominiosModule()) return tree;
+  if(!Array.isArray(tree)) return tree;
     const normalizeLabel = (label) => (label||'').toString().trim().toLowerCase();
     const desiredPath = '/administracao/comunicados';
     let adminNode = tree.find(node => normalizeLabel(node.label) === 'administração' || normalizeLabel(node.label) === 'administracao');
