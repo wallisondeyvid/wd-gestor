@@ -138,28 +138,52 @@
 			return String(valor);
 		}
 	}
-	function formatarNomeModuloProvisioning(modulo){
-		const nomeOriginal = String(modulo || '').trim();
-		if (!nomeOriginal) return '';
-
-		const chave = nomeOriginal
-			.normalize('NFD')
-			.replace(/[\u0300-\u036f]/g, '')
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, ' ')
-			.trim();
-
-		const nomesAmigaveis = {
-			'gestao de condominio': 'Gestão de Condomínio',
-			clinica: 'Clínica',
-			escalas: 'Escalas',
-			gestor: 'Gestor',
-			'portal do morador': 'Portal do Morador',
-			'portal morador': 'Portal do Morador',
-		};
-
-		return nomesAmigaveis[chave] || nomeOriginal;
+function formatarNomeModuloProvisioning(modulo){
+	if (modulo && typeof modulo === 'object') {
+		return formatarNomeModuloProvisioning(
+			modulo.nome ||
+			modulo.name ||
+			modulo.label ||
+			modulo.titulo ||
+			modulo.slug ||
+			modulo.chave ||
+			modulo.key ||
+			modulo.codigo ||
+			modulo._id ||
+			modulo.id ||
+			''
+		);
 	}
+
+	const nomeOriginal = String(modulo || '').trim();
+	if (!nomeOriginal) return '';
+
+	if (/^[a-f\d]{24}$/i.test(nomeOriginal)) {
+		const todos = Array.isArray(window.todosModulos) ? window.todosModulos : [];
+		const encontrado = todos.find((m) => String(m?._id || m?.id || '') === nomeOriginal);
+		if (encontrado) {
+			return formatarNomeModuloProvisioning(encontrado);
+		}
+	}
+
+	const chave = nomeOriginal
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, ' ')
+		.trim();
+
+	const nomesAmigaveis = {
+		'gestao de condominio': 'Gestão de Condomínio',
+		clinica: 'Clínica',
+		escalas: 'Escalas',
+		gestor: 'Gestor',
+		'portal do morador': 'Portal do Morador',
+		'portal morador': 'Portal do Morador',
+	};
+
+	return nomesAmigaveis[chave] || nomeOriginal;
+}
 	function normalizarModulosProvisioning(modulos){
 		if (!Array.isArray(modulos)) return [];
 
@@ -179,11 +203,12 @@
 			.join(' ');
 	}
 	function renderizarSecaoProvisionamento(container, {
-		snapshot = null,
-		loading = false,
-		retrying = false,
-		errorMessage = '',
-		successMessage = '',
+        snapshot = null,
+        modulosUnidade = [],
+        loading = false,
+        retrying = false,
+        errorMessage = '',
+        successMessage = '',
 	} = {}){
 		if (!container) return;
 
@@ -194,9 +219,21 @@
 			: (ready ? 'text-bg-success' : 'text-bg-warning');
 		const readyClass = ready ? 'text-bg-success' : 'text-bg-secondary';
 		const dbName = snapshot?.dbName ? escaparHtml(snapshot.dbName) : '<span class="text-muted">Nao informado</span>';
-		const modulosView = Array.isArray(snapshot?.modulosHabilitadosDisplay) && snapshot.modulosHabilitadosDisplay.length > 0
-			? snapshot.modulosHabilitadosDisplay
-			: snapshot?.modulosHabilitados;
+const snapshotDisplay = Array.isArray(snapshot?.modulosHabilitadosDisplay)
+	? snapshot.modulosHabilitadosDisplay.filter(Boolean)
+	: [];
+
+const snapshotModulos = Array.isArray(snapshot?.modulosHabilitados)
+	? snapshot.modulosHabilitados.filter(Boolean)
+	: [];
+
+const unidadeModulos = Array.isArray(modulosUnidade)
+	? modulosUnidade.filter(Boolean)
+	: [];
+
+const modulosView = snapshotDisplay.length
+	? snapshotDisplay
+	: (snapshotModulos.length ? snapshotModulos : unidadeModulos);
 		const modulosNormalizados = normalizarModulosProvisioning(modulosView);
 		const totalModulos = modulosNormalizados.length;
 		const modulosHtml = renderizarModulosProvisioning(modulosView);
@@ -415,7 +452,7 @@
 
 		modalRoot.dataset.provisioningHistoryDelegation = '1';
 	}
-	function iniciarProvisionamentoDetalhes({ unidadeId, containerId, requestToken }){
+	function iniciarProvisionamentoDetalhes({ unidadeId, containerId, requestToken, modulosUnidade = [] }){
 		const container = document.getElementById(containerId);
 		const modalRoot = document.getElementById('detalhesModal');
 		if (!container || !modalRoot || !unidadeId) return;
@@ -439,6 +476,7 @@
 			if (!isContextoAtivo()) return;
 			renderizarSecaoProvisionamento(container, {
 				snapshot: state.snapshot,
+				modulosUnidade,
 				loading: state.loading,
 				retrying: state.retrying,
 				errorMessage: state.errorMessage,
@@ -723,11 +761,12 @@
 
 						acc.id = accId; // para o data-bs-parent funcionar
 			acc.innerHTML = html;
-			iniciarProvisionamentoDetalhes({
-				unidadeId: id,
-				containerId: provisioningContainerId,
-				requestToken: provisioningToken,
-			});
+iniciarProvisionamentoDetalhes({
+	unidadeId: id,
+	containerId: provisioningContainerId,
+	requestToken: provisioningToken,
+	modulosUnidade: u.modulosAcessiveis || u.modulos_acessiveis || u.modulos || u.modules || [],
+});
 			iniciarHistoricoProvisionamentoDetalhes({
 				unidadeId: id,
 				containerId: historicoContainerId,

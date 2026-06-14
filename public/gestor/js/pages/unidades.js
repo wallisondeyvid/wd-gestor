@@ -1112,28 +1112,52 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	function formatarNomeModuloProvisioningResumo(modulo){
-		const nomeOriginal = String(modulo || '').trim();
-		if (!nomeOriginal) return '';
-
-		const chave = nomeOriginal
-			.normalize('NFD')
-			.replace(/[\u0300-\u036f]/g, '')
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, ' ')
-			.trim();
-
-		const nomesAmigaveis = {
-			'gestao de condominio': 'Gestao de Condominio',
-			clinica: 'Clinica',
-			escalas: 'Escalas',
-			gestor: 'Gestor',
-			'portal do morador': 'Portal do Morador',
-			'portal morador': 'Portal do Morador',
-		};
-
-		return nomesAmigaveis[chave] || nomeOriginal;
+function formatarNomeModuloProvisioningResumo(modulo){
+	if (modulo && typeof modulo === 'object') {
+		return formatarNomeModuloProvisioningResumo(
+			modulo.nome ||
+			modulo.name ||
+			modulo.label ||
+			modulo.titulo ||
+			modulo.slug ||
+			modulo.chave ||
+			modulo.key ||
+			modulo.codigo ||
+			modulo._id ||
+			modulo.id ||
+			''
+		);
 	}
+
+	const nomeOriginal = String(modulo || '').trim();
+	if (!nomeOriginal) return '';
+
+	if (/^[a-f\d]{24}$/i.test(nomeOriginal)) {
+		const todos = Array.isArray(window.todosModulos) ? window.todosModulos : [];
+		const encontrado = todos.find((m) => String(m?._id || m?.id || '') === nomeOriginal);
+		if (encontrado) {
+			return formatarNomeModuloProvisioningResumo(encontrado);
+		}
+	}
+
+	const chave = nomeOriginal
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, ' ')
+		.trim();
+
+	const nomesAmigaveis = {
+		'gestao de condominio': 'Gestão de Condomínio',
+		clinica: 'Clínica',
+		escalas: 'Escalas',
+		gestor: 'Gestor',
+		'portal do morador': 'Portal do Morador',
+		'portal morador': 'Portal do Morador',
+	};
+
+	return nomesAmigaveis[chave] || nomeOriginal;
+}
 
 	function normalizarModulosProvisioningResumo(modulos){
 		if (!Array.isArray(modulos)) return [];
@@ -1193,28 +1217,60 @@ document.addEventListener('DOMContentLoaded', () => {
 		].join('');
 	}
 
-	function renderProvisioningSnapshotCell(cell, snapshot){
-		if (!cell) return;
-		const visual = getProvisioningStatusVisual(snapshot);
-		const modulosView = Array.isArray(snapshot?.modulosHabilitadosDisplay) && snapshot.modulosHabilitadosDisplay.length
-			? snapshot.modulosHabilitadosDisplay
-			: snapshot?.modulosHabilitados;
-		const modulos = normalizarModulosProvisioningResumo(modulosView);
-		const modulosResumo = montarResumoModulosProvisioning(modulos, snapshot);
-		const tempoCurto = formatarDataHoraProvisioningCurta(snapshot?.lastProvisionedAt);
+function renderProvisioningSnapshotCell(cell, snapshot){
+	if (!cell) return;
 
-		cell.dataset.provisioningState = visual.state;
-		cell.removeAttribute('title');
-		cell.innerHTML = `
-			<div class="prov-summary">
-				<div class="prov-line-1">
-					<span class="badge ${visual.badgeClass}">${visual.badgeLabel}</span>
-					${tempoCurto ? `<span class="prov-time">${escapeHtmlProvisioning(tempoCurto)}</span>` : ''}
-				</div>
-				<div class="prov-line-2">${escapeHtmlProvisioning(modulosResumo)}</div>
+	const visual = getProvisioningStatusVisual(snapshot);
+	const unidadeId = String(cell.getAttribute('data-unidade-id') || '').trim();
+
+	const unidade = Array.isArray(window.unidadesFiltradas)
+		? window.unidadesFiltradas.find((u) => String(u?._id || u?.id || '') === unidadeId)
+		: null;
+
+	const snapshotDisplay = Array.isArray(snapshot?.modulosHabilitadosDisplay)
+		? snapshot.modulosHabilitadosDisplay.filter(Boolean)
+		: [];
+
+	const snapshotModulos = Array.isArray(snapshot?.modulosHabilitados)
+		? snapshot.modulosHabilitados.filter(Boolean)
+		: [];
+
+	const unidadeModulos = Array.isArray(unidade?.modulosAcessiveis)
+		? unidade.modulosAcessiveis.filter(Boolean)
+		: (
+			Array.isArray(unidade?.modulos_acessiveis)
+				? unidade.modulos_acessiveis.filter(Boolean)
+				: (
+					Array.isArray(unidade?.modulos)
+						? unidade.modulos.filter(Boolean)
+						: (
+							Array.isArray(unidade?.modules)
+								? unidade.modules.filter(Boolean)
+								: []
+						)
+				)
+		);
+
+	const modulosView = snapshotDisplay.length
+		? snapshotDisplay
+		: (snapshotModulos.length ? snapshotModulos : unidadeModulos);
+
+	const modulos = normalizarModulosProvisioningResumo(modulosView);
+	const modulosResumo = montarResumoModulosProvisioning(modulos, snapshot);
+	const tempoCurto = formatarDataHoraProvisioningCurta(snapshot?.lastProvisionedAt);
+
+	cell.dataset.provisioningState = visual.state;
+	cell.removeAttribute('title');
+	cell.innerHTML = `
+		<div class="prov-summary">
+			<div class="prov-line-1">
+				<span class="badge ${visual.badgeClass}">${visual.badgeLabel}</span>
+				${tempoCurto ? `<span class="prov-time">${escapeHtmlProvisioning(tempoCurto)}</span>` : ''}
 			</div>
-		`;
-	}
+			<div class="prov-line-2">${escapeHtmlProvisioning(modulosResumo)}</div>
+		</div>
+	`;
+}
 
 	function isProvisioningCacheEntryFresh(entry){
 		if (!entry || typeof entry !== 'object') return false;
