@@ -95,7 +95,7 @@ async function renderPesquisarEscala(req,res){
   }
   res.render('pesquisar_escala', { title:'Pesquisar Escalas', tipoEscala, usuario, unidades });
 }
-router.get(['/ordinaria/pesquisar','/extraordinaria/pesquisar'], requireEscalasAuth, (req,res)=>{
+router.get(['/ordinaria/listar','/extraordinaria/listar'], requireEscalasAuth, (req,res)=>{
   renderPesquisarEscala(req,res);
 });
 
