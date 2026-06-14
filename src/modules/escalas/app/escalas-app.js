@@ -129,7 +129,9 @@ app.use((req, res, next) => {
       if (pathOnly === '/api/usuario') return true;
       if (pathOnly === '/api/usuario/foto') return true;
       if (pathOnly === '/api/usuario/senha') return true;
-      if (pathOnly === '/api/modulos' && method === 'GET') return true;
+      // /api/modulos deve ser resolvido pelo userApiRouter do próprio Escalas.
+      // Delegar ao userApi do Gestor causa 401 porque o contexto/base do módulo é diferente.
+      // if (pathOnly === '/api/modulos' && method === 'GET') return true;
 
       if (pathOnly === '/api/usuarios' && method === 'POST') return true;
 

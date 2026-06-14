@@ -169,7 +169,22 @@ router.get('/api/usuario/foto', async (req, res) => {
 // GET /api/modulos — retorna lista simples de módulos acessíveis (para badges do perfil)
 router.get('/api/modulos', async (req, res) => {
   try {
-    const sessionUser = req.session?.escalasUser;
+    const sessionUser = req.user || req.session?.escalasUser || req.session?.user || null;
+
+    if (req.session && !req.session.escalasUser && sessionUser) {
+      req.session.escalasUser = {
+        id: sessionUser.id || sessionUser._id || null,
+        _id: sessionUser._id || sessionUser.id || null,
+        email: sessionUser.email || null,
+        nome: sessionUser.nome || sessionUser.name || 'Usuário',
+        role: String(sessionUser.role || sessionUser.globalRole || sessionUser.global_role || sessionUser.effectiveRole || 'user').toLowerCase(),
+        isMaster: !!sessionUser.isMaster,
+        unidade_id: sessionUser.unidade_id || sessionUser.unidadeId || sessionUser.unidade_principal_id || null,
+        unidadeId: sessionUser.unidadeId || sessionUser.unidade_id || sessionUser.unidade_principal_id || null,
+        unidade_principal_id: sessionUser.unidade_principal_id || sessionUser.unidade_id || sessionUser.unidadeId || null,
+        funcionario_id: sessionUser.funcionario_id || null
+      };
+    }
     // Buscar usuário completo para obter role/unidade quando necessário
     const email = (req.user?.email || sessionUser?.email || '').toLowerCase();
     const userDoc = email ? await User.findOne({ email }).lean().catch(()=>null) : null;
