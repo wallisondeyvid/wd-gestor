@@ -201,7 +201,7 @@ router.get('/api/recursos', async (req,res)=>{
   console.log('[Escalas][recursosApi] HIT /api/recursos query=', req.query, 'sessionUser?', !!req.session?.escalasUser);
   try {
     if(!req.user && !req.session?.escalasUser && !req.session?.user){
-      return res.status(401).json({ error:'nao_autenticado' });
+      return res.status(401).json({ success: false, error:'Não autenticado' });
     }
     const data = await resolveRecursosListPayload(req);
     return res.json(data);
@@ -233,13 +233,12 @@ router.delete('/api/recursos/:id', async (req,res)=>{
     if(!req.user && !req.session?.escalasUser && !req.session?.user){
       return res.status(401).json({ error:'nao_autenticado' });
     }
-    const su = req.session.escalasUser || {};
-    const role = su.role || su.perfil || 'user';
+    const { usuario: su, role, isPrivileged } = resolveUsuarioBaseEscalas(req);
     const id = req.params.id;
     if(!id) return res.status(400).json({ error:'id_invalido' });
     const rec = await Recurso.findById(id).populate('unidade_id','_id is_principal unidade_principal_id matriz_id');
     if(!rec) return res.status(404).json({ error:'nao_encontrado' });
-    if(role!=='master' && role!=='admin'){
+    if(!isPrivileged){
       let principalId = su.unidade_principal_id || su.unidadePrincipalId || null;
       if(!principalId && su.unidade_id){
         const u = await Unidade.findById(su.unidade_id).select('_id is_principal unidade_principal_id matriz_id').lean();
