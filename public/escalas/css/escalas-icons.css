@@ -1,0 +1,65 @@
+﻿/* Padrão visual de ícones e ações do módulo Escalas */
+
+.esc-inline-icon {
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  max-width: 16px !important;
+  max-height: 16px !important;
+  object-fit: contain !important;
+  display: inline-block !important;
+  vertical-align: -3px;
+  margin-right: 4px;
+}
+
+.esc-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.esc-icon-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  max-width: 28px;
+  max-height: 28px;
+  border: 0;
+  background: #ffffff;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 9px;
+  vertical-align: middle;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.10);
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+  overflow: hidden;
+}
+
+.esc-icon-btn:hover {
+  background: #eef6ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.14);
+}
+
+.esc-icon-danger:hover {
+  background: #fff1f2;
+}
+
+.esc-action-icon {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+  object-fit: contain !important;
+  display: block !important;
+}

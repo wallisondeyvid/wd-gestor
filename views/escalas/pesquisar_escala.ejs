@@ -1,5 +1,6 @@
 <% 
 // Variáveis esperadas: tipoEscala ('ordinaria' | 'extraordinaria'), usuario, unidades (lista opcional)
+const _bpDash = '/escalas';
 const tipo = (typeof tipoEscala === 'string' ? tipoEscala : 'ordinaria').toLowerCase();
 const titulo = tipo === 'extraordinaria' ? 'Pesquisar Escala Extraordinária' : 'Pesquisar Escala Ordinária';
 %>
@@ -15,6 +16,7 @@ const titulo = tipo === 'extraordinaria' ? 'Pesquisar Escala Extraordinária' : 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: '/escalas' }) %>
   <%- include('../shared/partials/theme-esc-blue') %>
+  <link rel="stylesheet" href="<%= _bpDash %>/css/escalas-icons.css" />
   <style>
     :root{ --esc-gray-1:#f8f9fa; --esc-gray-3:#e7eef5; }
     body{ background: linear-gradient(180deg, var(--esc-gray-2), #fff 28%); }
@@ -31,7 +33,6 @@ const titulo = tipo === 'extraordinaria' ? 'Pesquisar Escala Extraordinária' : 
   </style>
 </head>
 <body class="wdg-layout wdg-theme-blue" data-user-master="<%= (user && (user.isMaster || user.role==='master' || user.role==='admin')) ? '1':'0' %>">
-  <% const _bpDash='/escalas'; %>
   <!-- Reuso dos mesmos partials do dashboard para consistência -->
   <%- include('../shared/partials/header-shared', { moduleBasePath: _bpDash, moduleLabel:'Escalas' }) %>
   <%- include('../shared/partials/navbar-shared', {
@@ -107,7 +108,9 @@ const titulo = tipo === 'extraordinaria' ? 'Pesquisar Escala Extraordinária' : 
               <!-- Linha 3: Botão alinhado à direita -->
               <div class="row mt-2">
                 <div class="col-12 d-flex justify-content-end">
-                  <button type="button" id="btnPesquisarEscalas" class="btn btn-primary btn-sm"><i class="bi bi-search"></i> Pesquisar</button>
+                  <button type="button" id="btnPesquisarEscalas" class="btn btn-primary btn-sm">
+                    <img src="/escalas/img/icons/pesquisar.png" class="esc-inline-icon" alt="Pesquisar" width="16" height="16"> Pesquisar
+                  </button>
                 </div>
               </div>
             </form>
@@ -115,7 +118,9 @@ const titulo = tipo === 'extraordinaria' ? 'Pesquisar Escala Extraordinária' : 
         </div>
 
         <div class="d-flex justify-content-end mb-2">
-          <button class="btn btn-success btn-sm" id="btnNovaEscala"><i class="bi bi-plus-circle"></i> Nova</button>
+          <button class="btn btn-success btn-sm" id="btnNovaEscala">
+            <img src="/escalas/img/icons/adicionar-pessoa.png" class="esc-inline-icon" alt="Nova" width="16" height="16"> Nova
+          </button>
         </div>
 
         <!-- Tabela de Resultados -->

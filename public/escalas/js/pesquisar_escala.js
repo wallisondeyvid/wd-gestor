@@ -92,20 +92,26 @@
         const fechada = (e.status === 'fechada');
         const isMaster = document.body.getAttribute('data-user-master') === '1';
         let btnExcluirAttrs;
-        if(fechada && !isMaster){
-          btnExcluirAttrs = 'class="btn btn-outline-danger disabled" title="Escala fechada (somente master pode excluir)" data-act="excluir" disabled aria-disabled="true"';
-        } else {
-          btnExcluirAttrs = 'class="btn btn-outline-danger" title="'+(fechada? 'Excluir (fechada - permitido para master)':'Excluir')+'" data-act="excluir"';
-        }
+          if(fechada && !isMaster){
+            btnExcluirAttrs = 'type="button" class="esc-icon-btn esc-icon-danger disabled" title="Escala fechada (somente master pode excluir)" data-act="excluir" disabled aria-disabled="true"';
+          } else {
+            btnExcluirAttrs = 'type="button" class="esc-icon-btn esc-icon-danger" title="'+(fechada? 'Excluir (fechada - permitido para master)':'Excluir')+'" data-act="excluir"';
+          }
         return `<tr data-id="${id}">
           <td class="text-truncate" style="max-width:260px;" title="${escapeHtml(desc)}">${escapeHtml(desc)}</td>
           <td class="text-truncate" style="max-width:200px;" title="${escapeHtml(uni)}">${escapeHtml(uni)}</td>
           <td class="text-nowrap">${periodo}</td>
           <td class="text-center" style="white-space:nowrap;">
-            <div class="btn-group btn-group-sm" role="group">
-              <button class="btn btn-outline-primary" title="Editar" data-act="editar"><i class="bi bi-pencil"></i></button>
-              <button ${btnExcluirAttrs}><i class="bi bi-trash"></i></button>
-              <button class="btn btn-outline-secondary" title="Relatório" data-act="relatorio"><i class="bi bi-file-earmark-text"></i></button>
+            <div class="esc-actions">
+              <button type="button" class="esc-icon-btn" title="Editar" data-act="editar">
+                <img src="/escalas/img/icons/lapisedit.png" class="esc-action-icon" alt="Editar" width="18" height="18">
+              </button>
+              <button ${btnExcluirAttrs}>
+                <img src="/escalas/img/icons/excluir.png" class="esc-action-icon" alt="Excluir" width="18" height="18">
+              </button>
+              <button type="button" class="esc-icon-btn" title="Relatório" data-act="relatorio">
+                <img src="/escalas/img/icons/relatorio.png" class="esc-action-icon" alt="Relatório" width="18" height="18">
+              </button>
             </div>
           </td>
         </tr>`;
