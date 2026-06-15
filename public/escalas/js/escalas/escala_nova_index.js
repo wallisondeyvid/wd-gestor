@@ -1,8 +1,162 @@
 (function(){
   // Orquestrador da página principal: liga abas e integra com o core canônico
   function getId(){ try{ const u=new URL(location.href); return u.searchParams.get('id')||null; }catch(_){ return null; } }
+
+  window.__ESCALA_FETCH_CACHE__ = window.__ESCALA_FETCH_CACHE__ || new Map();
+
+  window.__fetchEscalaByIdCached = window.__fetchEscalaByIdCached || async function(id, opts) {
+    id = String(id || '').trim();
+    if (!id) return null;
+
+    const force = !!(opts && opts.force);
+    const cacheKey = `escala:${id}`;
+
+    if (!force && window.__ESCALA_FETCH_CACHE__.has(cacheKey)) {
+      return window.__ESCALA_FETCH_CACHE__.get(cacheKey);
+    }
+
+    const bp = (document.body && document.body.getAttribute('data-base-path')) || '/escalas';
+
+    const promise = (async function() {
+      let r = await fetch(`${bp}/api/escalas/${encodeURIComponent(id)}`, {
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (!r.ok) {
+        r = await fetch(`/api/escalas/${encodeURIComponent(id)}`, {
+          credentials: 'same-origin',
+          headers: { 'Accept': 'application/json' }
+        });
+      }
+
+      if (!r.ok) return null;
+
+      const js = await r.json();
+      const d = js?.data || js?.escala || js || null;
+      if (!d) return null;
+
+      const st = (window.__ESCALA_STATE__ = window.__ESCALA_STATE__ || {});
+      st.escalaId = d.id || d._id || id;
+      st.created = true;
+      st.raw = d;
+
+      st.dadosGerais = st.dadosGerais || {};
+      st.dadosGerais.descricao = d.descricao || st.dadosGerais.descricao || '';
+      st.dadosGerais.unidadeId = d.unidade_id || d.unidadeId || st.dadosGerais.unidadeId || null;
+      st.dadosGerais.classificacao = d.classificacao || st.dadosGerais.classificacao || null;
+
+      if (Array.isArray(d.grupos_turnos || d.gruposTurnos)) {
+        st.gruposTurnos = d.grupos_turnos || d.gruposTurnos;
+      }
+
+      if (Array.isArray(d.equipes)) {
+        st.equipes = d.equipes;
+      }
+
+      if (Array.isArray(d.recursos)) {
+        st.recursos = d.recursos;
+      }
+
+      try {
+        const rawStatus = String(d.status || d.situacao || d.situacao_atual || '').toLowerCase();
+        st.status = rawStatus || st.status;
+        st.fechada = ['fechada', 'fechado', 'validada', 'validado', 'publicada', 'concluida', 'concluída'].includes(rawStatus)
+          || d.fechada === true
+          || d.fechamento?.status === 'fechada';
+      } catch (_) {}
+
+      return d;
+    })();
+
+    window.__ESCALA_FETCH_CACHE__.set(cacheKey, promise);
+
+    try {
+      const result = await promise;
+      window.__ESCALA_FETCH_CACHE__.set(cacheKey, Promise.resolve(result));
+      return result;
+    } catch (err) {
+      window.__ESCALA_FETCH_CACHE__.delete(cacheKey);
+      throw err;
+    }
+  };
+
+  function showEscalaLoading(message) {
+    try {
+      if (!getId()) return;
+
+      let overlay = document.getElementById('escalaEditLoadingOverlay');
+
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'escalaEditLoadingOverlay';
+        overlay.innerHTML = `
+          <div class="escala-loading-card">
+            <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+            <div>
+              <strong>${message || 'Carregando escala...'}</strong>
+              <div class="small text-muted">Aguarde enquanto os dados são preparados.</div>
+            </div>
+          </div>
+        `;
+
+        const style = document.createElement('style');
+        style.id = 'escalaEditLoadingStyle';
+style.textContent = `
+  #escalaEditLoadingOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1075;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: rgba(245, 249, 255, 0.72);
+    backdrop-filter: blur(2px);
+  }
+
+  #escalaEditLoadingOverlay .escala-loading-card {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    min-width: 340px;
+    max-width: 520px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 22px 58px rgba(15, 23, 42, 0.18);
+    padding: 18px 22px;
+    color: #0f172a;
+    transform: translateY(-5vh);
+  }
+
+  #escalaEditLoadingOverlay .spinner-border {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+`;
+
+        document.head.appendChild(style);
+        document.body.appendChild(overlay);
+      }
+
+      overlay.style.display = 'flex';
+    } catch (_) {}
+  }
+
+  function hideEscalaLoading() {
+    try {
+      const overlay = document.getElementById('escalaEditLoadingOverlay');
+      if (overlay) overlay.style.display = 'none';
+    } catch (_) {}
+  }
+
   // Atualiza título para edição
   try { if(getId()){ const h=document.getElementById('tituloPrincipalEscala'); if(h) h.textContent='Editar Escala'; if(document && document.title) document.title='Editar Escala - WDGestor'; } } catch(_e){}
+  try {
+    if (getId()) showEscalaLoading('Carregando escala...');
+  } catch (_) {}
 
   // Habilita/desabilita abas com base na função global do core, caindo em stub se necessário
   function setTabs(cfg){ try { if(typeof window.setAbasHabilitadas==='function'){ window.setAbasHabilitadas(cfg); } } catch(_e){} }
@@ -33,8 +187,8 @@
     async function carregarManual(){
       const id = getId(); if(!id) return;
       try{
-        const r = await fetch(`${bp()}/api/escalas/${encodeURIComponent(id)}`, { credentials:'same-origin' });
-        if(!r.ok) return; const js=await r.json(); const d=js?.data||js?.escala||js; if(!d) return;
+        const d = await window.__fetchEscalaByIdCached(id);
+        if(!d) return;
         const desc=document.getElementById('descricaoEscala'); if(desc && d.descricao) desc.value=d.descricao;
         const cls=document.getElementById('classificacaoEscala'); if(cls && d.classificacao) cls.value=d.classificacao;
         const lbl=document.getElementById('tipoEscalaLabel'); if(lbl && d.classificacao) lbl.textContent='('+d.classificacao+')';
@@ -128,11 +282,15 @@
         try { if (typeof window.avaliarProgressaoAbas==='function') window.avaliarProgressaoAbas(); } catch(_a){}
         // Disparar evento para módulos re-sincronizarem campos
         try { document.dispatchEvent(new CustomEvent('escala:carregada', { detail:{ id } })); } catch(_evt){}
+        hideEscalaLoading();
       }catch(_e){}
     }
     // Tenta inicializar core e/ou carregar manualmente em atraso pequeno
     const t1 = setTimeout(()=>{ if(!corePronto()) carregarManual(); }, 1200);
-    document.addEventListener('escala:core-ready', ()=>{ try{ clearTimeout(t1); }catch(_e){} });
+    document.addEventListener('escala:core-ready', ()=>{
+  try{ clearTimeout(t1); }catch(_e){}
+  setTimeout(()=>{ hideEscalaLoading(); }, 250);
+});
   })();
 
   // Auto-switch de Recursos quando houver alocação
