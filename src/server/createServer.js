@@ -38,12 +38,8 @@ import { portalLoginPost, portalPrimeiroAcessoGet, portalPrimeiroAcessoPost } fr
 
 // Módulos registrados: por padrão, NÃO montar Escalas (fora do escopo atual).
 // Para habilitar Escalas no futuro, use ENABLE_ESCALAS=1.
-const BASE_REGISTRY = Object.freeze([
-  clinicaModule,
-  condominiosModule,
-  mensagensModule,
-  portalMoradorModule
-]);
+const BASE_REGISTRY = Object.freeze([clinicaModule, condominiosModule, portalMoradorModule]);
+const registry = [resolveGestorRegistryModule(), ...BASE_REGISTRY, mensagensModule];
 const BOOTSTRAP_ALIAS_BY_MODULE = Object.freeze({
   condominios: ['/condominio'],
   'portal-morador': ['/portal_morador'],
