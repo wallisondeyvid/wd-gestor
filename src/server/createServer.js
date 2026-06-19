@@ -30,6 +30,7 @@ import verificacaoRoutes from '#routes/verificacao.routes.js';
 import * as gestorModule from '#modules/gestor/index.js';
 import * as clinicaModule from '#modules/clinica/index.js';
 import * as condominiosModule from '#modules/condominios/index.js';
+import * as mensagensModule from '#modules/mensagens/index.js';
 import * as portalMoradorModule from '#modules/portal-morador/index.js';
 // Reuso de handlers de login/primeiro acesso do Gestor para rotas genéricas de módulos
 import { login as genericLogin, primeiroAcessoPost as genericPrimeiroAcessoPost } from '#modules/gestor/app/controllers/authController.js';
@@ -37,7 +38,12 @@ import { portalLoginPost, portalPrimeiroAcessoGet, portalPrimeiroAcessoPost } fr
 
 // Módulos registrados: por padrão, NÃO montar Escalas (fora do escopo atual).
 // Para habilitar Escalas no futuro, use ENABLE_ESCALAS=1.
-const BASE_REGISTRY = Object.freeze([clinicaModule, condominiosModule, portalMoradorModule]);
+const BASE_REGISTRY = Object.freeze([
+  clinicaModule,
+  condominiosModule,
+  mensagensModule,
+  portalMoradorModule
+]);
 const BOOTSTRAP_ALIAS_BY_MODULE = Object.freeze({
   condominios: ['/condominio'],
   'portal-morador': ['/portal_morador'],
