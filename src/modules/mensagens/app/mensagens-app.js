@@ -57,6 +57,30 @@ async function renderCaixaMensagens(req, res) {
   }
 }
 
+app.get('/api/usuario', (req, res) => {
+  const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  return res.redirect(307, `/condominios/api/usuario${qs}`);
+});
+
+app.get('/api/modulos', (req, res) => {
+  const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  return res.redirect(307, `/condominios/api/modulos${qs}`);
+});
+
+app.get('/api/usuario/foto', (req, res) => {
+  const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  return res.redirect(307, `/condominios/api/usuario/foto${qs}`);
+});
+
+app.get('/api/usuarios/foto', (req, res) => {
+  const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  return res.redirect(307, `/condominios/api/usuarios/foto${qs}`);
+});
+
+app.put('/api/usuario/senha', express.json({ limit: '128kb' }), (req, res) => {
+  return res.redirect(307, '/condominios/api/usuario/senha');
+});
+
 app.get('/', renderCaixaMensagens);
 
 // O dashboard do módulo é a própria Caixa de Mensagens.
