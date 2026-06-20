@@ -15,7 +15,7 @@ async function renderCaixaMensagens(req, res) {
       return res.redirect(`/mensagens/login?next=${nextUrl}`);
     }
 
-    return res.render('condominios/caixa_de_mensagem', {
+    return res.render('mensagens/caixa_de_mensagem', {
       user: ctxUser,
       basePath: '/condominios',
       moduleLabel: 'Caixa de Mensagens'
