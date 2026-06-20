@@ -7,12 +7,14 @@
   <% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
 <% const _moduleLabel = (typeof moduleLabel === 'string' && moduleLabel) ? moduleLabel : 'Caixa de Mensagens'; %>
 <% const _moduleHomePath = (typeof moduleHomePath === 'string' && moduleHomePath) ? moduleHomePath : '/mensagens'; %>
+<% const _assetBp = (typeof assetBasePath === 'string' && assetBasePath) ? assetBasePath : _moduleHomePath; %>
+<% const _apiBp = (typeof apiBasePath === 'string' && apiBasePath) ? apiBasePath : _bp; %>
   <link rel="icon" href="/favicon.ico?v=2" sizes="any">
-  <link rel="icon" type="image/png" sizes="32x32" href="<%= _bp %>/images/logoWDGestor.png?v=4">
-  <link rel="shortcut icon" type="image/png" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="icon" type="image/png" sizes="32x32" href="<%= _assetBp %>/images/logoWDGestor.png?v=4">
+  <link rel="shortcut icon" type="image/png" href="<%= _assetBp %>/images/logoWDGestor.png?v=4">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="<%= _bp %>/css/condominios-modern.css?v=<%= (typeof assetVersion !== 'undefined' && assetVersion) ? assetVersion : Date.now() %>">
+  <link rel="stylesheet" href="<%= _assetBp %>/css/condominios-modern.css?v=<%= (typeof assetVersion !== 'undefined' && assetVersion) ? assetVersion : Date.now() %>">
   <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
   <style>
     :root{
@@ -2227,42 +2229,42 @@
           <div class="list-group wdg-msg-menu" id="msgMenu" role="navigation" aria-label="Menu de mensagens">
             <button type="button" class="list-group-item list-group-item-action" data-view="nova" aria-current="false">
               <span class="wdg-msg-item">
-                <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _bp %>/images/nova-mensagem.png" alt=""></span>
+                <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _assetBp %>/images/nova-mensagem.png" alt=""></span>
                 <span class="wdg-msg-label">Nova mensagem</span>
               </span>
               <span class="wdg-msg-caret" aria-hidden="true"></span>
             </button>
             <button type="button" class="list-group-item list-group-item-action active" data-view="entrada" aria-current="page">
               <span class="wdg-msg-item">
-                <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _bp %>/images/caixa-de-entrada.png" alt=""></span>
+                <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _assetBp %>/images/caixa-de-entrada.png" alt=""></span>
                 <span class="wdg-msg-label">Caixa de entrada <span class="badge rounded-pill bg-danger ms-2" data-msg-inbox-count style="display:none; font-size:.72rem; line-height:1; min-width:1.6em;" aria-hidden="true"></span></span>
               </span>
               <span class="wdg-msg-caret" aria-hidden="true"></span>
             </button>
             <button type="button" class="list-group-item list-group-item-action" data-view="saida" aria-current="false">
               <span class="wdg-msg-item">
-                <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _bp %>/images/caixa-de-saida.png" alt=""></span>
+                <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _assetBp %>/images/caixa-de-saida.png" alt=""></span>
                 <span class="wdg-msg-label">Caixa de saída</span>
               </span>
               <span class="wdg-msg-caret" aria-hidden="true"></span>
             </button>
             <button type="button" class="list-group-item list-group-item-action" data-view="arquivo" aria-current="false">
               <span class="wdg-msg-item">
-                <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _bp %>/images/arquivomensagem.png" alt=""></span>
+                <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _assetBp %>/images/arquivomensagem.png" alt=""></span>
                 <span class="wdg-msg-label">Arquivo</span>
               </span>
               <span class="wdg-msg-caret" aria-hidden="true"></span>
             </button>
             <button type="button" class="list-group-item list-group-item-action" data-view="lixeira" aria-current="false">
               <span class="wdg-msg-item">
-                <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _bp %>/images/lixeira.png" alt=""></span>
+                <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _assetBp %>/images/lixeira.png" alt=""></span>
                 <span class="wdg-msg-label">Lixeira</span>
               </span>
               <span class="wdg-msg-caret" aria-hidden="true"></span>
             </button>
             <button type="button" class="list-group-item list-group-item-action" aria-current="false">
               <span class="wdg-msg-item">
-                <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _bp %>/images/grupo.png" alt=""></span>
+                <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _assetBp %>/images/grupo.png" alt=""></span>
                 <span class="wdg-msg-label">Grupos</span>
               </span>
               <span class="wdg-msg-caret" aria-hidden="true"></span>
@@ -2270,7 +2272,7 @@
             <div class="wdg-msg-submenu" id="msgGroupsSubmenu" role="group" aria-label="Grupos" hidden>
               <button type="button" class="list-group-item list-group-item-action" data-view="grupos" data-groups-edit="1" aria-current="false">
                 <span class="wdg-msg-item">
-                  <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _bp %>/images/editar.png" alt=""></span>
+                  <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _assetBp %>/images/editar.png" alt=""></span>
                   <span class="wdg-msg-label">Editar</span>
                 </span>
                 <span class="wdg-msg-caret" aria-hidden="true"></span>
@@ -2278,7 +2280,7 @@
             </div>
             <button type="button" class="list-group-item list-group-item-action" data-view="configuracao" aria-current="false">
               <span class="wdg-msg-item">
-                <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _bp %>/images/configuracao.png" alt=""></span>
+                <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _assetBp %>/images/configuracao.png" alt=""></span>
                 <span class="wdg-msg-label">Configuração</span>
               </span>
               <span class="wdg-msg-caret" aria-hidden="true"></span>
@@ -2287,7 +2289,7 @@
               <% if (user && (user.isMaster || user.role === 'master' || user.role === 'admin' || user.role === 'diretor')) { %>
                 <button type="button" class="list-group-item list-group-item-action" data-view="cfg_geral" aria-current="false">
                   <span class="wdg-msg-item">
-                    <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _bp %>/images/servicos.png" alt=""></span>
+                    <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _assetBp %>/images/servicos.png" alt=""></span>
                     <span class="wdg-msg-label">Geral</span>
                   </span>
                   <span class="wdg-msg-caret" aria-hidden="true"></span>
@@ -2295,7 +2297,7 @@
               <% } %>
               <button type="button" class="list-group-item list-group-item-action" data-view="cfg_caixas" aria-current="false">
                 <span class="wdg-msg-item">
-                  <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _bp %>/images/caixas.png" alt=""></span>
+                  <span class="wdg-msg-ico-wrap"><img class="wdg-msg-ico" src="<%= _assetBp %>/images/caixas.png" alt=""></span>
                   <span class="wdg-msg-label">Caixas</span>
                 </span>
                 <span class="wdg-msg-caret" aria-hidden="true"></span>
@@ -2332,7 +2334,7 @@
     const __assetCfgV = __assetV;
     const __assetMsgV = __assetV;
   %>
-  <script src="<%= _bp %>/js/condominios/configuracoes_geral.js?v=<%= __assetCfgV %>"></script>
-  <script src="<%= _bp %>/js/condominios/caixa_de_mensagem.js?v=<%= __assetMsgV %>"></script>
+  <script src="<%= _assetBp %>/js/configuracoes_geral.js?v=<%= __assetCfgV %>"></script>
+  <script src="<%= _assetBp %>/js/caixa_de_mensagem.js?v=<%= __assetMsgV %>"></script>
 </body>
 </html>
