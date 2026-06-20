@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Caixa de Mensagem - WDGestor</title>
   <% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+<% const _moduleLabel = (typeof moduleLabel === 'string' && moduleLabel) ? moduleLabel : 'Caixa de Mensagens'; %>
+<% const _moduleHomePath = (typeof moduleHomePath === 'string' && moduleHomePath) ? moduleHomePath : '/mensagens'; %>
   <link rel="icon" href="/favicon.ico?v=2" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="<%= _bp %>/images/logoWDGestor.png?v=4">
   <link rel="shortcut icon" type="image/png" href="<%= _bp %>/images/logoWDGestor.png?v=4">
@@ -2189,59 +2191,32 @@
   data-user-role="<%= user && user.role ? user.role : '' %>"
   data-user-unit-id="<%= user && user.unidade_id ? (user.unidade_id._id || user.unidade_id || user.unidadeId || '') : '' %>"
   data-user-unit-name="<%= user && (user.unidade_nome || user.unidadeNome || (user.unidade_id && user.unidade_id.nome)) ? (user.unidade_nome || user.unidadeNome || user.unidade_id.nome) : '' %>">
-  <%- include('../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _moduleHomePath, moduleLabel: _moduleLabel, user }) %>
   <%- include('../shared/partials/navbar-shared', {
-        moduleBasePath: _bp,
-        moduleLabel: 'Gestão de Condomínios',
+        moduleBasePath: _moduleHomePath,
+        moduleLabel: _moduleLabel,
         user,
         menuLabel: 'Menu',
-        prefixMenuPaths: true,
+        prefixMenuPaths: false,
         menuTree: [
-          { label: 'Estruturar condomínio', children: [
-            { label: 'Habitações', path: '/estruturar/habitacoes' },
-            { label: 'Garagem', path: '/estruturar/garagem' },
-            { label: 'Áreas comuns', path: '/estruturar/areas-comuns' }
-          ]},
-          { label: 'Cadastros', children: [
-            { label: 'Proprietários', path: '/cadastros/proprietarios' },
-            { label: 'Moradores', path: '/cadastros/moradores' },
-            { label: 'Materiais', path: '/cadastros/materiais' }
-          ]},
-          { label: 'Editar', children: [
-            { label: 'Editar habitações', path: '/editar/habitacoes' },
-            { label: 'Editar áreas comuns', path: '/editar/areas-comuns' }
-          ]},
-          { label: 'Operação', children: [
-            { label: 'Painel de habitações', path: '/operacao/painel-habitacoes' },
-            { label: 'Painel de áreas comuns', path: '/operacao/painel-areas-comuns' }
-          ]},
-          { label: 'Administração', children: [
-            { label: 'Assembleia', children: [
-              { label: 'Assembleias', path: '/assembleias' },
-              { label: 'Nova assembleia', path: '/assembleias/nova' }
-            ]},
-            { label: 'Dirigência', path: '/administracao/dirigencia' },
-            { label: 'Atas', path: '/administracao/atas' },
-            { label: 'Financeiro', path: '/administracao/financeiro' },
-            { label: 'Configurações', path: '/administracao/configuracoes' }
-          ]},
-          { label: 'Serviços', children: [
-            { label: 'Solicitar Serviços', path: '/servicos/solicitar' }
-          ]},
-          { label: 'Configurações', children: [
-            { label: 'Usuários', path: '/configuracoes/usuarios' }
-          ]}
+          { label: 'Caixa de entrada', path: '/mensagens/dashboard' },
+          { label: 'Nova mensagem', path: '/mensagens/dashboard#nova' },
+          { label: 'Caixa de saída', path: '/mensagens/dashboard#saida' },
+          { label: 'Arquivo', path: '/mensagens/dashboard#arquivo' },
+          { label: 'Lixeira', path: '/mensagens/dashboard#lixeira' },
+          { label: 'Grupos', path: '/mensagens/dashboard#grupos' },
+          { label: 'Configuração', path: '/mensagens/dashboard#configuracao' }
         ]
       }) %>
-  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _moduleHomePath, moduleLabel: _moduleLabel, user }) %>
 
   <main class="container-fluid py-1" style="padding-bottom:.5rem;">
     <div class="wdg-msg-wrap">
       <aside class="wdg-msg-aside">
         <div class="wdg-card wdg-card-hover">
           <div class="mb-2 wdg-msg-head">
-            <h1 class="wdg-msg-title">CAIXA DE MENSAGEM</h1>
-            <div class="wdg-msg-sub">Administração · Comunicação interna</div>
+            <h1 class="wdg-msg-title">CAIXA DE MENSAGENS</h1>
+            <div class="wdg-msg-sub">Comunicação interna</div>
           </div>
 
           <div class="wdg-msg-mailbox">
