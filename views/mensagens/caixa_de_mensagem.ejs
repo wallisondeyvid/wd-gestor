@@ -2210,7 +2210,51 @@
           { label: 'Configuração', path: '/mensagens/dashboard#configuracao' }
         ]
       }) %>
-  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _moduleHomePath, moduleLabel: _moduleLabel, user }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: _moduleLabel, user }) %>
+
+<script>
+  (function hydrateMensagensNavbarAvatar(){
+    try {
+      var base = '<%= _bp %>';
+      var avatar = document.getElementById('navbarAvatarShared');
+      var offcanvasAvatar = document.getElementById('offcanvasAvatarShared');
+
+      function applyFoto(foto) {
+        foto = String(foto || '').trim();
+        if (!foto) return;
+
+        var url = '';
+        if (typeof window.buildUserFotoUrl === 'function') {
+          try { url = window.buildUserFotoUrl(foto); } catch (_) {}
+        }
+
+        if (!url) {
+          url = base + '/api/usuario/foto';
+        }
+
+        var sep = url.indexOf('?') >= 0 ? '&' : '?';
+        url = url + sep + 'v=' + Date.now();
+
+        [avatar, offcanvasAvatar].filter(Boolean).forEach(function(img) {
+          img.setAttribute('data-user-foto', foto);
+          img.dataset.avatarLoaded = '1';
+          img.src = url;
+        });
+      }
+
+      fetch(base + '/api/usuario', {
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'fetch' }
+      })
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(data) {
+          applyFoto(data && data.foto);
+        })
+        .catch(function(){});
+    } catch (_) {}
+  })();
+</script>
 
   <main class="container-fluid py-1" style="padding-bottom:.5rem;">
     <div class="wdg-msg-wrap">
