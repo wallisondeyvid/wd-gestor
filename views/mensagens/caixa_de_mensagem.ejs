@@ -2185,57 +2185,6 @@
     .wdg-msg-table thead th { font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; color: var(--wdg-text-light); font-weight: 900; }
     .wdg-msg-table tbody td { font-weight: 650; }
 
-    /* Mensagens: avatar da navbar compacto, expandindo para a esquerda no hover */
-    body.wdg-msg .navbar-wd .nav-wd-profile {
-      width: 32px !important;
-      min-width: 32px !important;
-      height: 32px !important;
-      padding: 0 !important;
-      gap: 0 !important;
-      border-radius: 999px !important;
-      overflow: hidden !important;
-      flex-direction: row-reverse !important;
-      justify-content: flex-start !important;
-      align-items: center !important;
-      transition: width .18s ease, min-width .18s ease, padding .18s ease, background .18s ease;
-    }
-
-    body.wdg-msg .navbar-wd .nav-wd-profile:hover,
-    body.wdg-msg .navbar-wd .nav-wd-profile:focus-within {
-      width: 112px !important;
-      min-width: 112px !important;
-      padding-left: 8px !important;
-      background: rgba(255, 255, 255, .12) !important;
-    }
-
-    body.wdg-msg .navbar-wd .nav-wd-profile .avatar-img {
-      width: 32px !important;
-      height: 32px !important;
-      min-width: 32px !important;
-      min-height: 32px !important;
-      max-width: 32px !important;
-      max-height: 32px !important;
-      flex: 0 0 32px !important;
-      margin: 0 !important;
-    }
-
-    body.wdg-msg .navbar-wd .nav-wd-profile .nav-wd-profile-name {
-      max-width: 0 !important;
-      opacity: 0 !important;
-      overflow: hidden !important;
-      white-space: nowrap !important;
-      margin: 0 !important;
-      transform: translateX(8px);
-      transition: max-width .18s ease, opacity .18s ease, transform .18s ease, margin .18s ease;
-    }
-
-    body.wdg-msg .navbar-wd .nav-wd-profile:hover .nav-wd-profile-name,
-    body.wdg-msg .navbar-wd .nav-wd-profile:focus-within .nav-wd-profile-name {
-      max-width: 72px !important;
-      opacity: 1 !important;
-      margin-right: 6px !important;
-      transform: translateX(0);
-    }
 
   </style>
 </head>
@@ -2266,14 +2215,46 @@
 <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: _moduleLabel, user }) %>
 
 <script>
-  (function hydrateMensagensNavbarAvatar(){
+  (function hydrateMensagensNavbarProfile(){
     try {
       var base = '<%= _bp %>';
       var avatar = document.getElementById('navbarAvatarShared');
       var offcanvasAvatar = document.getElementById('offcanvasAvatarShared');
+      var navbarName = document.querySelector('.navbar-wd .nav-wd-profile-name');
+
+      function pickUser(payload) {
+        return (payload && (payload.usuario || payload.user || payload.data)) || payload || {};
+      }
+
+      function pickName(u) {
+        return String(
+          u.nome ||
+          u.name ||
+          u.displayName ||
+          u.nome_completo ||
+          u.nomeCompleto ||
+          u.email ||
+          ''
+        ).trim();
+      }
+
+      function pickFoto(u) {
+        return String(
+          u.foto ||
+          u.photo ||
+          u.avatar ||
+          u.fotoUrl ||
+          u.foto_url ||
+          ''
+        ).trim();
+      }
+
+      function applyName(nome) {
+        if (!nome || !navbarName) return;
+        navbarName.textContent = nome;
+      }
 
       function applyFoto(foto) {
-        foto = String(foto || '').trim();
         if (!foto) return;
 
         var url = '';
@@ -2290,7 +2271,7 @@
 
         [avatar, offcanvasAvatar].filter(Boolean).forEach(function(img) {
           img.setAttribute('data-user-foto', foto);
-          img.dataset.avatarLoaded = '1';
+          img.dataset.avatarLoaded = '';
           img.src = url;
         });
       }
@@ -2301,8 +2282,10 @@
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'fetch' }
       })
         .then(function(r) { return r.ok ? r.json() : null; })
-        .then(function(data) {
-          applyFoto(data && data.foto);
+        .then(function(payload) {
+          var u = pickUser(payload);
+          applyName(pickName(u));
+          applyFoto(pickFoto(u));
         })
         .catch(function(){});
     } catch (_) {}
