@@ -135,6 +135,7 @@
       out.push(bp);
     };
 
+    try { push(document.body?.dataset?.apiBasePath); } catch { /* noop */ }
     push(explicitBasePath);
     try { push(document.body?.dataset?.basePath); } catch { /* noop */ }
     try {

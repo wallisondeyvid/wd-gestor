@@ -45,7 +45,7 @@ async function renderCaixaMensagens(req, res) {
       user: ctxUser,
       basePath: '/condominios',
       assetBasePath: '/mensagens',
-      apiBasePath: '/condominios',
+      apiBasePath: '/mensagens',
       moduleLabel: 'Caixa de Mensagens'
     });
   } catch (err) {
@@ -80,6 +80,15 @@ app.get('/api/usuarios/foto', (req, res) => {
 app.put('/api/usuario/senha', express.json({ limit: '128kb' }), (req, res) => {
   return res.redirect(307, '/condominios/api/usuario/senha');
 });
+
+function redirectToCondominiosApi(req, res) {
+  const original = String(req.originalUrl || req.url || '');
+  const suffix = original.replace(/^\/mensagens\/api\/msg/i, '');
+  const target = `/condominios/api/msg${suffix || ''}`;
+  return res.redirect(307, target);
+}
+
+app.use('/api/msg', redirectToCondominiosApi);
 
 app.get('/', renderCaixaMensagens);
 
