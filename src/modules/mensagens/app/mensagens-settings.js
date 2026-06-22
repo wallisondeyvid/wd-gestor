@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { connectMongo } from '#config/db.js';
+import { connectMongo } from '#core/db/connect.js';
 import CondMsgSettings from '#models/cond_msg_settings.js';
 
 export async function ensureMongoReady() {

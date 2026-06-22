@@ -68,15 +68,16 @@ export function getUserUnidadeId(ctxUser) {
       ctxUser?.unidade ||
       ctxUser?.unidade_id_str ||
       ctxUser?.matriz_unidade_id ||
-      ''
+      ctxUser?.unidade_principal_id ||
+      ctxUser?.unidadePrincipalId ||
+      null
     );
 
-    const raw = (ref && typeof ref === 'object')
+    const id = (ref && typeof ref === 'object')
       ? (ref._id || ref.id || ref)
       : ref;
 
-    const s = String(raw || '').trim();
-    return s;
+    return String(id || '').trim();
   } catch {
     return '';
   }
