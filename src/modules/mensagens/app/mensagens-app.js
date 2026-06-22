@@ -1,3 +1,4 @@
+import mensagensApiRouter from './mensagens-api.js';
 import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -88,6 +89,7 @@ function redirectToCondominiosApi(req, res) {
   return res.redirect(307, target);
 }
 
+app.use('/api/msg', mensagensApiRouter);
 app.use('/api/msg', redirectToCondominiosApi);
 
 app.get('/', renderCaixaMensagens);
