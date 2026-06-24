@@ -93,14 +93,41 @@ function preparePersonalSignatureContext({ ctxUser, req, mailboxId = '' }) {
   const baseEmail = ownerKeyBaseEmailLower(owner);
   const canonicalOwner = normalizedMailboxId === 'pessoal' && baseEmail ? baseEmail : owner;
 
+  const cleanupOwnerKeys = [];
+
+  if (normalizedMailboxId === 'pessoal') {
+    const addCleanupOwnerKey = (value) => {
+      const key = String(value || '').trim().toLowerCase();
+      if (!key || key === canonicalOwner) return;
+      if (cleanupOwnerKeys.includes(key)) return;
+      cleanupOwnerKeys.push(key);
+    };
+
+    addCleanupOwnerKey(owner);
+    addCleanupOwnerKey(req?.__wdgPortalCookieUserId);
+    addCleanupOwnerKey(ctxUser?.cond_usuario_id);
+    addCleanupOwnerKey(ctxUser?.condUsuarioId);
+    addCleanupOwnerKey(ctxUser?._id);
+    addCleanupOwnerKey(ctxUser?.id);
+  }
+
   return {
     ctxUser,
     fromPortal,
     mailboxId: normalizedMailboxId,
     owner,
     baseEmail,
-    canonicalOwner
+    canonicalOwner,
+    cleanupOwnerKeys
   };
+}
+
+function normalizeSignaturePrefText(raw) {
+  const text = String(raw || '').trim();
+  if (!text) return '';
+
+  // Limite defensivo: UI já limita, mas evita payloads absurdos.
+  return text.slice(0, 3000);
 }
 
 router.get('/health', (req, res) => {
@@ -164,6 +191,102 @@ router.get('/signature', async (req, res, next) => {
 
     console.error('[mensagens][GET /api/msg/signature] erro:', e);
     return res.status(500).json({ error: 'Falha ao carregar assinatura' });
+  }
+});
+
+router.put('/signature', express.json({ limit: '64kb' }), async (req, res, next) => {
+  try {
+    let ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    if (mongoose.connection.readyState !== 1) {
+      const ok = await ensureMongoReady();
+      if (!ok) {
+        try { res.set('Retry-After', '5'); } catch {}
+        return res.status(503).json({ error: 'DB indisponível' });
+      }
+    }
+
+    const mailboxIdRaw = String(
+      req.query.mailboxId ||
+      req.query.mailbox_id ||
+      req.body?.mailboxId ||
+      req.body?.mailbox_id ||
+      ''
+    ).trim();
+
+    const mailboxId = mailboxIdRaw || 'pessoal';
+
+    // Neste microcorte, só migramos a assinatura da caixa pessoal.
+    // Assinaturas de caixas compartilhadas continuam caindo na façade do Condomínios.
+    if (mailboxId !== 'pessoal') return next();
+
+    const signatureContext = preparePersonalSignatureContext({
+      ctxUser,
+      req,
+      mailboxId
+    });
+
+    const {
+      owner,
+      canonicalOwner,
+      cleanupOwnerKeys
+    } = signatureContext;
+
+    if (!owner) return res.status(400).json({ error: 'Usuário inválido' });
+
+    const enabled = !!(req.body?.enabled ?? req.body?.assinaturaAtiva ?? req.body?.signatureEnabled);
+    const text = normalizeSignaturePrefText(
+      req.body?.text ??
+      req.body?.assinaturaTexto ??
+      req.body?.signatureText
+    );
+
+    const updated = await CondMsgSignaturePref.findOneAndUpdate(
+      {
+        owner: String(canonicalOwner).toLowerCase(),
+        mailbox_id: 'pessoal'
+      },
+      {
+        $set: {
+          enabled,
+          text
+        }
+      },
+      {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true
+      }
+    ).lean();
+
+    const duplicateOwners = Array.from(new Set([
+      ...(Array.isArray(cleanupOwnerKeys) ? cleanupOwnerKeys : []),
+      ...(canonicalOwner && canonicalOwner !== owner ? [owner] : [])
+    ].filter(Boolean)));
+
+    if (duplicateOwners.length) {
+      try {
+        await CondMsgSignaturePref.deleteMany({
+          mailbox_id: 'pessoal',
+          owner: { $in: duplicateOwners },
+          _id: { $ne: updated?._id }
+        });
+      } catch {
+        /* noop */
+      }
+    }
+
+    return res.json({
+      enabled: !!updated?.enabled,
+      text: String(updated?.text || '')
+    });
+  } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
+
+    console.error('[mensagens][PUT /api/msg/signature] erro:', e);
+    return res.status(500).json({ error: 'Falha ao salvar assinatura' });
   }
 });
 
