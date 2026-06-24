@@ -1,4 +1,5 @@
 import express from 'express';
+import CondMsgSignaturePref from '#models/cond_msg_signature_pref.js';
 
 import {
   getMsgOwnerKey,
@@ -65,6 +66,7 @@ async function preparePortalRecipientPermsContext({ ctxUser, req }) {
       ''
     ).trim();
   }
+
   const ownerKey = String(getMsgOwnerKey(nextCtxUser, req) || nextCtxUser?.email || '').trim().toLowerCase();
   const baseEmail = ownerKeyBaseEmailLower(ownerKey);
   const emailLower = String(baseEmail || ownerKey || '').trim().toLowerCase();
@@ -80,12 +82,89 @@ async function preparePortalRecipientPermsContext({ ctxUser, req }) {
   };
 }
 
+function preparePersonalSignatureContext({ ctxUser, req, mailboxId = '' }) {
+  const normalizedMailboxId = String(mailboxId || '').trim() || 'pessoal';
+
+  const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
+  const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
+    || refLower.includes('/portal-morador');
+
+  const owner = String(getMsgOwnerKey(ctxUser, req) || '').trim().toLowerCase();
+  const baseEmail = ownerKeyBaseEmailLower(owner);
+  const canonicalOwner = normalizedMailboxId === 'pessoal' && baseEmail ? baseEmail : owner;
+
+  return {
+    ctxUser,
+    fromPortal,
+    mailboxId: normalizedMailboxId,
+    owner,
+    baseEmail,
+    canonicalOwner
+  };
+}
+
 router.get('/health', (req, res) => {
   return res.json({
     ok: true,
     module: 'mensagens',
     api: 'msg'
   });
+});
+
+router.get('/signature', async (req, res, next) => {
+  try {
+    let ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    if (mongoose.connection.readyState !== 1) {
+      const ok = await ensureMongoReady();
+      if (!ok) {
+        try { res.set('Retry-After', '5'); } catch {}
+        return res.status(503).json({ error: 'DB indisponível' });
+      }
+    }
+
+    const mailboxIdRaw = String(req.query.mailboxId || req.query.mailbox_id || '').trim();
+    const mailboxId = mailboxIdRaw || 'pessoal';
+
+    // Neste microcorte, só migramos a assinatura da caixa pessoal.
+    // As assinaturas de caixas compartilhadas ainda caem na façade do Condomínios.
+    if (mailboxId !== 'pessoal') return next();
+
+    const signatureContext = preparePersonalSignatureContext({
+      ctxUser,
+      req,
+      mailboxId
+    });
+
+    const { owner, baseEmail } = signatureContext;
+    if (!owner) return res.status(400).json({ error: 'Usuário inválido' });
+
+    let doc = await CondMsgSignaturePref.findOne({
+      owner,
+      mailbox_id: 'pessoal'
+    }).lean();
+
+    if (!doc && baseEmail && baseEmail !== owner) {
+      doc = await CondMsgSignaturePref.findOne({
+        owner: baseEmail,
+        mailbox_id: 'pessoal'
+      }).lean();
+    }
+
+    if (!doc) return res.json({ enabled: false, text: '' });
+
+    return res.json({
+      enabled: !!doc.enabled,
+      text: String(doc.text || '')
+    });
+  } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
+
+    console.error('[mensagens][GET /api/msg/signature] erro:', e);
+    return res.status(500).json({ error: 'Falha ao carregar assinatura' });
+  }
 });
 
 router.get('/recipients/perms', async (req, res) => {
