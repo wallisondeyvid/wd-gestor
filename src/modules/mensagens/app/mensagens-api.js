@@ -1,4 +1,5 @@
 import express from 'express';
+import CondMsgGroup from '#models/cond_msg_group.js';
 import CondMsgSignaturePref from '#models/cond_msg_signature_pref.js';
 
 import {
@@ -128,6 +129,62 @@ function normalizeSignaturePrefText(raw) {
 
   // Limite defensivo: UI já limita, mas evita payloads absurdos.
   return text.slice(0, 3000);
+}
+
+function isEmailish(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+}
+
+function escapeRegExp(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function toGroupClient(doc) {
+  if (!doc) return null;
+
+  return {
+    id: String(doc._id || doc.id || ''),
+    mailboxId: String(doc.mailbox_id || ''),
+    name: doc.name || '',
+    members: Array.isArray(doc.members) ? doc.members : []
+  };
+}
+
+function buildPersonalGroupOwnerCompat(ctxUser, req) {
+  const ownerKey = String(getMsgOwnerKey(ctxUser, req) || '').trim().toLowerCase();
+  const baseEmail = ownerKeyBaseEmailLower(ownerKey);
+  const basePrefixRx = baseEmail && isEmailish(baseEmail)
+    ? new RegExp('^' + escapeRegExp(baseEmail) + '::')
+    : null;
+
+  return {
+    ownerKey,
+    baseEmail,
+    basePrefixRx,
+    buildFilter() {
+      return basePrefixRx
+        ? {
+            mailbox_id: 'pessoal',
+            ativo: { $ne: false },
+            $or: [
+              { owner: { $in: [ownerKey, baseEmail] } },
+              { owner: basePrefixRx }
+            ]
+          }
+        : {
+            mailbox_id: 'pessoal',
+            owner: baseEmail ? { $in: [ownerKey, baseEmail] } : ownerKey,
+            ativo: { $ne: false }
+          };
+    },
+    matchesDocOwner(docOwnerRaw) {
+      const docOwner = String(docOwnerRaw || '').trim().toLowerCase();
+      if (!docOwner) return false;
+      if (docOwner === ownerKey) return true;
+      if (baseEmail && docOwner === baseEmail) return true;
+      return !!(basePrefixRx && basePrefixRx.test(docOwner));
+    }
+  };
 }
 
 router.get('/health', (req, res) => {
@@ -287,6 +344,43 @@ router.put('/signature', express.json({ limit: '64kb' }), async (req, res, next)
 
     console.error('[mensagens][PUT /api/msg/signature] erro:', e);
     return res.status(500).json({ error: 'Falha ao salvar assinatura' });
+  }
+});
+
+router.get('/groups', async (req, res, next) => {
+  try {
+    const ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    if (mongoose.connection.readyState !== 1) {
+      const ok = await ensureMongoReady();
+      if (!ok) {
+        try { res.set('Retry-After', '5'); } catch {}
+        return res.status(503).json({ error: 'DB indisponível' });
+      }
+    }
+
+    const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || '').trim();
+    if (!mailboxId) return res.status(400).json({ error: 'mailboxId é obrigatório' });
+
+    // Neste microcorte, só migramos grupos da caixa pessoal.
+    // Grupos de caixas compartilhadas continuam caindo na façade do Condomínios.
+    if (mailboxId !== 'pessoal') return next();
+
+    const compat = buildPersonalGroupOwnerCompat(ctxUser, req);
+    const filter = compat.buildFilter();
+
+    const docs = await CondMsgGroup.find(filter)
+      .sort({ name: 1, createdAt: -1 })
+      .lean();
+
+    return res.json((docs || []).map(toGroupClient).filter(Boolean));
+  } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
+
+    console.error('[mensagens][GET /api/msg/groups] erro:', e);
+    return res.status(500).json({ error: 'Falha ao carregar grupos' });
   }
 });
 
