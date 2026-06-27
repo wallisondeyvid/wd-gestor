@@ -139,6 +139,46 @@ function escapeRegExp(value) {
   return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function sanitizeGroupMembers(members) {
+  const arr = Array.isArray(members) ? members : [];
+  const out = [];
+
+  for (const m of arr) {
+    if (!m) continue;
+
+    const type = String(m.type || '').trim().toLowerCase();
+
+    if (type === 'mailbox' || m.mailboxId) {
+      const mailboxId = String(m.mailboxId || m.id || '').trim();
+      const name = String(m.name || m.nome || '').trim();
+
+      if (!mailboxId || !name) continue;
+
+      out.push({
+        type: 'mailbox',
+        mailboxId,
+        name
+      });
+
+      continue;
+    }
+
+    const email = String(m.email || '').trim().toLowerCase();
+    const nome = String(m.nome || m.name || '').trim();
+
+    if (!email && !nome) continue;
+
+    out.push({
+      type: 'user',
+      email,
+      nome,
+      fotoUrl: String(m.fotoUrl || m.foto || m.photo || m.avatar || '').trim()
+    });
+  }
+
+  return out.slice(0, 500);
+}
+
 function toGroupClient(doc) {
   if (!doc) return null;
 
@@ -381,6 +421,64 @@ router.get('/groups', async (req, res, next) => {
 
     console.error('[mensagens][GET /api/msg/groups] erro:', e);
     return res.status(500).json({ error: 'Falha ao carregar grupos' });
+  }
+});
+
+router.post('/groups', express.json({ limit: '2mb' }), async (req, res, next) => {
+  try {
+    const ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    if (mongoose.connection.readyState !== 1) {
+      const ok = await ensureMongoReady();
+      if (!ok) {
+        try { res.set('Retry-After', '5'); } catch {}
+        return res.status(503).json({ error: 'DB indisponível' });
+      }
+    }
+
+    const mailboxId = String(req.body?.mailboxId || req.body?.mailbox_id || '').trim();
+    const name = String(req.body?.name || req.body?.nome || '').trim();
+
+    if (!mailboxId) return res.status(400).json({ error: 'mailboxId é obrigatório' });
+    if (!name) return res.status(400).json({ error: 'name é obrigatório' });
+
+    // Neste microcorte, só migramos criação de grupos da caixa pessoal.
+    // Grupos de caixas compartilhadas continuam caindo na façade do Condomínios.
+    if (mailboxId !== 'pessoal') return next();
+
+    const owner = String(getMsgOwnerKey(ctxUser, req) || '').trim().toLowerCase();
+
+    if (!owner) {
+      return res.status(400).json({
+        error: 'Usuário inválido'
+      });
+    }
+
+    let unidadeId = null;
+    const uid = getUserUnidadeId(ctxUser);
+    if (uid && mongoose.isValidObjectId(uid)) unidadeId = uid;
+
+    const createdBy = getMsgOwnerKey(ctxUser, req) || String(ctxUser?.nome || ctxUser?.name || '').trim();
+    const members = sanitizeGroupMembers(req.body?.members);
+
+    const doc = await CondMsgGroup.create({
+      mailbox_id: 'pessoal',
+      owner,
+      name,
+      members,
+      unidade_id: unidadeId,
+      createdBy,
+      ativo: true
+    });
+
+    return res.status(201).json(toGroupClient(doc));
+  } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
+
+    console.error('[mensagens][POST /api/msg/groups] erro:', e);
+    return res.status(500).json({ error: 'Falha ao criar grupo' });
   }
 });
 
