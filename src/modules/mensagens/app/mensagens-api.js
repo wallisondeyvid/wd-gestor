@@ -541,6 +541,56 @@ router.patch('/groups/:id', express.json({ limit: '2mb' }), async (req, res, nex
   }
 });
 
+router.delete('/groups/:id', async (req, res, next) => {
+  try {
+    const ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    if (mongoose.connection.readyState !== 1) {
+      const ok = await ensureMongoReady();
+      if (!ok) {
+        try { res.set('Retry-After', '5'); } catch {}
+        return res.status(503).json({ error: 'DB indisponível' });
+      }
+    }
+
+    const id = String(req.params.id || '').trim();
+    if (!id || !mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: 'id inválido' });
+    }
+
+    const doc = await CondMsgGroup.findById(id);
+    if (!doc || doc.ativo === false) {
+      return res.status(404).json({ error: 'Grupo não encontrado' });
+    }
+
+    const mailboxId = String(doc.mailbox_id || '').trim();
+
+    // Neste microcorte, só migramos exclusão de grupos da caixa pessoal.
+    // Grupos de caixas compartilhadas continuam caindo na façade do Condomínios.
+    if (mailboxId !== 'pessoal') return next();
+
+    const admin = userCanScopeAll(ctxUser);
+    const compat = buildPersonalGroupOwnerCompat(ctxUser, req);
+    const ok = compat.matchesDocOwner(doc.owner);
+
+    if (!admin && !ok) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    doc.ativo = false;
+    await doc.save();
+
+    return res.json({ ok: true, id });
+  } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
+
+    console.error('[mensagens][DELETE /api/msg/groups/:id] erro:', e);
+    return res.status(500).json({ error: 'Falha ao excluir grupo' });
+  }
+});
+
 router.get('/recipients/perms', async (req, res) => {
   try {
     let ctxUser = getCtxUser(req);
