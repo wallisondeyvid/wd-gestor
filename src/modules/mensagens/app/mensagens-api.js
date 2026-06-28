@@ -295,6 +295,29 @@ function toMailboxClient(doc) {
   };
 }
 
+function buildMailboxesDebugMeta(ctxUser, req, extra = {}) {
+  try {
+    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1';
+    const admin = userCanScopeAll(ctxUser);
+    const email = String(ctxUser?.email || ctxUser?.userEmail || '').trim().toLowerCase();
+    const idRaw = String(ctxUser?.cond_usuario_id || ctxUser?.id || '').trim();
+
+    return {
+      fromPortal,
+      admin,
+      mongoReadyState: mongoose.connection.readyState,
+      ctx: {
+        hasEmail: !!email,
+        emailMasked: email ? email.replace(/^(.{2}).*(@.*)$/, '$1***$2') : '',
+        hasCondUsuarioId: !!idRaw
+      },
+      ...extra
+    };
+  } catch {
+    return { ...extra };
+  }
+}
+
 router.get('/health', (req, res) => {
   return res.json({
     ok: true,
@@ -656,6 +679,133 @@ router.delete('/groups/:id', async (req, res, next) => {
 
     console.error('[mensagens][DELETE /api/msg/groups/:id] erro:', e);
     return res.status(500).json({ error: 'Falha ao excluir grupo' });
+  }
+});
+
+router.get('/mailboxes/recipients', async (req, res, next) => {
+  try {
+    const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
+    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
+      || refLower.includes('/portal-morador');
+
+    // Neste microcorte, só migramos o contexto Gestor/Mensagens.
+    // Portal continua caindo na façade do Condomínios.
+    if (fromPortal) return next();
+
+    let ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    const wantDebug = String(req.query?.debug || req.query?.__debug || '').trim() === '1';
+    const includeHabitacoes = String(
+      req.query?.includeHabitacoes ||
+      req.query?.include_habitacoes ||
+      req.query?.habitacoes ||
+      ''
+    ).trim() === '1';
+
+    try {
+      res.set('Cache-Control', 'no-store');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      res.set('Surrogate-Control', 'no-store');
+      res.set('CDN-Cache-Control', 'no-store');
+    } catch {}
+
+    if (mongoose.connection.readyState !== 1) {
+      const ok = await ensureMongoReady();
+      if (!ok) {
+        try { res.set('Retry-After', '5'); } catch {}
+        return res.status(503).json({ error: 'DB indisponível' });
+      }
+    }
+
+    const admin = userCanScopeAll(ctxUser);
+    const qUnidade = String(req.query.unidade_id || req.query.unidade || '').trim();
+    const unidadeId = admin ? qUnidade : getUserUnidadeId(ctxUser);
+
+    let groupSuspendedForUnit = false;
+
+    try {
+      const unitKey = String(unidadeId || '').trim();
+
+      if (unitKey && mongoose.isValidObjectId(unitKey)) {
+        const settings = await getOrInitMsgSettingsForUnidade(unitKey);
+        groupSuspendedForUnit = !!(settings && settings.suspender_caixas_grupo);
+      }
+    } catch {
+      /* noop */
+    }
+
+    const filter = { ativo: { $ne: false } };
+
+    if (unidadeId) {
+      if (!mongoose.isValidObjectId(unidadeId)) {
+        return res.status(400).json({ error: 'unidade_id inválido' });
+      }
+
+      filter.unidade_id = unidadeId;
+    }
+
+    const docs = await CondMsgMailbox.find(filter)
+      .sort({ unidade_nome: 1, name: 1, createdAt: -1 })
+      .lean();
+
+    let visible = docs || [];
+
+    // Regra histórica: caixas de habitação não aparecem no Gestor por padrão.
+    // Para seleção de destinatários, podem ser habilitadas por query.
+    if (!includeHabitacoes) {
+      visible = (visible || []).filter(d => !mailboxIsHabitacao(d));
+    }
+
+    const out = (visible || [])
+      .map(d => ({
+        id: String(d._id || d.id || ''),
+        name: d.name || '',
+        type: d.type || 'grupo',
+        unitId: d.unidade_id ? String(d.unidade_id) : '',
+        unitName: d.unidade_nome || '',
+        isPublic: mailboxIsPublic(d),
+        linkType: d.link_type || '',
+        linkId: d.link_id ? String(d.link_id) : ''
+      }))
+      .filter(x => x && x.id && x.name);
+
+    if (groupSuspendedForUnit) {
+      if (wantDebug) {
+        const meta = buildMailboxesDebugMeta(ctxUser, req, {
+          unidadeId: unidadeId || '',
+          counts: {
+            total: Array.isArray(docs) ? docs.length : 0,
+            visible: 0
+          },
+          recipientsMode: true,
+          rules: { groupSuspendedForUnit: true }
+        });
+
+        return res.json({ ok: true, data: [], debug: meta });
+      }
+
+      return res.json([]);
+    }
+
+    if (wantDebug) {
+      const meta = buildMailboxesDebugMeta(ctxUser, req, {
+        unidadeId: unidadeId || '',
+        counts: {
+          total: Array.isArray(docs) ? docs.length : 0,
+          visible: Array.isArray(out) ? out.length : 0
+        },
+        recipientsMode: true
+      });
+
+      return res.json({ ok: true, data: out, debug: meta });
+    }
+
+    return res.json(out);
+  } catch (e) {
+    console.error('[mensagens][GET /api/msg/mailboxes/recipients] erro:', e);
+    return res.status(500).json({ error: 'Falha ao listar caixas' });
   }
 });
 
