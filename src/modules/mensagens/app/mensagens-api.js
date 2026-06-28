@@ -1,12 +1,16 @@
 import express from 'express';
 import CondMsgGroup from '#models/cond_msg_group.js';
+import CondMsgMailbox from '#models/cond_msg_mailbox.js';
 import CondMsgSignaturePref from '#models/cond_msg_signature_pref.js';
 
 import {
   getMsgOwnerKey,
+  getUserIdentityKeyCandidates,
   getUserUnidadeId,
+  mailboxGetUserPerms,
   ownerKeyBaseEmailLower,
   resolveMsgRecipientPermsFromSettings,
+  sanitizeMailboxPerms,
   userCanScopeAll
 } from './mensagens-api-helpers.js';
 
@@ -224,6 +228,70 @@ function buildPersonalGroupOwnerCompat(ctxUser, req) {
       if (baseEmail && docOwner === baseEmail) return true;
       return !!(basePrefixRx && basePrefixRx.test(docOwner));
     }
+  };
+}
+
+function mailboxIsPublic(mailboxDoc) {
+  if (!mailboxDoc) return false;
+
+  const linkType = String(mailboxDoc.link_type || '').trim().toLowerCase();
+  if (linkType === 'habitacao') return false;
+
+  return !!(
+    mailboxDoc.public ||
+    mailboxDoc.publica ||
+    mailboxDoc.isPublic ||
+    mailboxDoc.visivel_publico ||
+    mailboxDoc.visivelPublico
+  );
+}
+
+function mailboxIsHabitacao(mailboxDoc) {
+  try {
+    const linkType = String(mailboxDoc?.link_type || '').trim().toLowerCase();
+    return linkType === 'habitacao';
+  } catch {
+    return false;
+  }
+}
+
+function mailboxIsMember(mailboxDoc, user) {
+  if (!mailboxDoc || !user) return false;
+
+  const meList = getUserIdentityKeyCandidates(user);
+  if (!meList.length) return false;
+
+  const createdBy = String(mailboxDoc.createdBy || '').trim().toLowerCase();
+  if (createdBy && meList.includes(createdBy)) return true;
+
+  const ops = Array.isArray(mailboxDoc.operators) ? mailboxDoc.operators : [];
+
+  return ops.some(op => {
+    const u = typeof op === 'string'
+      ? op
+      : (op && typeof op === 'object' ? op.user : '');
+
+    const k = String(u || '').trim().toLowerCase();
+    if (!k) return false;
+
+    return meList.includes(k);
+  });
+}
+
+function toMailboxClient(doc) {
+  if (!doc) return null;
+
+  return {
+    id: String(doc._id || doc.id || ''),
+    name: doc.name || '',
+    type: doc.type || 'grupo',
+    unitId: doc.unidade_id ? String(doc.unidade_id) : '',
+    unitName: doc.unidade_nome || '',
+    createdBy: doc.createdBy || '',
+    operators: Array.isArray(doc.operators) ? doc.operators : [],
+    isPublic: mailboxIsPublic(doc),
+    linkType: doc.link_type || '',
+    linkId: doc.link_id ? String(doc.link_id) : ''
   };
 }
 
@@ -588,6 +656,145 @@ router.delete('/groups/:id', async (req, res, next) => {
 
     console.error('[mensagens][DELETE /api/msg/groups/:id] erro:', e);
     return res.status(500).json({ error: 'Falha ao excluir grupo' });
+  }
+});
+
+router.get('/mailboxes', async (req, res, next) => {
+  try {
+    const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
+    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
+      || refLower.includes('/portal-morador');
+
+    // Neste microcorte, só migramos o contexto Gestor/Mensagens.
+    // Portal continua caindo na façade do Condomínios.
+    if (fromPortal) return next();
+
+    let ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    try {
+      res.set('Cache-Control', 'no-store');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      res.set('Surrogate-Control', 'no-store');
+      res.set('CDN-Cache-Control', 'no-store');
+    } catch {}
+
+    if (mongoose.connection.readyState !== 1) {
+      const ok = await ensureMongoReady();
+      if (!ok) {
+        try { res.set('Retry-After', '5'); } catch {}
+        return res.status(503).json({ error: 'DB indisponível' });
+      }
+    }
+
+    const admin = userCanScopeAll(ctxUser);
+    const qUnidade = String(req.query.unidade_id || req.query.unidade || '').trim();
+    const unidadeId = admin ? qUnidade : getUserUnidadeId(ctxUser);
+
+    const filter = { ativo: { $ne: false } };
+
+    if (unidadeId) {
+      if (!mongoose.isValidObjectId(unidadeId)) {
+        return res.status(400).json({ error: 'unidade_id inválido' });
+      }
+
+      filter.unidade_id = unidadeId;
+    }
+
+    const docs = await CondMsgMailbox.find(filter)
+      .sort({ unidade_nome: 1, name: 1, createdAt: -1 })
+      .lean();
+
+    // No Gestor/Mensagens, não listamos caixas de habitação.
+    const docsFiltered = (docs || []).filter(d => !mailboxIsHabitacao(d));
+
+    const visible = admin
+      ? docsFiltered
+      : (docsFiltered || []).filter(d => mailboxIsMember(d, ctxUser));
+
+    const light = String(req.query.light || req.query.lightNavbar || '').trim() === '1';
+
+    if (light) {
+      const outLight = (visible || [])
+        .map(d => ({
+          id: String(d?._id || d?.id || ''),
+          name: String(d?.name || ''),
+          type: String(d?.type || 'grupo')
+        }))
+        .filter(d => d.id);
+
+      return res.json(outLight);
+    }
+
+    const out = (visible || [])
+      .map(d => {
+        const mb = toMailboxClient(d);
+        if (!mb) return null;
+
+        let isMember = false;
+
+        try {
+          isMember = !!(admin || mailboxIsMember(d, ctxUser));
+        } catch {
+          isMember = !!admin;
+        }
+
+        mb.isMember = isMember;
+
+        try {
+          const perms = mailboxGetUserPerms(d, ctxUser);
+          mb.canAdmin = !!(admin || (perms && typeof perms === 'object' && perms.administrar));
+
+          try {
+            mb.userPerms = sanitizeMailboxPerms(perms);
+          } catch {
+            mb.userPerms = sanitizeMailboxPerms({});
+          }
+        } catch {
+          mb.canAdmin = !!admin;
+          mb.userPerms = sanitizeMailboxPerms({});
+        }
+
+        try {
+          const rawOps = Array.isArray(d?.operators) ? d.operators : [];
+
+          mb.operators = rawOps
+            .map(op => {
+              if (typeof op === 'string') {
+                const user = String(op || '').trim();
+                if (!user) return null;
+                return { user, perms: {}, displayName: '' };
+              }
+
+              if (op && typeof op === 'object') {
+                const user = String(op.user || '').trim();
+                if (!user) return null;
+
+                const perms = op.perms && typeof op.perms === 'object'
+                  ? op.perms
+                  : {};
+
+                const displayName = String(op.displayName || op.nome || op.name || '').trim();
+
+                return { user, perms, displayName };
+              }
+
+              return null;
+            })
+            .filter(Boolean);
+        } catch {
+          mb.operators = [];
+        }
+
+        return mb;
+      })
+      .filter(Boolean);
+
+    return res.json(out);
+  } catch (e) {
+    console.error('[mensagens][GET /api/msg/mailboxes] erro:', e);
+    return res.status(500).json({ error: 'Falha ao listar caixas' });
   }
 });
 
