@@ -1,6 +1,7 @@
 import express from 'express';
 import CondMsgGroup from '#models/cond_msg_group.js';
 import CondMsgMailbox from '#models/cond_msg_mailbox.js';
+import CondMsgMessage from '#models/cond_msg_message.js';
 import CondMsgSignaturePref from '#models/cond_msg_signature_pref.js';
 
 import {
@@ -316,6 +317,217 @@ function buildMailboxesDebugMeta(ctxUser, req, extra = {}) {
   } catch {
     return { ...extra };
   }
+}
+
+function normalizeEmailKey(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (!raw) return '';
+
+  const cleaned = raw
+    .replace(/^userkey:\s*/i, '')
+    .replace(/^user:\s*/i, '')
+    .replace(/^email:\s*/i, '');
+
+  const base = ownerKeyBaseEmailLower(cleaned) || cleaned;
+
+  return base && base.includes('@') ? base : '';
+}
+
+function normalizeMarkerName(name) {
+  const n = String(name || '').trim();
+  if (!n) return '';
+  return n.replace(/\s+/g, ' ').slice(0, 60);
+}
+
+function inferDocCreatedAt(doc) {
+  try {
+    if (!doc || typeof doc !== 'object') return null;
+    if (doc.createdAt instanceof Date && !isNaN(doc.createdAt)) return doc.createdAt;
+
+    const id = doc._id;
+
+    if (id && typeof id.getTimestamp === 'function') {
+      const ts = id.getTimestamp();
+      if (ts instanceof Date && !isNaN(ts)) return ts;
+    }
+
+    const raw = String(id || '').trim();
+
+    if (raw && mongoose.isValidObjectId(raw)) {
+      const oid = new mongoose.Types.ObjectId(raw);
+      const ts = oid.getTimestamp();
+      if (ts instanceof Date && !isNaN(ts)) return ts;
+    }
+  } catch {
+    /* noop */
+  }
+
+  return null;
+}
+
+function resolvePersonalMessageScope(ctxUser, req) {
+  const owner = String(getMsgOwnerKey(ctxUser, req) || '').trim().toLowerCase();
+  return {
+    mailboxId: 'pessoal',
+    owner
+  };
+}
+
+function buildPersonalOwnerCandidates(ctxUser, req, scope) {
+  const out = [];
+
+  const add = (value) => {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (!normalized) return;
+    if (!out.includes(normalized)) out.push(normalized);
+  };
+
+  const owner = String(scope?.owner || '').trim().toLowerCase();
+  const baseEmail = ownerKeyBaseEmailLower(owner) || normalizeEmailKey(owner);
+
+  add(owner);
+  add(baseEmail);
+  add(ctxUser?.email);
+  add(ctxUser?.userEmail);
+  add(ctxUser?.contato_email);
+  add(ctxUser?.contatoEmail);
+  add(ctxUser?.cond_usuario_id);
+  add(ctxUser?.condUsuarioId);
+  add(ctxUser?._id);
+  add(ctxUser?.id);
+  add(req?.__wdgPortalCookieUserId);
+
+  if (baseEmail && isEmailish(baseEmail)) {
+    add(`${baseEmail}::portal`);
+    add(`${baseEmail}::colab`);
+  }
+
+  return out;
+}
+
+function toMessageListItem(doc, scope, folder) {
+  if (!doc) return null;
+
+  const mb = String(scope?.mailboxId || '').trim() || 'pessoal';
+  const owner = String(scope?.owner || '').trim().toLowerCase();
+  const states = Array.isArray(doc.states) ? doc.states : [];
+  const baseEmail = mb === 'pessoal' ? (ownerKeyBaseEmailLower(owner) || '') : '';
+
+  const mailboxOk = (s) => String(s?.mailbox_id || '').trim() === mb;
+  const ownerLowerOf = (v) => String(v || '').trim().toLowerCase();
+
+  const baseOf = (v) => {
+    const low = ownerLowerOf(v);
+    return ownerKeyBaseEmailLower(low) || normalizeEmailKey(low) || '';
+  };
+
+  const ownerMatches = (emailOrOwner) => {
+    const v = ownerLowerOf(emailOrOwner);
+    if (!v || !owner) return false;
+    if (v === owner) return true;
+
+    if (mb === 'pessoal' && baseEmail) {
+      const b = baseOf(v);
+      return !!b && b === baseEmail;
+    }
+
+    return false;
+  };
+
+  let st = states.find(s => mailboxOk(s) && ownerLowerOf(s?.owner) === owner) || null;
+
+  if (!st && mb === 'pessoal' && baseEmail) {
+    const byBase = states.filter(s => mailboxOk(s) && baseOf(s?.owner) === baseEmail);
+    const readOne = byBase.find(s => !!s?.lida_em);
+    st = readOne || byBase[0] || null;
+  }
+
+  const createdAt = inferDocCreatedAt(doc);
+
+  const sentFromThisScope = String(doc.from_mailbox_id || '').trim() === mb
+    && (mb !== 'pessoal' || ownerMatches(doc.from_owner));
+
+  const sentToSelf = (() => {
+    try {
+      if (mb !== 'pessoal') return false;
+      if (!sentFromThisScope) return false;
+
+      const listTo = Array.isArray(doc.to) ? doc.to : [];
+      const listCc = Array.isArray(doc.cc) ? doc.cc : [];
+      const isMe = (m) => ownerMatches(String(m?.email || '').trim().toLowerCase());
+
+      return listTo.some(isMe) || listCc.some(isMe);
+    } catch {
+      return false;
+    }
+  })();
+
+  let treatAsSent = folder === 'saida' || ((folder === 'lixeira' || folder === 'arquivo') && sentFromThisScope);
+  if (sentToSelf && folder !== 'saida') treatAsSent = false;
+
+  let receivedAsCopy = false;
+
+  if (!treatAsSent) {
+    const listTo = Array.isArray(doc.to) ? doc.to : [];
+    const listCc = Array.isArray(doc.cc) ? doc.cc : [];
+    const isTo = listTo.some(m => ownerMatches(String(m?.email || '').trim().toLowerCase()));
+    const isCc = listCc.some(m => ownerMatches(String(m?.email || '').trim().toLowerCase()));
+
+    receivedAsCopy = !!(isCc && !isTo);
+  }
+
+  const isRead = treatAsSent ? true : !!(st && st.lida_em);
+  const isPinned = !!(st && st.fixada_em);
+  const hasAttachment = Array.isArray(doc.anexos) && doc.anexos.length > 0;
+
+  let remetente = String(doc.from_mailbox_name || doc.from_mailbox_id || '').trim();
+
+  if (treatAsSent) {
+    const list = [...(doc.to || []), ...(doc.cc || [])].filter(Boolean);
+    const first = list[0];
+
+    if (first) {
+      const t = String(first?.type || '').trim().toLowerCase();
+
+      if (t === 'mailbox') {
+        remetente = String(first?.name || '').trim() || remetente;
+      } else {
+        remetente = String(first?.nome || '').trim() || String(first?.email || '').trim() || remetente;
+      }
+    }
+
+    try {
+      const v = String(doc.__destinatario_display || '').trim();
+      if (v) remetente = v;
+    } catch {
+      /* noop */
+    }
+  }
+
+  if (!treatAsSent && doc && doc.__remetente_display) {
+    const v = String(doc.__remetente_display || '').trim();
+    if (v) remetente = v;
+  }
+
+  return {
+    id: String(doc._id || ''),
+    protocolo: String(doc.protocolo || '').trim(),
+    remetente,
+    assunto: String(doc.assunto || '').trim(),
+    data: createdAt || null,
+    lida: isRead,
+    fixada: isPinned,
+    comAnexo: hasAttachment,
+    copia: receivedAsCopy,
+    marcadores: Array.isArray(st?.marcadores) ? st.marcadores : [],
+    threadRootId: doc.thread_root_id ? String(doc.thread_root_id) : '',
+    inReplyToId: doc.in_reply_to ? String(doc.in_reply_to) : '',
+    forwardedFromId: doc.forwarded_from_id ? String(doc.forwarded_from_id) : '',
+    threadCount: Number(doc.__thread_count) || 0,
+    threadHasReply: !!doc.__thread_has_reply,
+    threadHasForward: !!doc.__thread_has_forward,
+    threadIsRoot: !!doc.__thread_is_root
+  };
 }
 
 router.get('/health', (req, res) => {
@@ -679,6 +891,517 @@ router.delete('/groups/:id', async (req, res, next) => {
 
     console.error('[mensagens][DELETE /api/msg/groups/:id] erro:', e);
     return res.status(500).json({ error: 'Falha ao excluir grupo' });
+  }
+});
+
+router.get('/messages', async (req, res, next) => {
+  try {
+    const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
+    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
+      || refLower.includes('/portal-morador');
+
+    // Neste microcorte, só migramos caixa pessoal no contexto Gestor/Mensagens.
+    if (fromPortal) return next();
+
+    let ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || '').trim() || 'pessoal';
+    if (mailboxId !== 'pessoal') return next();
+
+    if (mongoose.connection.readyState !== 1) {
+      const ok = await ensureMongoReady();
+
+      if (!ok) {
+        try { res.set('Retry-After', '5'); } catch {}
+        return res.status(503).json({ error: 'DB indisponível' });
+      }
+    }
+
+    try {
+      res.set('Cache-Control', 'no-store');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      res.set('Surrogate-Control', 'no-store');
+      res.set('CDN-Cache-Control', 'no-store');
+    } catch {
+      /* noop */
+    }
+
+    const folder = String(req.query.folder || req.query.view || 'entrada').trim().toLowerCase();
+    const scope = resolvePersonalMessageScope(ctxUser, req);
+
+    if (!scope.owner) {
+      return res.status(400).json({ error: 'Usuário inválido para carregar mensagens.' });
+    }
+
+    const ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
+    const ownerSet = new Set(ownerCandidatesLower);
+
+    const baseEmailForOwnerMatch = (() => {
+      try {
+        const fromOwner = ownerKeyBaseEmailLower(String(scope?.owner || '').trim().toLowerCase());
+        if (isEmailish(fromOwner)) return fromOwner;
+
+        const em = String(
+          ctxUser?.email ||
+          ctxUser?.userEmail ||
+          ctxUser?.contato_email ||
+          ctxUser?.contatoEmail ||
+          ''
+        ).trim().toLowerCase();
+
+        return isEmailish(em) ? em : '';
+      } catch {
+        return '';
+      }
+    })();
+
+    const baseMatches = (ownerVal) => {
+      try {
+        if (!baseEmailForOwnerMatch) return false;
+
+        const ownerLower = String(ownerVal || '').trim().toLowerCase();
+        if (!ownerLower) return false;
+
+        const base = ownerKeyBaseEmailLower(ownerLower) || normalizeEmailKey(ownerLower);
+
+        return !!base && base === baseEmailForOwnerMatch;
+      } catch {
+        return false;
+      }
+    };
+
+    const isOwnerMatch = (ownerVal) => {
+      const ownerLower = String(ownerVal || '').trim().toLowerCase();
+      if (!ownerLower) return false;
+      if (ownerSet.size && ownerSet.has(ownerLower)) return true;
+      return baseMatches(ownerLower);
+    };
+
+    const findScopeState = (doc) => {
+      const states = Array.isArray(doc?.states) ? doc.states : [];
+
+      if (scope.mailboxId === 'pessoal' && scope.owner) {
+        const exact = states.find(s =>
+          String(s?.mailbox_id || '').trim() === 'pessoal'
+          && String(s?.owner || '').trim().toLowerCase() === String(scope.owner || '').trim().toLowerCase()
+          && !s?.excluida_em
+        );
+
+        if (exact) return exact;
+      }
+
+      if (scope.mailboxId === 'pessoal' && baseEmailForOwnerMatch) {
+        const byBase = states.filter(s =>
+          String(s?.mailbox_id || '').trim() === 'pessoal'
+          && baseMatches(s?.owner)
+        );
+
+        const readOne = byBase.find(s => !!s?.lida_em && !s?.excluida_em);
+        if (readOne) return readOne;
+
+        const firstActive = byBase.find(s => !s?.excluida_em);
+        if (firstActive) return firstActive;
+      }
+
+      const direct = states.find(s =>
+        String(s?.mailbox_id || '').trim() === 'pessoal'
+        && isOwnerMatch(s?.owner)
+        && !s?.excluida_em
+      );
+
+      if (direct) return direct;
+
+      return states.find(s =>
+        String(s?.mailbox_id || '').trim() === 'pessoal'
+        && isOwnerMatch(s?.owner)
+      );
+    };
+
+    const hasOnlyDeletedStateForScope = (doc) => {
+      const states = Array.isArray(doc?.states) ? doc.states : [];
+
+      const scoped = states.filter(s =>
+        String(s?.mailbox_id || '').trim() === 'pessoal'
+        && isOwnerMatch(s?.owner)
+      );
+
+      return scoped.length > 0 && scoped.every(s => !!s?.excluida_em);
+    };
+
+    const qText = String(req.query.q || req.query.texto || '').trim();
+    const qProt = String(req.query.protocolo || '').trim();
+    const qStatus = String(req.query.status || '').trim().toLowerCase();
+    const qComAnexo = String(req.query.comAnexo || req.query.com_anexo || '').trim();
+    const qSemMarcador = String(req.query.semMarcador || req.query.sem_marcador || '').trim();
+    const qMarker = normalizeMarkerName(req.query.marker || req.query.marcador || req.query.tag || '');
+    const qDe = String(req.query.de || '').trim();
+    const qPara = String(req.query.para || '').trim();
+    const qIni = String(req.query.ini || req.query.inicio || '').trim();
+    const qFim = String(req.query.fim || '').trim();
+
+    const pageSizeRaw = Number(
+      req.query.pageSize ||
+      req.query.page_size ||
+      req.query.perPage ||
+      req.query.per_page ||
+      req.query.limit ||
+      25
+    ) || 25;
+
+    const pageSize = [10, 25, 50, 100].includes(pageSizeRaw) ? pageSizeRaw : 25;
+    const pageRaw = Number(req.query.page || 1) || 1;
+    const pageReq = Math.max(1, Math.floor(pageRaw));
+    const scanLimit = Math.min(5000, Math.max(pageReq * pageSize, 250));
+
+    const filter = { ativo: { $ne: false } };
+
+    if (folder === 'saida') {
+      const ownerExact = String(scope.owner || '').trim().toLowerCase();
+      const baseEmail = ownerKeyBaseEmailLower(ownerExact);
+      const basePrefixRx = isEmailish(baseEmail)
+        ? new RegExp('^' + escapeRegExp(baseEmail) + '::')
+        : null;
+
+      const cands = ownerCandidatesLower.length ? ownerCandidatesLower : [ownerExact].filter(Boolean);
+
+      filter.from_mailbox_id = 'pessoal';
+      filter.$or = [
+        { from_owner: cands.length > 1 ? { $in: cands } : cands[0] },
+        ...(basePrefixRx ? [{ from_owner: basePrefixRx }] : []),
+        { createdBy: { $in: cands } }
+      ];
+    } else {
+      const includeSent = folder === 'lixeira' || folder === 'arquivo';
+
+      const recipientKeyCandidatesLower = [];
+
+      const addRecipientCandidate = (v) => {
+        const s = String(v || '').trim().toLowerCase();
+        if (!s) return;
+        if (!recipientKeyCandidatesLower.includes(s)) recipientKeyCandidatesLower.push(s);
+      };
+
+      addRecipientCandidate(scope.owner);
+      ownerCandidatesLower.forEach(addRecipientCandidate);
+
+      const baseEmail = (() => {
+        try {
+          const fromOwner = ownerKeyBaseEmailLower(String(scope?.owner || '').trim().toLowerCase());
+          if (isEmailish(fromOwner)) return fromOwner;
+
+          const em = String(
+            ctxUser?.email ||
+            ctxUser?.userEmail ||
+            ctxUser?.contato_email ||
+            ctxUser?.contatoEmail ||
+            ''
+          ).trim().toLowerCase();
+
+          return isEmailish(em) ? em : '';
+        } catch {
+          return '';
+        }
+      })();
+
+      const basePrefixRx = isEmailish(baseEmail)
+        ? new RegExp('^' + escapeRegExp(baseEmail) + '::')
+        : null;
+
+      if (isEmailish(baseEmail)) {
+        addRecipientCandidate(baseEmail);
+        addRecipientCandidate(`${baseEmail}::portal`);
+        addRecipientCandidate(`${baseEmail}::colab`);
+      }
+
+      const recipientKeyRxs = recipientKeyCandidatesLower.map(k =>
+        new RegExp('^\\s*' + escapeRegExp(k) + '\\s*$', 'i')
+      );
+
+      const ors = [];
+
+      if (recipientKeyRxs.length) {
+        ors.push(
+          { 'to.email': { $in: recipientKeyRxs } },
+          { 'cc.email': { $in: recipientKeyRxs } }
+        );
+      }
+
+      if (ownerCandidatesLower.length) {
+        ors.push({
+          states: {
+            $elemMatch: {
+              mailbox_id: 'pessoal',
+              owner: { $in: ownerCandidatesLower }
+            }
+          }
+        });
+      }
+
+      if (basePrefixRx) {
+        ors.push({
+          states: {
+            $elemMatch: {
+              mailbox_id: 'pessoal',
+              owner: basePrefixRx
+            }
+          }
+        });
+      }
+
+      if (includeSent) {
+        ors.push({
+          from_mailbox_id: 'pessoal',
+          from_owner: ownerCandidatesLower.length > 1
+            ? { $in: ownerCandidatesLower }
+            : String(scope.owner || '').trim().toLowerCase()
+        });
+
+        if (basePrefixRx) {
+          ors.push({
+            from_mailbox_id: 'pessoal',
+            from_owner: basePrefixRx
+          });
+        }
+      }
+
+      filter.$or = ors;
+    }
+
+    const dateFilter = {};
+
+    if (qIni) {
+      const di = new Date(`${qIni}-01T00:00:00.000Z`);
+      if (!isNaN(di)) dateFilter.$gte = di;
+    }
+
+    if (qFim) {
+      const df = new Date(`${qFim}-01T00:00:00.000Z`);
+
+      if (!isNaN(df)) {
+        const nextDate = new Date(df);
+        nextDate.setUTCMonth(nextDate.getUTCMonth() + 1);
+        dateFilter.$lt = nextDate;
+      }
+    }
+
+    if (Object.keys(dateFilter).length) filter.createdAt = dateFilter;
+    if (qProt) filter.protocolo = new RegExp(escapeRegExp(qProt), 'i');
+    if (qText) filter.assunto = new RegExp(escapeRegExp(qText), 'i');
+    if (qComAnexo === '1' || qComAnexo === 'true') filter['anexos.0'] = { $exists: true };
+
+    let docs = await CondMsgMessage.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(scanLimit)
+      .lean();
+
+    docs = (docs || []).filter(d => !hasOnlyDeletedStateForScope(d));
+
+    docs = (docs || []).map(d => {
+      const fake = { ...d, states: Array.isArray(d.states) ? d.states : [] };
+      const st = findScopeState(fake);
+
+      if (!st) {
+        fake.__wdg_state_injected = true;
+
+        const canonicalOwner = scope.owner || ownerCandidatesLower[0] || '';
+
+        fake.states = [
+          ...fake.states,
+          {
+            mailbox_id: 'pessoal',
+            owner: canonicalOwner,
+            lida_em: null,
+            arquivada_em: null,
+            arquivada_de: '',
+            lixeira_em: null,
+            lixeira_de: '',
+            excluida_em: null,
+            fixada_em: null,
+            marcadores: []
+          }
+        ];
+      }
+
+      return fake;
+    });
+
+    docs = docs.filter(d => {
+      const st = findScopeState(d);
+      const arquivada = !!st?.arquivada_em;
+      const lixeira = !!st?.lixeira_em;
+
+      if (folder === 'arquivo') return arquivada && !lixeira;
+      if (folder === 'lixeira') return lixeira;
+
+      return !arquivada && !lixeira;
+    });
+
+    if (folder === 'saida') {
+      docs = (docs || []).filter(d => {
+        try {
+          const fromMailboxId = String(d?.from_mailbox_id || '').trim();
+          if (fromMailboxId !== 'pessoal') return false;
+
+          const fromOwnerLower = String(d?.from_owner || '').trim().toLowerCase();
+          if (fromOwnerLower && isOwnerMatch(fromOwnerLower)) return true;
+
+          const createdByLower = String(d?.createdBy || '').trim().toLowerCase();
+
+          return !!(
+            createdByLower &&
+            Array.isArray(ownerCandidatesLower) &&
+            ownerCandidatesLower.includes(createdByLower)
+          );
+        } catch {
+          return false;
+        }
+      });
+    }
+
+    if (folder === 'entrada') {
+      docs = docs.filter(d => {
+        try {
+          const fromMailboxId = String(d?.from_mailbox_id || '').trim();
+
+          const sentFromThisScope = fromMailboxId === 'pessoal'
+            && isOwnerMatch(String(d?.from_owner || '').trim().toLowerCase());
+
+          if (!sentFromThisScope) return true;
+
+          const listTo = Array.isArray(d?.to) ? d.to : [];
+          const listCc = Array.isArray(d?.cc) ? d.cc : [];
+
+          const emailMatchesOwner = (m) => {
+            const em = String(m?.email || '').trim().toLowerCase();
+            if (!em) return false;
+            if (isOwnerMatch(em)) return true;
+
+            if (baseEmailForOwnerMatch) {
+              const base = ownerKeyBaseEmailLower(em) || normalizeEmailKey(em) || '';
+              if (base && base === baseEmailForOwnerMatch) return true;
+            }
+
+            return false;
+          };
+
+          const sentToSelf = listTo.some(emailMatchesOwner) || listCc.some(emailMatchesOwner);
+
+          return sentToSelf;
+        } catch {
+          return true;
+        }
+      });
+    }
+
+    if (qStatus === 'lidas' || qStatus === 'nao_lidas' || qStatus === 'não_lidas') {
+      const wantRead = qStatus === 'lidas';
+
+      const isReadForScope = (doc) => {
+        try {
+          const st = findScopeState(doc);
+          if (st?.lida_em) return true;
+
+          if (baseEmailForOwnerMatch) {
+            const states = Array.isArray(doc?.states) ? doc.states : [];
+
+            return states.some(s =>
+              String(s?.mailbox_id || '').trim() === 'pessoal'
+              && !s?.excluida_em
+              && baseMatches(s?.owner)
+              && !!s?.lida_em
+            );
+          }
+
+          return false;
+        } catch {
+          return false;
+        }
+      };
+
+      docs = docs.filter(d => {
+        if (d && d.__wdg_state_injected) return false;
+
+        const read = isReadForScope(d);
+        return wantRead ? read : !read;
+      });
+    }
+
+    if (qMarker) {
+      docs = docs.filter(d => {
+        const st = findScopeState(d);
+        const markers = Array.isArray(st?.marcadores) ? st.marcadores : [];
+
+        return markers.some(m => String(m || '').trim().toLowerCase() === qMarker.toLowerCase());
+      });
+    }
+
+    if (qSemMarcador === '1' || qSemMarcador === 'true') {
+      docs = docs.filter(d => {
+        const st = findScopeState(d);
+        const markers = Array.isArray(st?.marcadores) ? st.marcadores : [];
+
+        return markers.length === 0;
+      });
+    }
+
+    if (qDe) {
+      const needle = qDe.toLowerCase();
+
+      docs = docs.filter(d => {
+        const values = [
+          d.from_mailbox_name,
+          d.from_mailbox_id,
+          d.from_owner,
+          d.createdBy,
+          d.__remetente_display
+        ].map(v => String(v || '').toLowerCase());
+
+        return values.some(v => v.includes(needle));
+      });
+    }
+
+    if (qPara) {
+      const needle = qPara.toLowerCase();
+
+      docs = docs.filter(d => {
+        const list = [...(d.to || []), ...(d.cc || [])];
+
+        return list.some(m => {
+          const values = [
+            m?.name,
+            m?.nome,
+            m?.email,
+            m?.mailboxId
+          ].map(v => String(v || '').toLowerCase());
+
+          return values.some(v => v.includes(needle));
+        });
+      });
+    }
+
+    const total = docs.length;
+    const pages = Math.max(1, Math.ceil(total / pageSize));
+    const page = Math.min(pageReq, pages);
+    const start = (page - 1) * pageSize;
+    const paged = docs.slice(start, start + pageSize);
+
+    const items = paged
+      .map(d => toMessageListItem(d, scope, folder))
+      .filter(Boolean);
+
+    return res.json({
+      ok: true,
+      items,
+      total,
+      page,
+      pageSize,
+      pages
+    });
+  } catch (e) {
+    console.error('[mensagens][GET /api/msg/messages] erro:', e);
+    return res.status(500).json({ error: 'Falha ao listar mensagens' });
   }
 });
 
