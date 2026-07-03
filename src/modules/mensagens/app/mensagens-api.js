@@ -1,4 +1,7 @@
+import crypto from 'crypto';
 import express from 'express';
+import multer from 'multer';
+
 import CondMsgGroup from '#models/cond_msg_group.js';
 import CondMsgMailbox from '#models/cond_msg_mailbox.js';
 import CondMsgMessage from '#models/cond_msg_message.js';
@@ -22,6 +25,16 @@ import {
 } from './mensagens-settings.js';
 
 const router = express.Router();
+
+const mensagensUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    files: 15,
+    fileSize: 10 * 1024 * 1024,
+    fields: 20,
+    fieldSize: 2 * 1024 * 1024
+  }
+});
 
 function getCtxUser(req) {
   try {
@@ -530,6 +543,185 @@ function toMessageListItem(doc, scope, folder) {
   };
 }
 
+function generateMsgProtocolo() {
+  const year = new Date().getFullYear();
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = crypto.randomBytes(8);
+  let out = '';
+
+  for (let i = 0; i < 8; i++) {
+    out += alphabet[bytes[i] % alphabet.length];
+  }
+
+  return `${year}-${out}`;
+}
+
+function sanitizeMessageRecipients(input) {
+  const arr = Array.isArray(input) ? input : [];
+  const out = [];
+
+  for (const raw of arr) {
+    if (!raw || typeof raw !== 'object') continue;
+
+    const type = String(raw.type || '').trim().toLowerCase();
+
+    if (type === 'mailbox') {
+      const mailboxId = String(raw.mailboxId || raw.mailbox_id || '').trim();
+      const name = String(raw.name || raw.nome || raw.mailboxName || '').trim();
+
+      if (!mailboxId) continue;
+
+      out.push({
+        type: 'mailbox',
+        mailboxId,
+        name
+      });
+
+      continue;
+    }
+
+    const email = String(raw.email || '').trim().toLowerCase();
+    const nome = String(raw.nome || raw.name || raw.display || '').trim();
+    const fotoUrl = String(raw.fotoUrl || raw.foto_url || raw.photoUrl || '').trim();
+
+    if (!email) continue;
+
+    out.push({
+      type: 'user',
+      email,
+      nome,
+      fotoUrl
+    });
+  }
+
+  return out;
+}
+
+function messageRecipientToStateScope(member) {
+  const type = String(member?.type || '').trim().toLowerCase();
+
+  if (type === 'mailbox') {
+    const mailboxId = String(member?.mailboxId || '').trim();
+    if (!mailboxId) return null;
+
+    return {
+      mailboxId,
+      owner: ''
+    };
+  }
+
+  const email = String(member?.email || '').trim().toLowerCase();
+  if (!email) return null;
+
+  return {
+    mailboxId: 'pessoal',
+    owner: email
+  };
+}
+
+function buildInitialMessageStates({ fromMailboxId, fromOwner, to, cc }) {
+  const now = new Date();
+  const map = new Map();
+
+  const push = ({ mailboxId, owner, isSender = false, isRecipient = false }) => {
+    const mb = String(mailboxId || '').trim();
+    const own = String(owner || '').trim().toLowerCase();
+
+    if (!mb) return;
+
+    const key = `${mb}::${own}`;
+    const existing = map.get(key) || {
+      mailbox_id: mb,
+      owner: own,
+      lida_em: null,
+      arquivada_em: null,
+      arquivada_de: '',
+      lixeira_em: null,
+      lixeira_de: '',
+      excluida_em: null,
+      fixada_em: null,
+      marcadores: []
+    };
+
+    if (isSender && !isRecipient) {
+      existing.lida_em = now;
+    }
+
+    if (isRecipient) {
+      existing.lida_em = null;
+    }
+
+    map.set(key, existing);
+  };
+
+  const senderScope = {
+    mailboxId: String(fromMailboxId || '').trim() || 'pessoal',
+    owner: String(fromOwner || '').trim().toLowerCase()
+  };
+
+  const recipientScopes = [];
+
+  for (const member of [...(to || []), ...(cc || [])]) {
+    const scope = messageRecipientToStateScope(member);
+    if (scope) recipientScopes.push(scope);
+  }
+
+  const senderAlsoRecipient = recipientScopes.some(s =>
+    String(s.mailboxId || '').trim() === senderScope.mailboxId &&
+    String(s.owner || '').trim().toLowerCase() === senderScope.owner
+  );
+
+  push({
+    ...senderScope,
+    isSender: true,
+    isRecipient: senderAlsoRecipient
+  });
+
+  for (const scope of recipientScopes) {
+    push({
+      ...scope,
+      isRecipient: true
+    });
+  }
+
+  return Array.from(map.values());
+}
+
+async function loadMsgMailboxForSend(mailboxId) {
+  const id = String(mailboxId || '').trim();
+
+  if (!id || !mongoose.isValidObjectId(id)) {
+    const err = new Error('Caixa remetente inválida.');
+    err.status = 400;
+    throw err;
+  }
+
+  const doc = await CondMsgMailbox.findOne({
+    _id: id,
+    ativo: { $ne: false }
+  }).lean();
+
+  if (!doc) {
+    const err = new Error('Caixa remetente não encontrada.');
+    err.status = 404;
+    throw err;
+  }
+
+  return doc;
+}
+
+function userCanSendFromMailbox(mailboxDoc, ctxUser) {
+  if (userCanScopeAll(ctxUser)) return true;
+  if (mailboxIsMember(mailboxDoc, ctxUser)) return true;
+
+  const perms = mailboxGetUserPerms(mailboxDoc, ctxUser);
+
+  return !!(
+    perms?.administrar ||
+    perms?.criarMensagem
+  );
+}
+
 router.get('/health', (req, res) => {
   return res.json({
     ok: true,
@@ -892,6 +1084,262 @@ router.delete('/groups/:id', async (req, res, next) => {
     console.error('[mensagens][DELETE /api/msg/groups/:id] erro:', e);
     return res.status(500).json({ error: 'Falha ao excluir grupo' });
   }
+});
+
+router.post('/messages', (req, res, next) => {
+  const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
+  const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
+    || refLower.includes('/portal-morador');
+
+  // Importante: para Portal, cair na façade ANTES de ler o body.
+  if (fromPortal) return next();
+
+  return mensagensUpload.array('anexos', 15)(req, res, async (uploadErr) => {
+    if (uploadErr) {
+      return res.status(400).json({
+        error: uploadErr?.message || 'Falha ao processar anexos.'
+      });
+    }
+
+    try {
+      let ctxUser = getCtxUser(req);
+      if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+      if (mongoose.connection.readyState !== 1) {
+        const ok = await ensureMongoReady();
+
+        if (!ok) {
+          try { res.set('Retry-After', '5'); } catch {}
+          return res.status(503).json({ error: 'DB indisponível' });
+        }
+      }
+
+      const ct = String(req.headers['content-type'] || '').toLowerCase();
+      const rawPayload = ct.includes('multipart/form-data') ? String(req.body?.payload || '') : '';
+      const payload = rawPayload ? JSON.parse(rawPayload || '{}') : (req.body || {});
+
+      const files = Array.isArray(req.files) ? req.files : [];
+
+      // Microcorte atual: parseia FormData, mas ainda não persiste anexos.
+      if (files.length) {
+        return res.status(400).json({
+          error: 'Envio com anexo ainda não foi migrado para o módulo Mensagens.'
+        });
+      }
+
+      const fromMailboxId = String(payload?.fromMailboxId || payload?.from_mailbox_id || '').trim() || 'pessoal';
+      const assunto = String(payload?.assunto || payload?.subject || '').trim();
+      const bodyHtml = String(payload?.bodyHtml || payload?.body_html || '').trim();
+      const bodyText = String(payload?.bodyText || payload?.body_text || '').trim();
+      const assinaturaAtiva = !!(payload?.assinaturaAtiva ?? payload?.signatureEnabled);
+      const assinaturaTexto = String(payload?.assinaturaTexto || payload?.signatureText || '').trim();
+      const clientNonceRaw = String(payload?.clientNonce || payload?.client_nonce || '').trim();
+      const clientNonce = clientNonceRaw ? clientNonceRaw.slice(0, 120) : '';
+
+      const to = sanitizeMessageRecipients(payload?.to);
+      const cc = sanitizeMessageRecipients(payload?.cc);
+
+      const threadRootIdRaw = String(payload?.threadRootId || payload?.thread_root_id || '').trim();
+      const inReplyToIdRaw = String(payload?.inReplyToId || payload?.in_reply_to || '').trim();
+      const forwardedFromIdRaw = String(payload?.forwardedFromId || payload?.forwarded_from_id || '').trim();
+
+      const threadRootId = threadRootIdRaw && mongoose.isValidObjectId(threadRootIdRaw)
+        ? new mongoose.Types.ObjectId(threadRootIdRaw)
+        : null;
+
+      const inReplyToId = inReplyToIdRaw && mongoose.isValidObjectId(inReplyToIdRaw)
+        ? new mongoose.Types.ObjectId(inReplyToIdRaw)
+        : null;
+
+      const forwardedFromId = forwardedFromIdRaw && mongoose.isValidObjectId(forwardedFromIdRaw)
+        ? new mongoose.Types.ObjectId(forwardedFromIdRaw)
+        : null;
+
+      if (!to.length) return res.status(400).json({ error: 'Informe ao menos um destinatário em Para.' });
+      if (!assunto) return res.status(400).json({ error: 'Assunto é obrigatório.' });
+      if (!bodyText) return res.status(400).json({ error: 'Mensagem é obrigatória.' });
+
+      for (const member of [...to, ...cc]) {
+        const type = String(member?.type || '').trim().toLowerCase();
+
+        if (type === 'mailbox') {
+          const mailboxId = String(member?.mailboxId || '').trim();
+
+          if (!mailboxId || !mongoose.isValidObjectId(mailboxId)) {
+            return res.status(400).json({ error: 'Caixa destinatária inválida.' });
+          }
+
+          const exists = await CondMsgMailbox.exists({
+            _id: mailboxId,
+            ativo: { $ne: false }
+          });
+
+          if (!exists) {
+            return res.status(400).json({ error: 'Caixa destinatária não encontrada.' });
+          }
+
+          continue;
+        }
+
+        const email = String(member?.email || '').trim().toLowerCase();
+
+        if (!isEmailish(email)) {
+          return res.status(400).json({ error: 'Destinatário pessoal inválido.' });
+        }
+      }
+
+      let unidadeId = null;
+      let fromMailboxName = '';
+      let fromOwner = '';
+
+      if (fromMailboxId === 'pessoal') {
+        fromOwner = String(getMsgOwnerKey(ctxUser, req) || '').trim().toLowerCase();
+
+        if (!isEmailish(fromOwner)) {
+          return res.status(400).json({
+            error: 'Não foi possível determinar o e-mail do remetente para enviar pela caixa pessoal.'
+          });
+        }
+
+        const uid = getUserUnidadeId(ctxUser);
+        if (uid && mongoose.isValidObjectId(uid)) unidadeId = uid;
+
+        fromMailboxName = String(payload?.fromMailboxName || 'Pessoal').trim() || 'Pessoal';
+      } else {
+        const mailbox = await loadMsgMailboxForSend(fromMailboxId);
+
+        if (!userCanSendFromMailbox(mailbox, ctxUser)) {
+          return res.status(403).json({ error: 'Sem permissão para enviar pela caixa.' });
+        }
+
+        unidadeId = mailbox.unidade_id || null;
+        fromMailboxName = String(mailbox.name || '').trim();
+        fromOwner = '';
+      }
+
+      if (clientNonce) {
+        const existing = await CondMsgMessage.findOne({
+          client_nonce: clientNonce,
+          from_mailbox_id: fromMailboxId,
+          ativo: { $ne: false }
+        }).select('_id protocolo').lean().catch(() => null);
+
+        if (existing && existing._id) {
+          return res.status(201).json({
+            ok: true,
+            id: String(existing._id),
+            protocolo: String(existing.protocolo || '').trim(),
+            deduped: true
+          });
+        }
+      }
+
+      const createdBy = String(ctxUser?.nome || ctxUser?.name || '').trim()
+        || String(ctxUser?.email || ctxUser?.userEmail || '').trim()
+        || String(getMsgOwnerKey(ctxUser, req) || '').trim();
+
+      const initialStates = buildInitialMessageStates({
+        fromMailboxId,
+        fromOwner,
+        to,
+        cc
+      });
+
+      let doc = null;
+      let protocolo = '';
+
+      for (let i = 0; i < 7; i++) {
+        protocolo = generateMsgProtocolo();
+
+        try {
+          let finalThreadRoot = threadRootId;
+
+          if (!finalThreadRoot && (inReplyToId || forwardedFromId)) {
+            finalThreadRoot = inReplyToId || forwardedFromId;
+          }
+
+          doc = await CondMsgMessage.create({
+            protocolo,
+            ano: new Date().getFullYear(),
+            from_mailbox_id: fromMailboxId,
+            from_mailbox_name: fromMailboxName,
+            from_owner: String(fromOwner || '').trim().toLowerCase(),
+            client_nonce: clientNonce || '',
+            to,
+            cc,
+            assunto,
+            body_html: bodyHtml,
+            body_text: bodyText,
+            assinatura_ativa: assinaturaAtiva,
+            assinatura_texto: assinaturaTexto,
+            anexos: [],
+            thread_root_id: finalThreadRoot,
+            in_reply_to: inReplyToId,
+            forwarded_from_id: forwardedFromId,
+            acessos: [],
+            states: initialStates,
+            unidade_id: unidadeId,
+            createdBy,
+            ativo: true
+          });
+
+          break;
+        } catch (e) {
+          const isDup = e && (e.code === 11000 || String(e?.message || '').includes('duplicate key'));
+
+          if (isDup) {
+            if (clientNonce) {
+              const existing = await CondMsgMessage.findOne({
+                client_nonce: clientNonce,
+                from_mailbox_id: fromMailboxId,
+                ativo: { $ne: false }
+              }).select('_id protocolo').lean().catch(() => null);
+
+              if (existing && existing._id) {
+                return res.status(201).json({
+                  ok: true,
+                  id: String(existing._id),
+                  protocolo: String(existing.protocolo || '').trim(),
+                  deduped: true
+                });
+              }
+            }
+
+            doc = null;
+            continue;
+          }
+
+          throw e;
+        }
+      }
+
+      if (!doc) {
+        return res.status(500).json({
+          error: 'Não foi possível gerar protocolo único para a mensagem.'
+        });
+      }
+
+      return res.status(201).json({
+        ok: true,
+        id: String(doc._id || ''),
+        protocolo
+      });
+    } catch (e) {
+      const st = e && e.status ? Number(e.status) : 500;
+
+      if (st !== 500) {
+        return res.status(st).json({
+          error: e?.message || 'Falha ao enviar mensagem.'
+        });
+      }
+
+      console.error('[mensagens][POST /api/msg/messages] erro:', e);
+
+      return res.status(500).json({
+        error: 'Falha ao enviar mensagem.'
+      });
+    }
+  });
 });
 
 router.get('/messages', async (req, res, next) => {
