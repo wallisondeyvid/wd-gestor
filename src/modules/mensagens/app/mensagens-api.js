@@ -966,6 +966,79 @@ function toMessageDetailItemPersonal(doc, scope, ownerMatcher, extra = {}) {
   };
 }
 
+function rootIdForMessageAction(doc) {
+  const raw = String(doc?.thread_root_id || doc?._id || '').trim();
+  return raw && mongoose.isValidObjectId(raw) ? raw : '';
+}
+
+function isPersonalMessageInTrashForScope(doc, ownerMatcher) {
+  const st = findPersonalMessageState(doc, ownerMatcher, { includeDeleted: false });
+  return !!st?.lixeira_em;
+}
+
+function isPersonalMessageArchivedForScope(doc, ownerMatcher) {
+  const st = findPersonalMessageState(doc, ownerMatcher, { includeDeleted: false });
+  return !!(st?.arquivada_em && !st?.lixeira_em);
+}
+
+function applyPersonalMessageStateAction(doc, scope, ownerMatcher, action, opts = {}) {
+  const st = ensurePersonalMessageState(doc, scope, ownerMatcher);
+  const now = opts?.now instanceof Date ? opts.now : new Date();
+
+  if (action === 'archive') {
+    st.arquivada_em = now;
+    st.arquivada_de = String(opts?.fromFolder || '').trim() || 'entrada';
+    st.lixeira_em = null;
+    st.lixeira_de = '';
+    st.fixada_em = null;
+    return true;
+  }
+
+  if (action === 'unarchive') {
+    st.arquivada_em = null;
+    st.arquivada_de = '';
+    return true;
+  }
+
+  if (action === 'trash') {
+    st.lixeira_em = now;
+    st.lixeira_de = String(opts?.fromFolder || '').trim() || 'entrada';
+    st.arquivada_em = null;
+    st.arquivada_de = '';
+    st.fixada_em = null;
+    return true;
+  }
+
+  if (action === 'restore') {
+    st.lixeira_em = null;
+    st.lixeira_de = '';
+    return true;
+  }
+
+  if (action === 'delete') {
+    st.excluida_em = now;
+    st.fixada_em = null;
+    return true;
+  }
+
+  if (action === 'pin') {
+    st.fixada_em = st.fixada_em ? null : now;
+    return true;
+  }
+
+  if (action === 'unread') {
+    st.lida_em = null;
+    return true;
+  }
+
+  if (action === 'read') {
+    st.lida_em = st.lida_em || now;
+    return true;
+  }
+
+  return false;
+}
+
 router.get('/health', (req, res) => {
   return res.json({
     ok: true,
@@ -1584,6 +1657,235 @@ router.post('/messages', (req, res, next) => {
       });
     }
   });
+});
+
+router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, res, next) => {
+  try {
+    const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
+    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
+      || refLower.includes('/portal-morador');
+
+    // Portal continua na façade.
+    if (fromPortal) return next();
+
+    let ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    const mailboxId = String(req.body?.mailboxId || req.body?.mailbox_id || '').trim() || 'pessoal';
+
+    // Neste microcorte, só caixa pessoal.
+    if (mailboxId !== 'pessoal') return next();
+
+    const action = String(req.body?.action || '').trim().toLowerCase();
+
+    // Marcadores ficam para outro microcorte. Deixa a façade antiga responder.
+    if (action === 'marker') return next();
+
+    const allowedActions = new Set([
+      'archive',
+      'unarchive',
+      'trash',
+      'restore',
+      'delete',
+      'pin',
+      'unread',
+      'read'
+    ]);
+
+    if (!action) return res.status(400).json({ error: 'action é obrigatório' });
+    if (!allowedActions.has(action)) return res.status(400).json({ error: 'Ação inválida.' });
+
+    const ids = Array.isArray(req.body?.ids)
+      ? req.body.ids.map(x => String(x || '').trim()).filter(Boolean)
+      : [];
+
+    if (!ids.length) return res.status(400).json({ error: 'ids é obrigatório' });
+
+    const validIds = ids.filter(id => mongoose.isValidObjectId(id));
+    if (!validIds.length) return res.status(400).json({ error: 'ids inválidos' });
+
+    if (mongoose.connection.readyState !== 1) {
+      const ok = await ensureMongoReady();
+
+      if (!ok) {
+        try { res.set('Retry-After', '5'); } catch {}
+        return res.status(503).json({ error: 'DB indisponível' });
+      }
+    }
+
+    const scope = resolvePersonalMessageScope(ctxUser, req);
+
+    if (!scope.owner) {
+      return res.status(400).json({ error: 'Usuário inválido para aplicar ação.' });
+    }
+
+    const ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
+    const ownerMatcher = buildPersonalOwnerMatcher(scope, ownerCandidatesLower);
+
+    const fromFolderRaw = String(
+      req.body?.fromFolder ||
+      req.body?.from_folder ||
+      req.body?.folder ||
+      ''
+    ).trim().toLowerCase();
+
+    const fromFolder = ['entrada', 'saida', 'arquivo', 'lixeira'].includes(fromFolderRaw)
+      ? fromFolderRaw
+      : '';
+
+    const seedDocs = await CondMsgMessage.find({
+      _id: { $in: validIds },
+      ativo: { $ne: false }
+    })
+      .select('_id thread_root_id')
+      .lean();
+
+    if (!seedDocs.length) return res.status(404).json({ error: 'Mensagem não encontrada' });
+
+    const actionsByThread = new Set([
+      'trash',
+      'delete',
+      'archive',
+      'unarchive',
+      'restore',
+      'pin'
+    ]);
+
+    let idsToAct = validIds;
+
+    if (actionsByThread.has(action)) {
+      const rootIds = Array.from(new Set(
+        (seedDocs || [])
+          .map(rootIdForMessageAction)
+          .filter(id => id && mongoose.isValidObjectId(id))
+      ));
+
+      const rootObjIds = rootIds.map(id => new mongoose.Types.ObjectId(id));
+
+      if (rootObjIds.length) {
+        const related = await CondMsgMessage.find({
+          ativo: { $ne: false },
+          $or: [
+            { _id: { $in: rootObjIds } },
+            { thread_root_id: { $in: rootObjIds } }
+          ]
+        })
+          .select('_id')
+          .lean();
+
+        const expanded = Array.from(new Set(
+          (related || [])
+            .map(d => String(d?._id || '').trim())
+            .filter(id => id && mongoose.isValidObjectId(id))
+        ));
+
+        if (expanded.length) idsToAct = expanded;
+      }
+    }
+
+    let docs = await CondMsgMessage.find({
+      _id: { $in: idsToAct },
+      ativo: { $ne: false }
+    });
+
+    docs = (docs || []).filter(d => {
+      if (personalMessageDeletedForScope(d, ownerMatcher)) return false;
+      return canAccessPersonalMessage(d, ctxUser, scope, ownerMatcher);
+    });
+
+    if (!docs.length) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    if (action === 'delete') {
+      docs = docs.filter(d => isPersonalMessageInTrashForScope(d, ownerMatcher));
+
+      if (!docs.length) {
+        return res.status(400).json({
+          error: 'A mensagem precisa estar na lixeira para exclusão definitiva.'
+        });
+      }
+    }
+
+    if (action === 'restore') {
+      docs = docs.filter(d => isPersonalMessageInTrashForScope(d, ownerMatcher));
+
+      if (!docs.length) {
+        return res.status(400).json({
+          error: 'A mensagem não está na lixeira.'
+        });
+      }
+    }
+
+    if (action === 'unarchive') {
+      docs = docs.filter(d => isPersonalMessageArchivedForScope(d, ownerMatcher));
+
+      if (!docs.length) {
+        return res.status(400).json({
+          error: 'A mensagem não está no arquivo.'
+        });
+      }
+    }
+
+    if (action === 'pin') {
+      const alreadyPinned = await CondMsgMessage.find({
+        ativo: { $ne: false },
+        states: {
+          $elemMatch: {
+            mailbox_id: 'pessoal',
+            fixada_em: { $ne: null }
+          }
+        }
+      })
+        .select('states')
+        .lean()
+        .catch(() => []);
+
+      const pinnedCount = (alreadyPinned || []).filter(d => {
+        const st = findPersonalMessageState(d, ownerMatcher, { includeDeleted: false });
+        return !!(st?.fixada_em && !st?.lixeira_em);
+      }).length;
+
+      const willPin = docs.some(d => {
+        const st = findPersonalMessageState(d, ownerMatcher, { includeDeleted: false });
+        return !(st?.fixada_em);
+      });
+
+      if (willPin && pinnedCount >= 10) {
+        return res.status(400).json({
+          error: 'Limite de 10 mensagens fixadas atingido.'
+        });
+      }
+    }
+
+    const now = new Date();
+    let modified = 0;
+
+    for (const doc of docs) {
+      const changed = applyPersonalMessageStateAction(doc, scope, ownerMatcher, action, {
+        now,
+        fromFolder
+      });
+
+      if (!changed) continue;
+
+      try {
+        if (typeof doc.markModified === 'function') doc.markModified('states');
+      } catch {}
+
+      await doc.save();
+      modified++;
+    }
+
+    return res.json({
+      ok: true,
+      modified,
+      action
+    });
+  } catch (e) {
+    console.error('[mensagens][POST /api/msg/messages/actions] erro:', e);
+    return res.status(500).json({ error: 'Falha ao aplicar ação em mensagens' });
+  }
 });
 
 router.get('/messages/:id', async (req, res, next) => {
