@@ -722,6 +722,250 @@ function userCanSendFromMailbox(mailboxDoc, ctxUser) {
   );
 }
 
+function buildPersonalOwnerMatcher(scope, ownerCandidatesLower = []) {
+  const candidates = [];
+
+  const add = (value) => {
+    const s = String(value || '').trim().toLowerCase();
+    if (!s) return;
+    if (!candidates.includes(s)) candidates.push(s);
+  };
+
+  add(scope?.owner);
+  (ownerCandidatesLower || []).forEach(add);
+
+  const baseEmail = (() => {
+    for (const c of candidates) {
+      const base = ownerKeyBaseEmailLower(c) || normalizeEmailKey(c);
+      if (isEmailish(base)) return base;
+    }
+
+    return '';
+  })();
+
+  return {
+    candidates,
+    baseEmail,
+    matches(value) {
+      const raw = String(value || '').trim().toLowerCase();
+      if (!raw) return false;
+      if (candidates.includes(raw)) return true;
+
+      const base = ownerKeyBaseEmailLower(raw) || normalizeEmailKey(raw);
+      return !!(baseEmail && base && base === baseEmail);
+    }
+  };
+}
+
+function findPersonalMessageState(doc, ownerMatcher, { includeDeleted = false } = {}) {
+  const states = Array.isArray(doc?.states) ? doc.states : [];
+
+  const list = states.filter(s =>
+    String(s?.mailbox_id || '').trim() === 'pessoal'
+    && ownerMatcher.matches(s?.owner)
+  );
+
+  if (!includeDeleted) {
+    const active = list.filter(s => !s?.excluida_em);
+    const readOne = active.find(s => !!s?.lida_em);
+    return readOne || active[0] || null;
+  }
+
+  const readOne = list.find(s => !!s?.lida_em);
+  return readOne || list[0] || null;
+}
+
+function personalMessageDeletedForScope(doc, ownerMatcher) {
+  const states = Array.isArray(doc?.states) ? doc.states : [];
+
+  const scoped = states.filter(s =>
+    String(s?.mailbox_id || '').trim() === 'pessoal'
+    && ownerMatcher.matches(s?.owner)
+  );
+
+  return scoped.length > 0 && scoped.every(s => !!s?.excluida_em);
+}
+
+function isPersonalScopeSender(doc, ownerMatcher) {
+  try {
+    const fromMailboxId = String(doc?.from_mailbox_id || '').trim();
+    if (fromMailboxId !== 'pessoal') return false;
+
+    const fromOwner = String(doc?.from_owner || '').trim().toLowerCase();
+    if (fromOwner && ownerMatcher.matches(fromOwner)) return true;
+
+    const createdBy = String(doc?.createdBy || '').trim().toLowerCase();
+    return !!(createdBy && ownerMatcher.matches(createdBy));
+  } catch {
+    return false;
+  }
+}
+
+function hasPersonalScopeAsRecipient(doc, ownerMatcher) {
+  try {
+    const list = [
+      ...(Array.isArray(doc?.to) ? doc.to : []),
+      ...(Array.isArray(doc?.cc) ? doc.cc : [])
+    ];
+
+    return list.some(m => {
+      const type = String(m?.type || '').trim().toLowerCase();
+      if (type === 'mailbox') return false;
+
+      const email = String(m?.email || '').trim().toLowerCase();
+      return !!(email && ownerMatcher.matches(email));
+    });
+  } catch {
+    return false;
+  }
+}
+
+function hasPersonalStateAccess(doc, ownerMatcher) {
+  try {
+    const st = findPersonalMessageState(doc, ownerMatcher, { includeDeleted: false });
+    return !!st;
+  } catch {
+    return false;
+  }
+}
+
+function canAccessPersonalMessage(doc, ctxUser, scope, ownerMatcher) {
+  if (!doc) return false;
+  if (userCanScopeAll(ctxUser)) return true;
+  if (isPersonalScopeSender(doc, ownerMatcher)) return true;
+  if (hasPersonalScopeAsRecipient(doc, ownerMatcher)) return true;
+  if (hasPersonalStateAccess(doc, ownerMatcher)) return true;
+  return false;
+}
+
+function ensurePersonalMessageState(doc, scope, ownerMatcher) {
+  const existing = findPersonalMessageState(doc, ownerMatcher, { includeDeleted: true });
+  if (existing) return existing;
+
+  const owner = String(scope?.owner || '').trim().toLowerCase();
+
+  const st = {
+    mailbox_id: 'pessoal',
+    owner,
+    lida_em: null,
+    arquivada_em: null,
+    arquivada_de: '',
+    lixeira_em: null,
+    lixeira_de: '',
+    excluida_em: null,
+    fixada_em: null,
+    marcadores: []
+  };
+
+  if (!Array.isArray(doc.states)) doc.states = [];
+
+  try {
+    if (typeof doc.states.push === 'function') {
+      doc.states.push(st);
+      if (typeof doc.markModified === 'function') doc.markModified('states');
+      return doc.states[doc.states.length - 1];
+    }
+  } catch {
+    /* noop */
+  }
+
+  doc.states = [...doc.states, st];
+  try { if (typeof doc.markModified === 'function') doc.markModified('states'); } catch {}
+
+  return st;
+}
+
+function toMessageDetailItemPersonal(doc, scope, ownerMatcher, extra = {}) {
+  if (!doc) return null;
+
+  const st = findPersonalMessageState(doc, ownerMatcher, { includeDeleted: false });
+
+  const createdAt = inferDocCreatedAt(doc);
+
+  const listTo = Array.isArray(doc.to) ? doc.to : [];
+  const listCc = Array.isArray(doc.cc) ? doc.cc : [];
+
+  const isTo = listTo.some(m => {
+    const email = String(m?.email || '').trim().toLowerCase();
+    return !!(email && ownerMatcher.matches(email));
+  });
+
+  const isCc = listCc.some(m => {
+    const email = String(m?.email || '').trim().toLowerCase();
+    return !!(email && ownerMatcher.matches(email));
+  });
+
+  const fromMailboxId = String(doc.from_mailbox_id || '').trim();
+  const fromMailboxName = String(doc.from_mailbox_name || '').trim() || fromMailboxId;
+  const fromOwnerRaw = String(doc.from_owner || '').trim();
+  const fromOwner = fromOwnerRaw ? fromOwnerRaw.trim().toLowerCase() : '';
+
+  const baseFromOwnerEmail = ownerKeyBaseEmailLower(fromOwner) || '';
+  const fromOwnerEmail = baseFromOwnerEmail || (isEmailish(fromOwnerRaw) ? fromOwnerRaw.trim().toLowerCase() : '');
+
+  const createdByRaw = String(doc.createdBy || '').trim();
+  const createdByEmail = isEmailish(createdByRaw) ? createdByRaw.trim().toLowerCase() : '';
+
+  const extraEmail = isEmailish(extra?.senderEmail)
+    ? String(extra.senderEmail || '').trim().toLowerCase()
+    : '';
+
+  const fromEmail = fromOwnerEmail || createdByEmail || extraEmail;
+
+  const fromDisplay = fromMailboxId === 'pessoal'
+    ? (String(extra?.senderName || '').trim() || createdByRaw || fromOwnerRaw || 'Pessoal')
+    : fromMailboxName;
+
+  return {
+    id: String(doc._id || ''),
+    protocolo: String(doc.protocolo || '').trim(),
+    assunto: String(doc.assunto || '').trim(),
+    bodyHtml: String(doc.body_html || ''),
+    bodyText: String(doc.body_text || ''),
+    createdAt: createdAt || null,
+    copia: !!(isCc && !isTo),
+    from: {
+      mailboxId: fromMailboxId,
+      mailboxName: fromMailboxName,
+      owner: fromOwner,
+      email: fromEmail,
+      createdBy: createdByRaw,
+      display: fromDisplay
+    },
+    to: listTo.map(m => ({
+      type: String(m?.type || 'user').trim() || 'user',
+      email: String(m?.email || '').trim().toLowerCase(),
+      nome: String(m?.nome || m?.name || '').trim(),
+      name: String(m?.name || m?.nome || '').trim(),
+      display: String(m?.display || m?.nome || m?.name || m?.email || '').trim(),
+      mailboxId: String(m?.mailboxId || '').trim(),
+      mailboxName: String(m?.mailboxName || m?.name || m?.nome || '').trim()
+    })),
+    cc: listCc.map(m => ({
+      type: String(m?.type || 'user').trim() || 'user',
+      email: String(m?.email || '').trim().toLowerCase(),
+      nome: String(m?.nome || m?.name || '').trim(),
+      name: String(m?.name || m?.nome || '').trim(),
+      display: String(m?.display || m?.nome || m?.name || m?.email || '').trim(),
+      mailboxId: String(m?.mailboxId || '').trim(),
+      mailboxName: String(m?.mailboxName || m?.name || m?.nome || '').trim()
+    })),
+    anexos: Array.isArray(doc.anexos) ? doc.anexos.map(a => ({
+      nome: String(a?.nome || '').trim(),
+      mime: String(a?.mime || '').trim(),
+      tamanho: Number(a?.tamanho) || 0,
+      url: String(a?.url || '').trim(),
+      caminho: String(a?.caminho || '').trim()
+    })) : [],
+    lida: !!st?.lida_em,
+    fixada: !!st?.fixada_em,
+    marcadores: Array.isArray(st?.marcadores) ? st.marcadores : [],
+    threadRootId: doc.thread_root_id ? String(doc.thread_root_id) : '',
+    inReplyToId: doc.in_reply_to ? String(doc.in_reply_to) : '',
+    forwardedFromId: doc.forwarded_from_id ? String(doc.forwarded_from_id) : ''
+  };
+}
+
 router.get('/health', (req, res) => {
   return res.json({
     ok: true,
@@ -1340,6 +1584,213 @@ router.post('/messages', (req, res, next) => {
       });
     }
   });
+});
+
+router.get('/messages/:id', async (req, res, next) => {
+  try {
+    const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
+    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
+      || refLower.includes('/portal-morador');
+
+    // Portal continua na façade.
+    if (fromPortal) return next();
+
+    let ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || '').trim() || 'pessoal';
+
+    // Neste microcorte, só caixa pessoal.
+    if (mailboxId !== 'pessoal') return next();
+
+    if (mongoose.connection.readyState !== 1) {
+      const ok = await ensureMongoReady();
+
+      if (!ok) {
+        try { res.set('Retry-After', '5'); } catch {}
+        return res.status(503).json({ error: 'DB indisponível' });
+      }
+    }
+
+    const id = String(req.params?.id || '').trim();
+
+    if (!id || !mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: 'id inválido' });
+    }
+
+    const scope = resolvePersonalMessageScope(ctxUser, req);
+
+    if (!scope.owner) {
+      return res.status(400).json({ error: 'Usuário inválido para carregar mensagem.' });
+    }
+
+    const ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
+    const ownerMatcher = buildPersonalOwnerMatcher(scope, ownerCandidatesLower);
+
+    const doc = await CondMsgMessage.findOne({
+      _id: id,
+      ativo: { $ne: false }
+    }).lean();
+
+    if (!doc) return res.status(404).json({ error: 'Mensagem não encontrada' });
+
+    if (personalMessageDeletedForScope(doc, ownerMatcher)) {
+      return res.status(404).json({ error: 'Mensagem não encontrada' });
+    }
+
+    if (!canAccessPersonalMessage(doc, ctxUser, scope, ownerMatcher)) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    const item = toMessageDetailItemPersonal(doc, scope, ownerMatcher);
+
+    const rootId = doc.thread_root_id || doc._id;
+
+    const rawThread = await CondMsgMessage.find({
+      ativo: { $ne: false },
+      $or: [
+        { _id: rootId },
+        { thread_root_id: rootId }
+      ]
+    })
+      .sort({ createdAt: 1 })
+      .limit(220)
+      .lean();
+
+    const thread = (rawThread || [])
+      .filter(d => {
+        if (personalMessageDeletedForScope(d, ownerMatcher)) return false;
+        return canAccessPersonalMessage(d, ctxUser, scope, ownerMatcher);
+      })
+      .map(d => toMessageDetailItemPersonal(d, scope, ownerMatcher))
+      .filter(Boolean);
+
+    return res.json({
+      ok: true,
+      item,
+      thread
+    });
+  } catch (e) {
+    console.error('[mensagens][GET /api/msg/messages/:id] erro:', e);
+    return res.status(500).json({ error: 'Falha ao carregar mensagem' });
+  }
+});
+
+router.post('/messages/:id/read', express.json({ limit: '64kb' }), async (req, res, next) => {
+  try {
+    const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
+    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
+      || refLower.includes('/portal-morador');
+
+    // Portal continua na façade.
+    if (fromPortal) return next();
+
+    let ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    const mailboxId = String(
+      req.body?.mailboxId ||
+      req.body?.mailbox_id ||
+      req.query?.mailboxId ||
+      req.query?.mailbox_id ||
+      ''
+    ).trim() || 'pessoal';
+
+    // Neste microcorte, só caixa pessoal.
+    if (mailboxId !== 'pessoal') return next();
+
+    if (mongoose.connection.readyState !== 1) {
+      const ok = await ensureMongoReady();
+
+      if (!ok) {
+        try { res.set('Retry-After', '5'); } catch {}
+        return res.status(503).json({ error: 'DB indisponível' });
+      }
+    }
+
+    const id = String(req.params?.id || '').trim();
+
+    if (!id || !mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: 'id inválido' });
+    }
+
+    const scope = resolvePersonalMessageScope(ctxUser, req);
+
+    if (!scope.owner) {
+      return res.status(400).json({ error: 'Usuário inválido para marcar mensagem.' });
+    }
+
+    const ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
+    const ownerMatcher = buildPersonalOwnerMatcher(scope, ownerCandidatesLower);
+
+    const doc = await CondMsgMessage.findOne({
+      _id: id,
+      ativo: { $ne: false }
+    });
+
+    if (!doc) return res.status(404).json({ error: 'Mensagem não encontrada' });
+
+    if (personalMessageDeletedForScope(doc, ownerMatcher)) {
+      return res.status(404).json({ error: 'Mensagem não encontrada' });
+    }
+
+    if (!canAccessPersonalMessage(doc, ctxUser, scope, ownerMatcher)) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    const markThread = !!(
+      req.body?.thread ||
+      req.body?.markThread ||
+      req.body?.threadAll
+    );
+
+    const now = new Date();
+
+    const markOne = async (targetDoc) => {
+      if (!targetDoc) return false;
+
+      if (personalMessageDeletedForScope(targetDoc, ownerMatcher)) return false;
+      if (!canAccessPersonalMessage(targetDoc, ctxUser, scope, ownerMatcher)) return false;
+
+      const st = ensurePersonalMessageState(targetDoc, scope, ownerMatcher);
+      st.lida_em = st.lida_em || now;
+
+      try {
+        if (typeof targetDoc.markModified === 'function') targetDoc.markModified('states');
+      } catch {}
+
+      await targetDoc.save();
+      return true;
+    };
+
+    let marked = 0;
+
+    if (markThread) {
+      const rootId = doc.thread_root_id || doc._id;
+
+      const docs = await CondMsgMessage.find({
+        ativo: { $ne: false },
+        $or: [
+          { _id: rootId },
+          { thread_root_id: rootId }
+        ]
+      }).limit(220);
+
+      for (const d of (docs || [])) {
+        if (await markOne(d)) marked++;
+      }
+    } else {
+      if (await markOne(doc)) marked++;
+    }
+
+    return res.json({
+      ok: true,
+      marked
+    });
+  } catch (e) {
+    console.error('[mensagens][POST /api/msg/messages/:id/read] erro:', e);
+    return res.status(500).json({ error: 'Falha ao marcar mensagem como lida' });
+  }
 });
 
 router.get('/messages', async (req, res, next) => {
