@@ -1036,6 +1036,26 @@ function applyPersonalMessageStateAction(doc, scope, ownerMatcher, action, opts 
     return true;
   }
 
+  if (action === 'marker') {
+    const marker = normalizeMarkerName(opts?.marker);
+    if (!marker) return false;
+
+    const current = Array.isArray(st.marcadores)
+      ? st.marcadores.map(x => normalizeMarkerName(x)).filter(Boolean)
+      : [];
+
+    const markerLower = marker.toLowerCase();
+    const hasMarker = current.some(x => String(x || '').trim().toLowerCase() === markerLower);
+
+    if (hasMarker) {
+      st.marcadores = current.filter(x => String(x || '').trim().toLowerCase() !== markerLower);
+      return true;
+    }
+
+    st.marcadores = [...current, marker];
+    return true;
+  }
+
   return false;
 }
 
@@ -1689,11 +1709,20 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
       'delete',
       'pin',
       'unread',
-      'read'
+      'read',
+      'marker'
     ]);
 
     if (!action) return res.status(400).json({ error: 'action é obrigatório' });
     if (!allowedActions.has(action)) return res.status(400).json({ error: 'Ação inválida.' });
+
+    const marker = action === 'marker'
+      ? normalizeMarkerName(req.body?.marker)
+      : '';
+
+    if (action === 'marker' && !marker) {
+      return res.status(400).json({ error: 'Marcador inválido.' });
+    }
 
     const ids = Array.isArray(req.body?.ids)
       ? req.body.ids.map(x => String(x || '').trim()).filter(Boolean)
@@ -1858,13 +1887,36 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
       }
     }
 
+    if (action === 'marker') {
+      const markerLower = marker.toLowerCase();
+
+      const wouldExceedMarkerLimit = docs.some(d => {
+        const st = findPersonalMessageState(d, ownerMatcher, { includeDeleted: false });
+
+        const current = Array.isArray(st?.marcadores)
+          ? st.marcadores.map(x => normalizeMarkerName(x)).filter(Boolean)
+          : [];
+
+        const hasMarker = current.some(x => String(x || '').trim().toLowerCase() === markerLower);
+
+        return !hasMarker && current.length >= 3;
+      });
+
+      if (wouldExceedMarkerLimit) {
+        return res.status(400).json({
+          error: 'Limite de 3 marcadores por mensagem.'
+        });
+      }
+    }
+
     const now = new Date();
     let modified = 0;
 
-    for (const doc of docs) {
+      for (const doc of docs) {
       const changed = applyPersonalMessageStateAction(doc, scope, ownerMatcher, action, {
         now,
-        fromFolder
+        fromFolder,
+        marker
       });
 
       if (!changed) continue;
