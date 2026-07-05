@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import express from 'express';
 import multer from 'multer';
-import { put } from '@vercel/blob';
+import { put, del } from '@vercel/blob';
 
 import CondMsgGroup from '#models/cond_msg_group.js';
 import CondMsgMailbox from '#models/cond_msg_mailbox.js';
@@ -46,6 +46,36 @@ function safeUploadName(name) {
     .slice(0, 120);
 
   return cleaned || 'arquivo';
+}
+
+async function cleanupMsgBlobAttachments(anexos, token = '') {
+  if (!Array.isArray(anexos) || !anexos.length) return;
+
+  const targets = [];
+
+  for (const a of anexos) {
+    const caminho = String(a?.caminho || '').trim();
+    const url = String(a?.url || '').trim();
+
+    if (caminho) targets.push(caminho);
+    else if (url) targets.push(url);
+  }
+
+  const uniqueTargets = Array.from(new Set(targets.filter(Boolean)));
+  if (!uniqueTargets.length) return;
+
+  for (const target of uniqueTargets) {
+    try {
+      await del(target, {
+        ...(token ? { token } : {})
+      });
+    } catch (e) {
+      console.warn('[mensagens][blob cleanup] falha ao remover anexo:', {
+        target,
+        error: e?.message || String(e)
+      });
+    }
+  }
 }
 
 function getCtxUser(req) {
@@ -796,6 +826,13 @@ function personalMessageDeletedForScope(doc, ownerMatcher) {
   );
 
   return scoped.length > 0 && scoped.every(s => !!s?.excluida_em);
+}
+
+function allMessageStatesDeleted(doc) {
+  const states = Array.isArray(doc?.states) ? doc.states : [];
+  if (!states.length) return false;
+
+  return states.every(s => !!s?.excluida_em);
 }
 
 function isPersonalScopeSender(doc, ownerMatcher) {
@@ -1978,6 +2015,11 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
     const now = new Date();
     let modified = 0;
 
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN
+      || process.env.WDGESTOR_DB_DADOS_READ_WRITE_TOKEN
+      || process.env.VERCEL_BLOB_RW_TOKEN
+      || '';
+
     for (const doc of docs) {
       const changed = applyPersonalMessageStateAction(doc, scope, ownerMatcher, action, {
         now,
@@ -1992,6 +2034,15 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
       } catch {}
 
       await doc.save();
+
+      if (
+        action === 'delete'
+        && process.env.ENABLE_DELETE_OLD_BLOB === '1'
+        && allMessageStatesDeleted(doc)
+      ) {
+        await cleanupMsgBlobAttachments(doc.anexos, blobToken);
+      }
+
       modified++;
     }
 
