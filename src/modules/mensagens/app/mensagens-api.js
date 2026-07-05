@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import express from 'express';
 import multer from 'multer';
+import { put } from '@vercel/blob';
 
 import CondMsgGroup from '#models/cond_msg_group.js';
 import CondMsgMailbox from '#models/cond_msg_mailbox.js';
@@ -35,6 +36,17 @@ const mensagensUpload = multer({
     fieldSize: 2 * 1024 * 1024
   }
 });
+
+function safeUploadName(name) {
+  const raw = String(name || 'arquivo').trim() || 'arquivo';
+
+  const cleaned = raw
+    .replace(/\s+/g, '_')
+    .replace(/[^a-zA-Z0-9._-]/g, '_')
+    .slice(0, 120);
+
+  return cleaned || 'arquivo';
+}
 
 function getCtxUser(req) {
   try {
@@ -1457,13 +1469,6 @@ router.post('/messages', (req, res, next) => {
 
       const files = Array.isArray(req.files) ? req.files : [];
 
-      // Microcorte atual: parseia FormData, mas ainda não persiste anexos.
-      if (files.length) {
-        return res.status(400).json({
-          error: 'Envio com anexo ainda não foi migrado para o módulo Mensagens.'
-        });
-      }
-
       const fromMailboxId = String(payload?.fromMailboxId || payload?.from_mailbox_id || '').trim() || 'pessoal';
       const assunto = String(payload?.assunto || payload?.subject || '').trim();
       const bodyHtml = String(payload?.bodyHtml || payload?.body_html || '').trim();
@@ -1656,6 +1661,70 @@ router.post('/messages', (req, res, next) => {
         });
       }
 
+      if (files.length) {
+        const blobToken = process.env.BLOB_READ_WRITE_TOKEN
+          || process.env.WDGESTOR_DB_DADOS_READ_WRITE_TOKEN
+          || process.env.VERCEL_BLOB_RW_TOKEN
+          || '';
+
+        const inVercel = !!process.env.VERCEL;
+
+        if (!(inVercel || blobToken)) {
+          return res.status(400).json({
+            error: 'Anexos exigem Vercel Blob. Configure BLOB_READ_WRITE_TOKEN (ou VERCEL_BLOB_RW_TOKEN) no ambiente.'
+          });
+        }
+
+        const saved = [];
+
+        try {
+          for (const f of files.slice(0, 15)) {
+            const original = String(f?.originalname || 'arquivo');
+            const safeName = safeUploadName(original);
+            const mime = String(f?.mimetype || 'application/octet-stream');
+            const size = Number(f?.size) || 0;
+            const buf = f?.buffer;
+
+            if (!buf || !buf.length) continue;
+
+            const key = `msg/${String(unidadeId || 'pessoal')}/${protocolo}/${Date.now()}_${safeName}`;
+
+            const uploaded = await put(key, buf, {
+              access: 'public',
+              contentType: mime,
+              cacheControl: 'public, max-age=31536000, immutable',
+              ...(blobToken ? { token: blobToken } : {})
+            });
+
+            const caminho = String(uploaded?.pathname || uploaded?.path || key || '').trim();
+
+            saved.push({
+              nome: original,
+              mime,
+              tamanho: size,
+              url: String(uploaded?.url || '').trim(),
+              caminho
+            });
+          }
+        } catch (e) {
+          console.error('[mensagens][POST /api/msg/messages] upload anexos erro:', e);
+
+          return res.status(500).json({
+            error: 'Falha ao salvar anexos da mensagem.'
+          });
+        }
+
+        if (saved.length) {
+          doc.anexos = saved;
+
+          try {
+            if (typeof doc.markModified === 'function') doc.markModified('anexos');
+          } catch {}
+
+          await doc.save();
+        }
+      }
+
       return res.status(201).json({
         ok: true,
         id: String(doc._id || ''),
@@ -1697,9 +1766,6 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
     if (mailboxId !== 'pessoal') return next();
 
     const action = String(req.body?.action || '').trim().toLowerCase();
-
-    // Marcadores ficam para outro microcorte. Deixa a façade antiga responder.
-    if (action === 'marker') return next();
 
     const allowedActions = new Set([
       'archive',
@@ -1912,7 +1978,7 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
     const now = new Date();
     let modified = 0;
 
-      for (const doc of docs) {
+    for (const doc of docs) {
       const changed = applyPersonalMessageStateAction(doc, scope, ownerMatcher, action, {
         now,
         fromFolder,
