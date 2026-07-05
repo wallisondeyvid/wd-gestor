@@ -764,6 +764,45 @@ function userCanSendFromMailbox(mailboxDoc, ctxUser) {
   );
 }
 
+async function loadMsgMailboxForSignature(mailboxId, ctxUser) {
+  const id = String(mailboxId || '').trim();
+
+  if (!id || !mongoose.isValidObjectId(id)) {
+    const err = new Error('Caixa inválida.');
+    err.status = 400;
+    throw err;
+  }
+
+  const mailbox = await CondMsgMailbox.findOne({
+    _id: id,
+    ativo: { $ne: false }
+  });
+
+  if (!mailbox) {
+    const err = new Error('Caixa não encontrada.');
+    err.status = 404;
+    throw err;
+  }
+
+  if (userCanScopeAll(ctxUser)) return mailbox;
+
+  const perms = mailboxGetUserPerms(mailbox, ctxUser);
+
+  const allowed = !!(
+    perms?.administrar ||
+    perms?.criarMensagem ||
+    mailboxIsMember(mailbox, ctxUser)
+  );
+
+  if (!allowed) {
+    const err = new Error('Sem permissão para configurar assinatura desta caixa.');
+    err.status = 403;
+    throw err;
+  }
+
+  return mailbox;
+}
+
 function buildPersonalOwnerMatcher(scope, ownerCandidatesLower = []) {
   const candidates = [];
 
@@ -1132,28 +1171,36 @@ router.get('/signature', async (req, res, next) => {
     const mailboxIdRaw = String(req.query.mailboxId || req.query.mailbox_id || '').trim();
     const mailboxId = mailboxIdRaw || 'pessoal';
 
-    // Neste microcorte, só migramos a assinatura da caixa pessoal.
-    // As assinaturas de caixas compartilhadas ainda caem na façade do Condomínios.
-    if (mailboxId !== 'pessoal') return next();
+    let doc = null;
 
-    const signatureContext = preparePersonalSignatureContext({
-      ctxUser,
-      req,
-      mailboxId
-    });
+    if (mailboxId === 'pessoal') {
+      const signatureContext = preparePersonalSignatureContext({
+        ctxUser,
+        req,
+        mailboxId
+      });
 
-    const { owner, baseEmail } = signatureContext;
-    if (!owner) return res.status(400).json({ error: 'Usuário inválido' });
+      const { owner, baseEmail } = signatureContext;
+      if (!owner) return res.status(400).json({ error: 'Usuário inválido' });
 
-    let doc = await CondMsgSignaturePref.findOne({
-      owner,
-      mailbox_id: 'pessoal'
-    }).lean();
-
-    if (!doc && baseEmail && baseEmail !== owner) {
       doc = await CondMsgSignaturePref.findOne({
-        owner: baseEmail,
+        owner,
         mailbox_id: 'pessoal'
+      }).lean();
+
+      if (!doc && baseEmail && baseEmail !== owner) {
+        doc = await CondMsgSignaturePref.findOne({
+          owner: baseEmail,
+          mailbox_id: 'pessoal'
+        }).lean();
+      }
+    } else {
+      const mailbox = await loadMsgMailboxForSignature(mailboxId, ctxUser);
+      const sharedMailboxId = String(mailbox?._id || mailboxId);
+
+      doc = await CondMsgSignaturePref.findOne({
+        owner: sharedMailboxId,
+        mailbox_id: sharedMailboxId
       }).lean();
     }
 
@@ -1195,24 +1242,6 @@ router.put('/signature', express.json({ limit: '64kb' }), async (req, res, next)
 
     const mailboxId = mailboxIdRaw || 'pessoal';
 
-    // Neste microcorte, só migramos a assinatura da caixa pessoal.
-    // Assinaturas de caixas compartilhadas continuam caindo na façade do Condomínios.
-    if (mailboxId !== 'pessoal') return next();
-
-    const signatureContext = preparePersonalSignatureContext({
-      ctxUser,
-      req,
-      mailboxId
-    });
-
-    const {
-      owner,
-      canonicalOwner,
-      cleanupOwnerKeys
-    } = signatureContext;
-
-    if (!owner) return res.status(400).json({ error: 'Usuário inválido' });
-
     const enabled = !!(req.body?.enabled ?? req.body?.assinaturaAtiva ?? req.body?.signatureEnabled);
     const text = normalizeSignaturePrefText(
       req.body?.text ??
@@ -1220,39 +1249,78 @@ router.put('/signature', express.json({ limit: '64kb' }), async (req, res, next)
       req.body?.signatureText
     );
 
-    const updated = await CondMsgSignaturePref.findOneAndUpdate(
-      {
-        owner: String(canonicalOwner).toLowerCase(),
-        mailbox_id: 'pessoal'
-      },
-      {
-        $set: {
-          enabled,
-          text
+    let updated = null;
+
+    if (mailboxId === 'pessoal') {
+      const signatureContext = preparePersonalSignatureContext({
+        ctxUser,
+        req,
+        mailboxId
+      });
+
+      const {
+        owner,
+        canonicalOwner,
+        cleanupOwnerKeys
+      } = signatureContext;
+
+      if (!owner) return res.status(400).json({ error: 'Usuário inválido' });
+
+      updated = await CondMsgSignaturePref.findOneAndUpdate(
+        {
+          owner: String(canonicalOwner).toLowerCase(),
+          mailbox_id: 'pessoal'
+        },
+        {
+          $set: {
+            enabled,
+            text
+          }
+        },
+        {
+          upsert: true,
+          new: true,
+          setDefaultsOnInsert: true
         }
-      },
-      {
-        upsert: true,
-        new: true,
-        setDefaultsOnInsert: true
-      }
-    ).lean();
+      ).lean();
 
-    const duplicateOwners = Array.from(new Set([
-      ...(Array.isArray(cleanupOwnerKeys) ? cleanupOwnerKeys : []),
-      ...(canonicalOwner && canonicalOwner !== owner ? [owner] : [])
-    ].filter(Boolean)));
+      const duplicateOwners = Array.from(new Set([
+        ...(Array.isArray(cleanupOwnerKeys) ? cleanupOwnerKeys : []),
+        ...(canonicalOwner && canonicalOwner !== owner ? [owner] : [])
+      ].filter(Boolean)));
 
-    if (duplicateOwners.length) {
-      try {
-        await CondMsgSignaturePref.deleteMany({
-          mailbox_id: 'pessoal',
-          owner: { $in: duplicateOwners },
-          _id: { $ne: updated?._id }
-        });
-      } catch {
-        /* noop */
+      if (duplicateOwners.length) {
+        try {
+          await CondMsgSignaturePref.deleteMany({
+            mailbox_id: 'pessoal',
+            owner: { $in: duplicateOwners },
+            _id: { $ne: updated?._id }
+          });
+        } catch {
+          /* noop */
+        }
       }
+    } else {
+      const mailbox = await loadMsgMailboxForSignature(mailboxId, ctxUser);
+      const sharedMailboxId = String(mailbox?._id || mailboxId);
+
+      updated = await CondMsgSignaturePref.findOneAndUpdate(
+        {
+          owner: sharedMailboxId,
+          mailbox_id: sharedMailboxId
+        },
+        {
+          $set: {
+            enabled,
+            text
+          }
+        },
+        {
+          upsert: true,
+          new: true,
+          setDefaultsOnInsert: true
+        }
+      ).lean();
     }
 
     return res.json({
