@@ -1352,12 +1352,21 @@ router.get('/groups', async (req, res, next) => {
     const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || '').trim();
     if (!mailboxId) return res.status(400).json({ error: 'mailboxId é obrigatório' });
 
-    // Neste microcorte, só migramos grupos da caixa pessoal.
-    // Grupos de caixas compartilhadas continuam caindo na façade do Condomínios.
-    if (mailboxId !== 'pessoal') return next();
+    let filter = null;
 
-    const compat = buildPersonalGroupOwnerCompat(ctxUser, req);
-    const filter = compat.buildFilter();
+    if (mailboxId === 'pessoal') {
+      const compat = buildPersonalGroupOwnerCompat(ctxUser, req);
+      filter = compat.buildFilter();
+    } else {
+      const mailbox = await loadMsgMailboxForSignature(mailboxId, ctxUser);
+      const sharedMailboxId = String(mailbox?._id || mailboxId);
+
+      filter = {
+        mailbox_id: sharedMailboxId,
+        owner: '',
+        ativo: { $ne: false }
+      };
+    }
 
     const docs = await CondMsgGroup.find(filter)
       .sort({ name: 1, createdAt: -1 })
@@ -1392,27 +1401,34 @@ router.post('/groups', express.json({ limit: '2mb' }), async (req, res, next) =>
     if (!mailboxId) return res.status(400).json({ error: 'mailboxId é obrigatório' });
     if (!name) return res.status(400).json({ error: 'name é obrigatório' });
 
-    // Neste microcorte, só migramos criação de grupos da caixa pessoal.
-    // Grupos de caixas compartilhadas continuam caindo na façade do Condomínios.
-    if (mailboxId !== 'pessoal') return next();
-
-    const owner = String(getMsgOwnerKey(ctxUser, req) || '').trim().toLowerCase();
-
-    if (!owner) {
-      return res.status(400).json({
-        error: 'Usuário inválido'
-      });
-    }
-
+    let targetMailboxId = 'pessoal';
+    let owner = '';
     let unidadeId = null;
-    const uid = getUserUnidadeId(ctxUser);
-    if (uid && mongoose.isValidObjectId(uid)) unidadeId = uid;
+
+    if (mailboxId === 'pessoal') {
+      owner = String(getMsgOwnerKey(ctxUser, req) || '').trim().toLowerCase();
+
+      if (!owner) {
+        return res.status(400).json({
+          error: 'Usuário inválido'
+        });
+      }
+
+      const uid = getUserUnidadeId(ctxUser);
+      if (uid && mongoose.isValidObjectId(uid)) unidadeId = uid;
+    } else {
+      const mailbox = await loadMsgMailboxForSignature(mailboxId, ctxUser);
+
+      targetMailboxId = String(mailbox?._id || mailboxId);
+      owner = '';
+      unidadeId = mailbox?.unidade_id || null;
+    }
 
     const createdBy = getMsgOwnerKey(ctxUser, req) || String(ctxUser?.nome || ctxUser?.name || '').trim();
     const members = sanitizeGroupMembers(req.body?.members);
 
     const doc = await CondMsgGroup.create({
-      mailbox_id: 'pessoal',
+      mailbox_id: targetMailboxId,
       owner,
       name,
       members,
@@ -1456,16 +1472,16 @@ router.patch('/groups/:id', express.json({ limit: '2mb' }), async (req, res, nex
 
     const mailboxId = String(doc.mailbox_id || '').trim();
 
-    // Neste microcorte, só migramos edição de grupos da caixa pessoal.
-    // Grupos de caixas compartilhadas continuam caindo na façade do Condomínios.
-    if (mailboxId !== 'pessoal') return next();
+    if (mailboxId === 'pessoal') {
+      const admin = userCanScopeAll(ctxUser);
+      const compat = buildPersonalGroupOwnerCompat(ctxUser, req);
+      const ok = compat.matchesDocOwner(doc.owner);
 
-    const admin = userCanScopeAll(ctxUser);
-    const compat = buildPersonalGroupOwnerCompat(ctxUser, req);
-    const ok = compat.matchesDocOwner(doc.owner);
-
-    if (!admin && !ok) {
-      return res.status(403).json({ error: 'Acesso negado' });
+      if (!admin && !ok) {
+        return res.status(403).json({ error: 'Acesso negado' });
+      }
+    } else {
+      await loadMsgMailboxForSignature(mailboxId, ctxUser);
     }
 
     if (req.body && (req.body.name != null || req.body.nome != null)) {
@@ -1515,16 +1531,16 @@ router.delete('/groups/:id', async (req, res, next) => {
 
     const mailboxId = String(doc.mailbox_id || '').trim();
 
-    // Neste microcorte, só migramos exclusão de grupos da caixa pessoal.
-    // Grupos de caixas compartilhadas continuam caindo na façade do Condomínios.
-    if (mailboxId !== 'pessoal') return next();
+    if (mailboxId === 'pessoal') {
+      const admin = userCanScopeAll(ctxUser);
+      const compat = buildPersonalGroupOwnerCompat(ctxUser, req);
+      const ok = compat.matchesDocOwner(doc.owner);
 
-    const admin = userCanScopeAll(ctxUser);
-    const compat = buildPersonalGroupOwnerCompat(ctxUser, req);
-    const ok = compat.matchesDocOwner(doc.owner);
-
-    if (!admin && !ok) {
-      return res.status(403).json({ error: 'Acesso negado' });
+      if (!admin && !ok) {
+        return res.status(403).json({ error: 'Acesso negado' });
+      }
+    } else {
+      await loadMsgMailboxForSignature(mailboxId, ctxUser);
     }
 
     doc.ativo = false;
