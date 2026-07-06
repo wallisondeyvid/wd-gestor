@@ -1054,6 +1054,196 @@ function toMessageDetailItemPersonal(doc, scope, ownerMatcher, extra = {}) {
   };
 }
 
+function findMessageStateForScope(doc, scope, ownerMatcher, { includeDeleted = false } = {}) {
+  const states = Array.isArray(doc?.states) ? doc.states : [];
+  const mailboxId = String(scope?.mailboxId || '').trim() || 'pessoal';
+  const owner = String(scope?.owner || '').trim().toLowerCase();
+
+  const list = states.filter(s => {
+    const stateMailboxId = String(s?.mailbox_id || '').trim();
+    const stateOwner = String(s?.owner || '').trim().toLowerCase();
+
+    if (stateMailboxId !== mailboxId) return false;
+
+    if (mailboxId === 'pessoal') {
+      return ownerMatcher && ownerMatcher.matches(stateOwner);
+    }
+
+    return stateOwner === owner;
+  });
+
+  if (!includeDeleted) {
+    const active = list.filter(s => !s?.excluida_em);
+    const readOne = active.find(s => !!s?.lida_em);
+    return readOne || active[0] || null;
+  }
+
+  const readOne = list.find(s => !!s?.lida_em);
+  return readOne || list[0] || null;
+}
+
+function messageDeletedForScope(doc, scope, ownerMatcher) {
+  const states = Array.isArray(doc?.states) ? doc.states : [];
+  const mailboxId = String(scope?.mailboxId || '').trim() || 'pessoal';
+  const owner = String(scope?.owner || '').trim().toLowerCase();
+
+  const scoped = states.filter(s => {
+    const stateMailboxId = String(s?.mailbox_id || '').trim();
+    const stateOwner = String(s?.owner || '').trim().toLowerCase();
+
+    if (stateMailboxId !== mailboxId) return false;
+
+    if (mailboxId === 'pessoal') {
+      return ownerMatcher && ownerMatcher.matches(stateOwner);
+    }
+
+    return stateOwner === owner;
+  });
+
+  return scoped.length > 0 && scoped.every(s => !!s?.excluida_em);
+}
+
+function isMessageSenderForScope(doc, scope, ownerMatcher) {
+  try {
+    const mailboxId = String(scope?.mailboxId || '').trim() || 'pessoal';
+    const fromMailboxId = String(doc?.from_mailbox_id || '').trim();
+
+    if (fromMailboxId !== mailboxId) return false;
+
+    if (mailboxId !== 'pessoal') return true;
+
+    const fromOwner = String(doc?.from_owner || '').trim().toLowerCase();
+    if (fromOwner && ownerMatcher && ownerMatcher.matches(fromOwner)) return true;
+
+    const createdBy = String(doc?.createdBy || '').trim().toLowerCase();
+    return !!(createdBy && ownerMatcher && ownerMatcher.matches(createdBy));
+  } catch {
+    return false;
+  }
+}
+
+function hasMessageRecipientForScope(doc, scope, ownerMatcher) {
+  try {
+    const mailboxId = String(scope?.mailboxId || '').trim() || 'pessoal';
+
+    const list = [
+      ...(Array.isArray(doc?.to) ? doc.to : []),
+      ...(Array.isArray(doc?.cc) ? doc.cc : [])
+    ];
+
+    return list.some(m => {
+      const type = String(m?.type || '').trim().toLowerCase();
+
+      if (mailboxId !== 'pessoal') {
+        const mb = String(m?.mailboxId || m?.mailbox_id || '').trim();
+        return type === 'mailbox' && mb === mailboxId;
+      }
+
+      if (type === 'mailbox') return false;
+
+      const email = String(m?.email || '').trim().toLowerCase();
+      return !!(email && ownerMatcher && ownerMatcher.matches(email));
+    });
+  } catch {
+    return false;
+  }
+}
+
+function canAccessMessageForScope(doc, ctxUser, scope, ownerMatcher) {
+  if (!doc) return false;
+  if (userCanScopeAll(ctxUser)) return true;
+  if (isMessageSenderForScope(doc, scope, ownerMatcher)) return true;
+  if (hasMessageRecipientForScope(doc, scope, ownerMatcher)) return true;
+
+  const st = findMessageStateForScope(doc, scope, ownerMatcher, { includeDeleted: false });
+  if (st) return true;
+
+  return false;
+}
+
+function toMessageDetailItemScoped(doc, scope, ownerMatcher, extra = {}) {
+  const mailboxId = String(scope?.mailboxId || '').trim() || 'pessoal';
+
+  if (mailboxId === 'pessoal') {
+    return toMessageDetailItemPersonal(doc, scope, ownerMatcher, extra);
+  }
+
+  if (!doc) return null;
+
+  const st = findMessageStateForScope(doc, scope, ownerMatcher, { includeDeleted: false });
+  const createdAt = inferDocCreatedAt(doc);
+
+  const listTo = Array.isArray(doc.to) ? doc.to : [];
+  const listCc = Array.isArray(doc.cc) ? doc.cc : [];
+
+  const fromMailboxId = String(doc.from_mailbox_id || '').trim();
+  const fromMailboxName = String(doc.from_mailbox_name || '').trim() || fromMailboxId;
+  const fromOwnerRaw = String(doc.from_owner || '').trim();
+  const fromOwner = fromOwnerRaw ? fromOwnerRaw.trim().toLowerCase() : '';
+
+  const fromDisplay = fromMailboxId === 'pessoal'
+    ? (String(extra?.senderName || '').trim() || String(doc.createdBy || '').trim() || fromOwnerRaw || 'Pessoal')
+    : fromMailboxName;
+
+  const mailboxRecipientMatches = (m) => {
+    const type = String(m?.type || '').trim().toLowerCase();
+    const mb = String(m?.mailboxId || m?.mailbox_id || '').trim();
+    return type === 'mailbox' && mb === mailboxId;
+  };
+
+  const isTo = listTo.some(mailboxRecipientMatches);
+  const isCc = listCc.some(mailboxRecipientMatches);
+
+  return {
+    id: String(doc._id || ''),
+    protocolo: String(doc.protocolo || '').trim(),
+    assunto: String(doc.assunto || '').trim(),
+    bodyHtml: String(doc.body_html || ''),
+    bodyText: String(doc.body_text || ''),
+    createdAt: createdAt || null,
+    copia: !!(isCc && !isTo),
+    from: {
+      mailboxId: fromMailboxId,
+      mailboxName: fromMailboxName,
+      owner: fromOwner,
+      email: String(extra?.senderEmail || '').trim().toLowerCase(),
+      createdBy: String(doc.createdBy || '').trim(),
+      display: fromDisplay
+    },
+    to: listTo.map(m => ({
+      type: String(m?.type || 'user').trim() || 'user',
+      email: String(m?.email || '').trim().toLowerCase(),
+      nome: String(m?.nome || m?.name || '').trim(),
+      name: String(m?.name || m?.nome || '').trim(),
+      display: String(m?.display || m?.nome || m?.name || m?.email || '').trim(),
+      mailboxId: String(m?.mailboxId || '').trim(),
+      mailboxName: String(m?.mailboxName || m?.name || m?.nome || '').trim()
+    })),
+    cc: listCc.map(m => ({
+      type: String(m?.type || 'user').trim() || 'user',
+      email: String(m?.email || '').trim().toLowerCase(),
+      nome: String(m?.nome || m?.name || '').trim(),
+      name: String(m?.name || m?.nome || '').trim(),
+      display: String(m?.display || m?.nome || m?.name || m?.email || '').trim(),
+      mailboxId: String(m?.mailboxId || '').trim(),
+      mailboxName: String(m?.mailboxName || m?.name || m?.nome || '').trim()
+    })),
+    anexos: Array.isArray(doc.anexos) ? doc.anexos.map(a => ({
+      nome: String(a?.nome || '').trim(),
+      mime: String(a?.mime || '').trim(),
+      tamanho: Number(a?.tamanho) || 0,
+      url: String(a?.url || '').trim(),
+      caminho: String(a?.caminho || '').trim()
+    })) : [],
+    lida: !!st?.lida_em,
+    fixada: !!st?.fixada_em,
+    marcadores: Array.isArray(st?.marcadores) ? st.marcadores : [],
+    threadRootId: doc.thread_root_id ? String(doc.thread_root_id) : '',
+    inReplyToId: doc.in_reply_to ? String(doc.in_reply_to) : '',
+    forwardedFromId: doc.forwarded_from_id ? String(doc.forwarded_from_id) : ''
+  };
+}
+
 function rootIdForMessageAction(doc) {
   const raw = String(doc?.thread_root_id || doc?._id || '').trim();
   return raw && mongoose.isValidObjectId(raw) ? raw : '';
@@ -2155,9 +2345,6 @@ router.get('/messages/:id', async (req, res, next) => {
 
     const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || '').trim() || 'pessoal';
 
-    // Neste microcorte, só caixa pessoal.
-    if (mailboxId !== 'pessoal') return next();
-
     if (mongoose.connection.readyState !== 1) {
       const ok = await ensureMongoReady();
 
@@ -2173,14 +2360,28 @@ router.get('/messages/:id', async (req, res, next) => {
       return res.status(400).json({ error: 'id inválido' });
     }
 
-    const scope = resolvePersonalMessageScope(ctxUser, req);
+    let scope = null;
+    let ownerMatcher = null;
 
-    if (!scope.owner) {
-      return res.status(400).json({ error: 'Usuário inválido para carregar mensagem.' });
+    if (mailboxId === 'pessoal') {
+      scope = resolvePersonalMessageScope(ctxUser, req);
+
+      if (!scope.owner) {
+        return res.status(400).json({ error: 'Usuário inválido para carregar mensagem.' });
+      }
+
+      const ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
+      ownerMatcher = buildPersonalOwnerMatcher(scope, ownerCandidatesLower);
+    } else {
+      const mailbox = await loadMsgMailboxForSignature(mailboxId, ctxUser);
+
+      scope = {
+        mailboxId: String(mailbox?._id || mailboxId),
+        owner: ''
+      };
+
+      ownerMatcher = null;
     }
-
-    const ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
-    const ownerMatcher = buildPersonalOwnerMatcher(scope, ownerCandidatesLower);
 
     const doc = await CondMsgMessage.findOne({
       _id: id,
@@ -2189,15 +2390,15 @@ router.get('/messages/:id', async (req, res, next) => {
 
     if (!doc) return res.status(404).json({ error: 'Mensagem não encontrada' });
 
-    if (personalMessageDeletedForScope(doc, ownerMatcher)) {
+    if (messageDeletedForScope(doc, scope, ownerMatcher)) {
       return res.status(404).json({ error: 'Mensagem não encontrada' });
     }
 
-    if (!canAccessPersonalMessage(doc, ctxUser, scope, ownerMatcher)) {
+    if (!canAccessMessageForScope(doc, ctxUser, scope, ownerMatcher)) {
       return res.status(403).json({ error: 'Acesso negado' });
     }
 
-    const item = toMessageDetailItemPersonal(doc, scope, ownerMatcher);
+    const item = toMessageDetailItemScoped(doc, scope, ownerMatcher);
 
     const rootId = doc.thread_root_id || doc._id;
 
@@ -2214,10 +2415,10 @@ router.get('/messages/:id', async (req, res, next) => {
 
     const thread = (rawThread || [])
       .filter(d => {
-        if (personalMessageDeletedForScope(d, ownerMatcher)) return false;
-        return canAccessPersonalMessage(d, ctxUser, scope, ownerMatcher);
+        if (messageDeletedForScope(d, scope, ownerMatcher)) return false;
+        return canAccessMessageForScope(d, ctxUser, scope, ownerMatcher);
       })
-      .map(d => toMessageDetailItemPersonal(d, scope, ownerMatcher))
+      .map(d => toMessageDetailItemScoped(d, scope, ownerMatcher))
       .filter(Boolean);
 
     return res.json({
