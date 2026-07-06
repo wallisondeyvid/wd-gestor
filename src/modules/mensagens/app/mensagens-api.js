@@ -1202,6 +1202,94 @@ function ensureMessageStateForScope(doc, scope, ownerMatcher) {
   return st;
 }
 
+function isMessageInTrashForScope(doc, scope, ownerMatcher) {
+  const st = findMessageStateForScope(doc, scope, ownerMatcher, { includeDeleted: false });
+  return !!st?.lixeira_em;
+}
+
+function isMessageArchivedForScope(doc, scope, ownerMatcher) {
+  const st = findMessageStateForScope(doc, scope, ownerMatcher, { includeDeleted: false });
+  return !!(st?.arquivada_em && !st?.lixeira_em);
+}
+
+function applyMessageStateAction(doc, scope, ownerMatcher, action, opts = {}) {
+  const st = ensureMessageStateForScope(doc, scope, ownerMatcher);
+  const now = opts?.now instanceof Date ? opts.now : new Date();
+
+  if (action === 'archive') {
+    st.arquivada_em = now;
+    st.arquivada_de = String(opts?.fromFolder || '').trim() || 'entrada';
+    st.lixeira_em = null;
+    st.lixeira_de = '';
+    st.fixada_em = null;
+    return true;
+  }
+
+  if (action === 'unarchive') {
+    st.arquivada_em = null;
+    st.arquivada_de = '';
+    return true;
+  }
+
+  if (action === 'trash') {
+    st.lixeira_em = now;
+    st.lixeira_de = String(opts?.fromFolder || '').trim() || 'entrada';
+    st.arquivada_em = null;
+    st.arquivada_de = '';
+    st.fixada_em = null;
+    return true;
+  }
+
+  if (action === 'restore') {
+    st.lixeira_em = null;
+    st.lixeira_de = '';
+    return true;
+  }
+
+  if (action === 'delete') {
+    st.excluida_em = now;
+    st.fixada_em = null;
+    return true;
+  }
+
+  if (action === 'pin') {
+    st.fixada_em = st.fixada_em ? null : now;
+    return true;
+  }
+
+  if (action === 'unread') {
+    st.lida_em = null;
+    return true;
+  }
+
+  if (action === 'read') {
+    st.lida_em = st.lida_em || now;
+    return true;
+  }
+
+  if (action === 'marker') {
+    const marker = normalizeMarkerName(opts?.marker);
+    if (!marker) return false;
+
+    const current = Array.isArray(st.marcadores)
+      ? st.marcadores.map(x => normalizeMarkerName(x)).filter(Boolean)
+      : [];
+
+    const markerLower = marker.toLowerCase();
+    const hasMarker = current.some(x => String(x || '').trim().toLowerCase() === markerLower);
+
+    if (hasMarker) {
+      st.marcadores = current.filter(x => String(x || '').trim().toLowerCase() !== markerLower);
+      return true;
+    }
+
+    st.marcadores = [...current, marker];
+    return true;
+  }
+
+  return false;
+}
+
 function toMessageDetailItemScoped(doc, scope, ownerMatcher, extra = {}) {
   const mailboxId = String(scope?.mailboxId || '').trim() || 'pessoal';
 
@@ -2114,9 +2202,6 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
 
     const mailboxId = String(req.body?.mailboxId || req.body?.mailbox_id || '').trim() || 'pessoal';
 
-    // Neste microcorte, só caixa pessoal.
-    if (mailboxId !== 'pessoal') return next();
-
     const action = String(req.body?.action || '').trim().toLowerCase();
 
     const allowedActions = new Set([
@@ -2160,14 +2245,28 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
       }
     }
 
-    const scope = resolvePersonalMessageScope(ctxUser, req);
+    let scope = null;
+    let ownerMatcher = null;
 
-    if (!scope.owner) {
-      return res.status(400).json({ error: 'Usuário inválido para aplicar ação.' });
+    if (mailboxId === 'pessoal') {
+      scope = resolvePersonalMessageScope(ctxUser, req);
+
+      if (!scope.owner) {
+        return res.status(400).json({ error: 'Usuário inválido para aplicar ação.' });
+      }
+
+      const ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
+      ownerMatcher = buildPersonalOwnerMatcher(scope, ownerCandidatesLower);
+    } else {
+      const mailbox = await loadMsgMailboxForSignature(mailboxId, ctxUser);
+
+      scope = {
+        mailboxId: String(mailbox?._id || mailboxId),
+        owner: ''
+      };
+
+      ownerMatcher = null;
     }
-
-    const ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
-    const ownerMatcher = buildPersonalOwnerMatcher(scope, ownerCandidatesLower);
 
     const fromFolderRaw = String(
       req.body?.fromFolder ||
@@ -2236,8 +2335,8 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
     });
 
     docs = (docs || []).filter(d => {
-      if (personalMessageDeletedForScope(d, ownerMatcher)) return false;
-      return canAccessPersonalMessage(d, ctxUser, scope, ownerMatcher);
+      if (messageDeletedForScope(d, scope, ownerMatcher)) return false;
+      return canAccessMessageForScope(d, ctxUser, scope, ownerMatcher);
     });
 
     if (!docs.length) {
@@ -2245,7 +2344,7 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
     }
 
     if (action === 'delete') {
-      docs = docs.filter(d => isPersonalMessageInTrashForScope(d, ownerMatcher));
+      docs = docs.filter(d => isMessageInTrashForScope(d, scope, ownerMatcher));
 
       if (!docs.length) {
         return res.status(400).json({
@@ -2255,7 +2354,7 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
     }
 
     if (action === 'restore') {
-      docs = docs.filter(d => isPersonalMessageInTrashForScope(d, ownerMatcher));
+      docs = docs.filter(d => isMessageInTrashForScope(d, scope, ownerMatcher));
 
       if (!docs.length) {
         return res.status(400).json({
@@ -2265,7 +2364,7 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
     }
 
     if (action === 'unarchive') {
-      docs = docs.filter(d => isPersonalMessageArchivedForScope(d, ownerMatcher));
+      docs = docs.filter(d => isMessageArchivedForScope(d, scope, ownerMatcher));
 
       if (!docs.length) {
         return res.status(400).json({
@@ -2279,7 +2378,8 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
         ativo: { $ne: false },
         states: {
           $elemMatch: {
-            mailbox_id: 'pessoal',
+            mailbox_id: scope.mailboxId,
+            owner: String(scope.owner || '').trim().toLowerCase(),
             fixada_em: { $ne: null }
           }
         }
@@ -2289,12 +2389,12 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
         .catch(() => []);
 
       const pinnedCount = (alreadyPinned || []).filter(d => {
-        const st = findPersonalMessageState(d, ownerMatcher, { includeDeleted: false });
+        const st = findMessageStateForScope(d, scope, ownerMatcher, { includeDeleted: false });
         return !!(st?.fixada_em && !st?.lixeira_em);
       }).length;
 
       const willPin = docs.some(d => {
-        const st = findPersonalMessageState(d, ownerMatcher, { includeDeleted: false });
+        const st = findMessageStateForScope(d, scope, ownerMatcher, { includeDeleted: false });
         return !(st?.fixada_em);
       });
 
@@ -2309,7 +2409,7 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
       const markerLower = marker.toLowerCase();
 
       const wouldExceedMarkerLimit = docs.some(d => {
-        const st = findPersonalMessageState(d, ownerMatcher, { includeDeleted: false });
+        const st = findMessageStateForScope(d, scope, ownerMatcher, { includeDeleted: false });
 
         const current = Array.isArray(st?.marcadores)
           ? st.marcadores.map(x => normalizeMarkerName(x)).filter(Boolean)
@@ -2336,7 +2436,7 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
       || '';
 
     for (const doc of docs) {
-      const changed = applyPersonalMessageStateAction(doc, scope, ownerMatcher, action, {
+      const changed = applyMessageStateAction(doc, scope, ownerMatcher, action, {
         now,
         fromFolder,
         marker
