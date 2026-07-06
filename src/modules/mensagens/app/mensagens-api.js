@@ -2354,14 +2354,13 @@ router.get('/messages', async (req, res, next) => {
     const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
       || refLower.includes('/portal-morador');
 
-    // Neste microcorte, só migramos caixa pessoal no contexto Gestor/Mensagens.
+    // Portal continua na façade neste microcorte.
     if (fromPortal) return next();
 
     let ctxUser = getCtxUser(req);
     if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
 
     const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || '').trim() || 'pessoal';
-    if (mailboxId !== 'pessoal') return next();
 
     if (mongoose.connection.readyState !== 1) {
       const ok = await ensureMongoReady();
@@ -2383,33 +2382,52 @@ router.get('/messages', async (req, res, next) => {
     }
 
     const folder = String(req.query.folder || req.query.view || 'entrada').trim().toLowerCase();
-    const scope = resolvePersonalMessageScope(ctxUser, req);
 
-    if (!scope.owner) {
-      return res.status(400).json({ error: 'Usuário inválido para carregar mensagens.' });
+    let scope = null;
+    let ownerCandidatesLower = [];
+
+    if (mailboxId === 'pessoal') {
+      scope = resolvePersonalMessageScope(ctxUser, req);
+
+      if (!scope.owner) {
+        return res.status(400).json({ error: 'Usuário inválido para carregar mensagens.' });
+      }
+
+      ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
+    } else {
+      const mailbox = await loadMsgMailboxForSignature(mailboxId, ctxUser);
+
+      scope = {
+        mailboxId: String(mailbox?._id || mailboxId),
+        owner: ''
+      };
+
+      ownerCandidatesLower = [];
     }
 
-    const ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
     const ownerSet = new Set(ownerCandidatesLower);
+    const isPersonalMailbox = scope.mailboxId === 'pessoal';
 
-    const baseEmailForOwnerMatch = (() => {
-      try {
-        const fromOwner = ownerKeyBaseEmailLower(String(scope?.owner || '').trim().toLowerCase());
-        if (isEmailish(fromOwner)) return fromOwner;
+    const baseEmailForOwnerMatch = isPersonalMailbox
+      ? (() => {
+          try {
+            const fromOwner = ownerKeyBaseEmailLower(String(scope?.owner || '').trim().toLowerCase());
+            if (isEmailish(fromOwner)) return fromOwner;
 
-        const em = String(
-          ctxUser?.email ||
-          ctxUser?.userEmail ||
-          ctxUser?.contato_email ||
-          ctxUser?.contatoEmail ||
-          ''
-        ).trim().toLowerCase();
+            const em = String(
+              ctxUser?.email ||
+              ctxUser?.userEmail ||
+              ctxUser?.contato_email ||
+              ctxUser?.contatoEmail ||
+              ''
+            ).trim().toLowerCase();
 
-        return isEmailish(em) ? em : '';
-      } catch {
-        return '';
-      }
-    })();
+            return isEmailish(em) ? em : '';
+          } catch {
+            return '';
+          }
+        })()
+      : '';
 
     const baseMatches = (ownerVal) => {
       try {
@@ -2433,12 +2451,25 @@ router.get('/messages', async (req, res, next) => {
       return baseMatches(ownerLower);
     };
 
+    const stateMailboxMatches = (s) =>
+      String(s?.mailbox_id || '').trim() === String(scope.mailboxId || '').trim();
+
+    const stateOwnerMatches = (s) => {
+      const ownerLower = String(s?.owner || '').trim().toLowerCase();
+
+      if (!isPersonalMailbox) {
+        return ownerLower === '';
+      }
+
+      return isOwnerMatch(ownerLower);
+    };
+
     const findScopeState = (doc) => {
       const states = Array.isArray(doc?.states) ? doc.states : [];
 
-      if (scope.mailboxId === 'pessoal' && scope.owner) {
+      if (isPersonalMailbox && scope.owner) {
         const exact = states.find(s =>
-          String(s?.mailbox_id || '').trim() === 'pessoal'
+          stateMailboxMatches(s)
           && String(s?.owner || '').trim().toLowerCase() === String(scope.owner || '').trim().toLowerCase()
           && !s?.excluida_em
         );
@@ -2446,9 +2477,9 @@ router.get('/messages', async (req, res, next) => {
         if (exact) return exact;
       }
 
-      if (scope.mailboxId === 'pessoal' && baseEmailForOwnerMatch) {
+      if (isPersonalMailbox && baseEmailForOwnerMatch) {
         const byBase = states.filter(s =>
-          String(s?.mailbox_id || '').trim() === 'pessoal'
+          stateMailboxMatches(s)
           && baseMatches(s?.owner)
         );
 
@@ -2460,16 +2491,16 @@ router.get('/messages', async (req, res, next) => {
       }
 
       const direct = states.find(s =>
-        String(s?.mailbox_id || '').trim() === 'pessoal'
-        && isOwnerMatch(s?.owner)
+        stateMailboxMatches(s)
+        && stateOwnerMatches(s)
         && !s?.excluida_em
       );
 
       if (direct) return direct;
 
       return states.find(s =>
-        String(s?.mailbox_id || '').trim() === 'pessoal'
-        && isOwnerMatch(s?.owner)
+        stateMailboxMatches(s)
+        && stateOwnerMatches(s)
       );
     };
 
@@ -2477,8 +2508,8 @@ router.get('/messages', async (req, res, next) => {
       const states = Array.isArray(doc?.states) ? doc.states : [];
 
       const scoped = states.filter(s =>
-        String(s?.mailbox_id || '').trim() === 'pessoal'
-        && isOwnerMatch(s?.owner)
+        stateMailboxMatches(s)
+        && stateOwnerMatches(s)
       );
 
       return scoped.length > 0 && scoped.every(s => !!s?.excluida_em);
@@ -2511,7 +2542,48 @@ router.get('/messages', async (req, res, next) => {
 
     const filter = { ativo: { $ne: false } };
 
-    if (folder === 'saida') {
+    if (!isPersonalMailbox) {
+      if (folder === 'saida') {
+        filter.from_mailbox_id = scope.mailboxId;
+      } else {
+        const includeSent = folder === 'lixeira' || folder === 'arquivo';
+
+        const ors = [
+          {
+            to: {
+              $elemMatch: {
+                type: 'mailbox',
+                mailboxId: scope.mailboxId
+              }
+            }
+          },
+          {
+            cc: {
+              $elemMatch: {
+                type: 'mailbox',
+                mailboxId: scope.mailboxId
+              }
+            }
+          },
+          {
+            states: {
+              $elemMatch: {
+                mailbox_id: scope.mailboxId,
+                owner: ''
+              }
+            }
+          }
+        ];
+
+        if (includeSent) {
+          ors.push({
+            from_mailbox_id: scope.mailboxId
+          });
+        }
+
+        filter.$or = ors;
+      }
+    } else if (folder === 'saida') {
       const ownerExact = String(scope.owner || '').trim().toLowerCase();
       const baseEmail = ownerKeyBaseEmailLower(ownerExact);
       const basePrefixRx = isEmailish(baseEmail)
@@ -2659,12 +2731,14 @@ router.get('/messages', async (req, res, next) => {
       if (!st) {
         fake.__wdg_state_injected = true;
 
-        const canonicalOwner = scope.owner || ownerCandidatesLower[0] || '';
+        const canonicalOwner = isPersonalMailbox
+          ? (scope.owner || ownerCandidatesLower[0] || '')
+          : '';
 
         fake.states = [
           ...fake.states,
           {
-            mailbox_id: 'pessoal',
+            mailbox_id: scope.mailboxId,
             owner: canonicalOwner,
             lida_em: null,
             arquivada_em: null,
@@ -2696,6 +2770,11 @@ router.get('/messages', async (req, res, next) => {
       docs = (docs || []).filter(d => {
         try {
           const fromMailboxId = String(d?.from_mailbox_id || '').trim();
+
+          if (!isPersonalMailbox) {
+            return fromMailboxId === scope.mailboxId;
+          }
+
           if (fromMailboxId !== 'pessoal') return false;
 
           const fromOwnerLower = String(d?.from_owner || '').trim().toLowerCase();
@@ -2719,13 +2798,28 @@ router.get('/messages', async (req, res, next) => {
         try {
           const fromMailboxId = String(d?.from_mailbox_id || '').trim();
 
-          const sentFromThisScope = fromMailboxId === 'pessoal'
-            && isOwnerMatch(String(d?.from_owner || '').trim().toLowerCase());
+          const sentFromThisScope = isPersonalMailbox
+            ? (
+                fromMailboxId === 'pessoal'
+                && isOwnerMatch(String(d?.from_owner || '').trim().toLowerCase())
+              )
+            : fromMailboxId === scope.mailboxId;
 
           if (!sentFromThisScope) return true;
 
           const listTo = Array.isArray(d?.to) ? d.to : [];
           const listCc = Array.isArray(d?.cc) ? d.cc : [];
+
+          if (!isPersonalMailbox) {
+            const mailboxMatchesScope = (m) => {
+              const type = String(m?.type || '').trim().toLowerCase();
+              const mb = String(m?.mailboxId || m?.mailbox_id || '').trim();
+
+              return type === 'mailbox' && mb === scope.mailboxId;
+            };
+
+            return listTo.some(mailboxMatchesScope) || listCc.some(mailboxMatchesScope);
+          }
 
           const emailMatchesOwner = (m) => {
             const em = String(m?.email || '').trim().toLowerCase();
