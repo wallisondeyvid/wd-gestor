@@ -1161,6 +1161,47 @@ function canAccessMessageForScope(doc, ctxUser, scope, ownerMatcher) {
   return false;
 }
 
+function ensureMessageStateForScope(doc, scope, ownerMatcher) {
+  const existing = findMessageStateForScope(doc, scope, ownerMatcher, { includeDeleted: true });
+  if (existing) return existing;
+
+  const mailboxId = String(scope?.mailboxId || '').trim() || 'pessoal';
+  const owner = String(scope?.owner || '').trim().toLowerCase();
+
+  const st = {
+    mailbox_id: mailboxId,
+    owner,
+    lida_em: null,
+    arquivada_em: null,
+    arquivada_de: '',
+    lixeira_em: null,
+    lixeira_de: '',
+    excluida_em: null,
+    fixada_em: null,
+    marcadores: []
+  };
+
+  if (!Array.isArray(doc.states)) doc.states = [];
+
+  try {
+    if (typeof doc.states.push === 'function') {
+      doc.states.push(st);
+      if (typeof doc.markModified === 'function') doc.markModified('states');
+      return doc.states[doc.states.length - 1];
+    }
+  } catch {
+    /* noop */
+  }
+
+  doc.states = [...doc.states, st];
+
+  try {
+    if (typeof doc.markModified === 'function') doc.markModified('states');
+  } catch {}
+
+  return st;
+}
+
 function toMessageDetailItemScoped(doc, scope, ownerMatcher, extra = {}) {
   const mailboxId = String(scope?.mailboxId || '').trim() || 'pessoal';
 
@@ -2452,9 +2493,6 @@ router.post('/messages/:id/read', express.json({ limit: '64kb' }), async (req, r
       ''
     ).trim() || 'pessoal';
 
-    // Neste microcorte, só caixa pessoal.
-    if (mailboxId !== 'pessoal') return next();
-
     if (mongoose.connection.readyState !== 1) {
       const ok = await ensureMongoReady();
 
@@ -2470,14 +2508,28 @@ router.post('/messages/:id/read', express.json({ limit: '64kb' }), async (req, r
       return res.status(400).json({ error: 'id inválido' });
     }
 
-    const scope = resolvePersonalMessageScope(ctxUser, req);
+    let scope = null;
+    let ownerMatcher = null;
 
-    if (!scope.owner) {
-      return res.status(400).json({ error: 'Usuário inválido para marcar mensagem.' });
+    if (mailboxId === 'pessoal') {
+      scope = resolvePersonalMessageScope(ctxUser, req);
+
+      if (!scope.owner) {
+        return res.status(400).json({ error: 'Usuário inválido para marcar mensagem.' });
+      }
+
+      const ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
+      ownerMatcher = buildPersonalOwnerMatcher(scope, ownerCandidatesLower);
+    } else {
+      const mailbox = await loadMsgMailboxForSignature(mailboxId, ctxUser);
+
+      scope = {
+        mailboxId: String(mailbox?._id || mailboxId),
+        owner: ''
+      };
+
+      ownerMatcher = null;
     }
-
-    const ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
-    const ownerMatcher = buildPersonalOwnerMatcher(scope, ownerCandidatesLower);
 
     const doc = await CondMsgMessage.findOne({
       _id: id,
@@ -2486,11 +2538,11 @@ router.post('/messages/:id/read', express.json({ limit: '64kb' }), async (req, r
 
     if (!doc) return res.status(404).json({ error: 'Mensagem não encontrada' });
 
-    if (personalMessageDeletedForScope(doc, ownerMatcher)) {
+    if (messageDeletedForScope(doc, scope, ownerMatcher)) {
       return res.status(404).json({ error: 'Mensagem não encontrada' });
     }
 
-    if (!canAccessPersonalMessage(doc, ctxUser, scope, ownerMatcher)) {
+    if (!canAccessMessageForScope(doc, ctxUser, scope, ownerMatcher)) {
       return res.status(403).json({ error: 'Acesso negado' });
     }
 
@@ -2505,10 +2557,10 @@ router.post('/messages/:id/read', express.json({ limit: '64kb' }), async (req, r
     const markOne = async (targetDoc) => {
       if (!targetDoc) return false;
 
-      if (personalMessageDeletedForScope(targetDoc, ownerMatcher)) return false;
-      if (!canAccessPersonalMessage(targetDoc, ctxUser, scope, ownerMatcher)) return false;
+      if (messageDeletedForScope(targetDoc, scope, ownerMatcher)) return false;
+      if (!canAccessMessageForScope(targetDoc, ctxUser, scope, ownerMatcher)) return false;
 
-      const st = ensurePersonalMessageState(targetDoc, scope, ownerMatcher);
+      const st = ensureMessageStateForScope(targetDoc, scope, ownerMatcher);
       st.lida_em = st.lida_em || now;
 
       try {
