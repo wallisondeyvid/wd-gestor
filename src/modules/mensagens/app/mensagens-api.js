@@ -6,6 +6,7 @@ import { put, del } from '@vercel/blob';
 import CondMsgGroup from '#models/cond_msg_group.js';
 import CondMsgMailbox from '#models/cond_msg_mailbox.js';
 import CondMsgMessage from '#models/cond_msg_message.js';
+import CondMsgMarker from '#models/cond_msg_marker.js';
 import CondMsgSignaturePref from '#models/cond_msg_signature_pref.js';
 
 import {
@@ -334,6 +335,21 @@ function mailboxIsMember(mailboxDoc, user) {
   });
 }
 
+function mailboxCanManageMarker(mailboxDoc, user) {
+  if (!mailboxDoc || !user) return false;
+  if (userCanScopeAll(user)) return true;
+
+  const perms = mailboxGetUserPerms(mailboxDoc, user);
+
+  return !!(
+    perms?.administrar ||
+    perms?.gerenciarMarcadores ||
+    perms?.marcadores ||
+    perms?.criarMensagem ||
+    mailboxIsMember(mailboxDoc, user)
+  );
+}
+
 function toMailboxClient(doc) {
   if (!doc) return null;
 
@@ -392,6 +408,19 @@ function normalizeMarkerName(name) {
   const n = String(name || '').trim();
   if (!n) return '';
   return n.replace(/\s+/g, ' ').slice(0, 60);
+}
+
+function normalizeMarkerColorKey(cor) {
+  const k = String(cor || '').trim().toLowerCase();
+  if (!k) return '';
+
+  const allowed = new Set([
+    'blue', 'indigo', 'purple', 'pink',
+    'red', 'orange', 'yellow', 'green',
+    'teal', 'cyan', 'gray'
+  ]);
+
+  return allowed.has(k) ? k : '';
 }
 
 function inferDocCreatedAt(doc) {
@@ -1872,6 +1901,268 @@ router.delete('/groups/:id', async (req, res, next) => {
 
     console.error('[mensagens][DELETE /api/msg/groups/:id] erro:', e);
     return res.status(500).json({ error: 'Falha ao excluir grupo' });
+  }
+});
+
+router.get('/markers', async (req, res) => {
+  try {
+    let ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    if (mongoose.connection.readyState !== 1) {
+      const ok = await ensureMongoReady();
+      if (!ok) {
+        try { res.set('Retry-After', '5'); } catch {}
+        return res.status(503).json({ error: 'DB indisponível' });
+      }
+    }
+
+    const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || '').trim() || 'pessoal';
+
+    let scope = null;
+    let ownerCandidatesLower = [];
+    let unidadeId = null;
+
+    if (mailboxId === 'pessoal') {
+      scope = resolvePersonalMessageScope(ctxUser, req);
+      ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
+    } else {
+      const mailbox = await loadMsgMailboxForSignature(mailboxId, ctxUser);
+      if (!mailbox) return res.status(404).json({ error: 'Caixa não encontrada' });
+
+      scope = {
+        mailboxId: String(mailbox._id || mailboxId),
+        owner: ''
+      };
+
+      unidadeId = mailbox.unidade_id || null;
+    }
+
+    const ownerQuery = scope.mailboxId === 'pessoal' && ownerCandidatesLower.length
+      ? { $in: ownerCandidatesLower }
+      : scope.owner;
+
+    const docs = await CondMsgMarker.find({
+      mailbox_id: scope.mailboxId,
+      owner: ownerQuery,
+      ativo: { $ne: false },
+      ...(scope.mailboxId !== 'pessoal' && unidadeId ? { unidade_id: unidadeId } : {})
+    }).sort({ nome: 1, createdAt: -1 }).lean();
+
+    const out = [];
+    const seen = new Set();
+
+    for (const d of (docs || [])) {
+      const nome = normalizeMarkerName(d?.nome);
+      const key = String(nome || '').trim().toLowerCase();
+      if (!key) continue;
+      if (seen.has(key)) continue;
+
+      seen.add(key);
+
+      out.push({
+        id: String(d._id || ''),
+        nome,
+        cor: String(d?.cor || '').trim()
+      });
+    }
+
+    return res.json(out);
+  } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
+
+    console.error('[mensagens][GET /api/msg/markers] erro:', e);
+    return res.status(500).json({ error: 'Falha ao listar marcadores' });
+  }
+});
+
+router.post('/markers', express.json({ limit: '64kb' }), async (req, res) => {
+  try {
+    let ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    if (mongoose.connection.readyState !== 1) {
+      const ok = await ensureMongoReady();
+      if (!ok) {
+        try { res.set('Retry-After', '5'); } catch {}
+        return res.status(503).json({ error: 'DB indisponível' });
+      }
+    }
+
+    const mailboxId = String(req.body?.mailboxId || req.body?.mailbox_id || '').trim() || 'pessoal';
+    const nome = normalizeMarkerName(req.body?.nome || req.body?.name);
+    const cor = normalizeMarkerColorKey(req.body?.cor || req.body?.color);
+
+    if (!nome) return res.status(400).json({ error: 'nome é obrigatório' });
+
+    let scope = null;
+    let ownerCandidatesLower = [];
+    let unidadeId = null;
+
+    if (mailboxId === 'pessoal') {
+      scope = resolvePersonalMessageScope(ctxUser, req);
+      ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
+    } else {
+      const mailbox = await loadMsgMailboxForSignature(mailboxId, ctxUser);
+
+      if (!mailboxCanManageMarker(mailbox, ctxUser)) {
+        return res.status(403).json({ error: 'Sem permissão para gerenciar marcador' });
+      }
+
+      scope = {
+        mailboxId: String(mailbox._id || mailboxId),
+        owner: ''
+      };
+
+      unidadeId = mailbox.unidade_id || null;
+    }
+
+    const ownerQuery = scope.mailboxId === 'pessoal' && ownerCandidatesLower.length
+      ? { $in: ownerCandidatesLower }
+      : scope.owner;
+
+    const existing = await CondMsgMarker.findOne({
+      mailbox_id: scope.mailboxId,
+      owner: ownerQuery,
+      nome,
+      ativo: { $ne: false },
+      ...(scope.mailboxId !== 'pessoal' && unidadeId ? { unidade_id: unidadeId } : {})
+    }).lean();
+
+    if (existing) {
+      return res.json({
+        id: String(existing._id || ''),
+        nome: existing.nome || '',
+        cor: String(existing.cor || '').trim()
+      });
+    }
+
+    let createOwner = scope.owner;
+
+    if (scope.mailboxId === 'pessoal') {
+      const ownerExact = String(scope.owner || '').trim().toLowerCase();
+      const base = ownerKeyBaseEmailLower(ownerExact) || (isEmailish(ownerExact) ? ownerExact : '');
+      if (base) createOwner = base;
+    }
+
+    const createdBy = getMsgOwnerKey(ctxUser, req) || String(ctxUser?.nome || ctxUser?.name || '').trim();
+
+    const doc = await CondMsgMarker.create({
+      mailbox_id: scope.mailboxId,
+      owner: createOwner,
+      nome,
+      cor,
+      unidade_id: scope.mailboxId !== 'pessoal' ? unidadeId : null,
+      createdBy,
+      ativo: true
+    });
+
+    return res.status(201).json({
+      id: String(doc._id || ''),
+      nome: doc.nome || '',
+      cor: String(doc.cor || '').trim()
+    });
+  } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
+
+    console.error('[mensagens][POST /api/msg/markers] erro:', e);
+    return res.status(500).json({ error: 'Falha ao criar marcador' });
+  }
+});
+
+router.delete('/markers/:id', async (req, res) => {
+  try {
+    let ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    if (mongoose.connection.readyState !== 1) {
+      const ok = await ensureMongoReady();
+      if (!ok) {
+        try { res.set('Retry-After', '5'); } catch {}
+        return res.status(503).json({ error: 'DB indisponível' });
+      }
+    }
+
+    const id = String(req.params?.id || '').trim();
+    if (!mongoose.isValidObjectId(id)) return res.status(400).json({ error: 'id inválido' });
+
+    const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || req.body?.mailboxId || req.body?.mailbox_id || '').trim() || 'pessoal';
+
+    let scope = null;
+    let ownerCandidatesLower = [];
+
+    if (mailboxId === 'pessoal') {
+      scope = resolvePersonalMessageScope(ctxUser, req);
+      ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
+    } else {
+      const mailbox = await loadMsgMailboxForSignature(mailboxId, ctxUser);
+
+      if (!mailboxCanManageMarker(mailbox, ctxUser)) {
+        return res.status(403).json({ error: 'Sem permissão para gerenciar marcador' });
+      }
+
+      scope = {
+        mailboxId: String(mailbox._id || mailboxId),
+        owner: ''
+      };
+    }
+
+    const ownerQuery = scope.mailboxId === 'pessoal' && ownerCandidatesLower.length
+      ? { $in: ownerCandidatesLower }
+      : scope.owner;
+
+    const doc = await CondMsgMarker.findOne({
+      _id: id,
+      mailbox_id: scope.mailboxId,
+      owner: ownerQuery,
+      ativo: { $ne: false }
+    });
+
+    if (!doc) return res.status(404).json({ error: 'Marcador não encontrado' });
+
+    const marker = normalizeMarkerName(doc.nome);
+
+    await CondMsgMarker.updateMany(
+      {
+        mailbox_id: scope.mailboxId,
+        owner: ownerQuery,
+        nome: marker,
+        ativo: { $ne: false }
+      },
+      { $set: { ativo: false } }
+    );
+
+    if (marker) {
+      const ownersToPull = scope.mailboxId === 'pessoal' && ownerCandidatesLower.length
+        ? ownerCandidatesLower
+        : [String(scope.owner || '').trim().toLowerCase()];
+
+      await CondMsgMessage.updateMany(
+        {
+          ativo: { $ne: false },
+          'states.mailbox_id': scope.mailboxId,
+          'states.owner': ownersToPull.length > 1 ? { $in: ownersToPull } : ownersToPull[0],
+          'states.marcadores': marker
+        },
+        { $pull: { 'states.$[st].marcadores': marker } },
+        {
+          arrayFilters: [{
+            'st.mailbox_id': scope.mailboxId,
+            'st.owner': ownersToPull.length > 1 ? { $in: ownersToPull } : ownersToPull[0]
+          }]
+        }
+      );
+    }
+
+    return res.json({ ok: true });
+  } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
+
+    console.error('[mensagens][DELETE /api/msg/markers/:id] erro:', e);
+    return res.status(500).json({ error: 'Falha ao remover marcador' });
   }
 });
 

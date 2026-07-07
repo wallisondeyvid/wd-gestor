@@ -2011,8 +2011,8 @@
   async function apiFetchMarkers(basePath, mailboxId) {
     const bp = String(basePath || '').trim();
     const mb = String(mailboxId || 'pessoal').trim() || 'pessoal';
-    const path = `/api/msg/markers?mailboxId=${encodeURIComponent(mb)}`;
-    const tries = buildApiUrlTries(bp, path);
+    const path = `/mensagens/api/msg/markers?mailboxId=${encodeURIComponent(mb)}`;
+    const tries = [path];
     const result = await fetchJsonWithFallback(tries, { credentials: 'same-origin' });
     const r = result?.r || null;
     const json = result?.json ?? null;
@@ -2029,8 +2029,7 @@
   }
 
   async function apiCreateMarker(basePath, mailboxId, nome, cor) {
-    const bp = String(basePath || '').trim();
-    const url = bp ? `${bp}/api/msg/markers` : '/api/msg/markers';
+    const url = '/mensagens/api/msg/markers';
     const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'fetch' };
     try {
       const low = String(bp || '').trim().toLowerCase();
@@ -2051,11 +2050,8 @@
   }
 
   async function apiDeleteMarker(basePath, mailboxId, markerId) {
-    const bp = String(basePath || '').trim();
     const id = String(markerId || '').trim();
-    const url = bp
-      ? `${bp}/api/msg/markers/${encodeURIComponent(id)}?mailboxId=${encodeURIComponent(mailboxId || 'pessoal')}`
-      : `/api/msg/markers/${encodeURIComponent(id)}?mailboxId=${encodeURIComponent(mailboxId || 'pessoal')}`;
+    const url = `/mensagens/api/msg/markers/${encodeURIComponent(id)}?mailboxId=${encodeURIComponent(mailboxId || 'pessoal')}`;
     const headers = { 'Accept': 'application/json', 'X-Requested-With': 'fetch' };
     try {
       const low = String(bp || '').trim().toLowerCase();
