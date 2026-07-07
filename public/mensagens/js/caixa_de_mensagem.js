@@ -7734,7 +7734,7 @@
         const msgId = String(m?.id || m?._id || '').trim();
         if (!msgId) return;
         const mb = String(mailboxId || '').trim() || 'pessoal';
-        const url = `${String(basePath || '').trim()}/api/msg/messages/${encodeURIComponent(msgId)}/historico-acessos.pdf?mailboxId=${encodeURIComponent(mb)}`;
+        const url = `/mensagens/api/msg/messages/${encodeURIComponent(msgId)}/historico-acessos.pdf?mailboxId=${encodeURIComponent(mb)}`;
         try {
           const w = window.open(url, '_blank');
           if (!w) window.location.assign(url);

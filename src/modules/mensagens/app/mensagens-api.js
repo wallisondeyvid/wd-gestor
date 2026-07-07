@@ -2877,6 +2877,281 @@ async function loadMessageDetailContextForRequest(req, res) {
   };
 }
 
+router.get('/messages/:id/historico-acessos.pdf', async (req, res) => {
+  try {
+    const ctx = await loadMessageDetailContextForRequest(req, res);
+
+    if (ctx.handled) {
+      return res.status(ctx.status).end(ctx.error);
+    }
+
+    const filenameBase = String(ctx.item?.protocolo || ctx.id || 'mensagem')
+      .replace(/[^\w.-]+/g, '_');
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="historico-acessos-${filenameBase}.pdf"`);
+
+    try {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    } catch {}
+
+    const doc = new PDFDocument({
+      size: 'A4',
+      margins: { top: 50, left: 50, right: 50, bottom: 60 },
+      bufferPages: true
+    });
+
+    doc.pipe(res);
+
+    const PDF_TZ = 'America/Sao_Paulo';
+
+    const formatDateTimeBr = (dt) => {
+      const d = dt instanceof Date ? dt : new Date(dt);
+      if (!isFinite(d.getTime())) return '';
+
+      try {
+        const date = new Intl.DateTimeFormat('pt-BR', {
+          timeZone: PDF_TZ,
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }).format(d);
+
+        const time = new Intl.DateTimeFormat('pt-BR', {
+          timeZone: PDF_TZ,
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }).format(d);
+
+        return `${date} ${time}`;
+      } catch {
+        return '';
+      }
+    };
+
+    const textLine = (label, value) => {
+      doc.font('Helvetica-Bold').fontSize(10).fillColor('#0f172a');
+      doc.text(`${label}: `, { continued: true });
+      doc.font('Helvetica').fontSize(10).fillColor('#0f172a');
+      doc.text(String(value || '—'));
+      doc.moveDown(0.25);
+    };
+
+    const resolveAccessActor = (access) => {
+      const user = String(access?.user || '').trim();
+      const owner = String(access?.owner || '').trim();
+      const email = String(access?.email || access?.userEmail || '').trim();
+      const nome = String(access?.nome || access?.name || access?.display || '').trim();
+
+      return nome || email || user || owner || '—';
+    };
+
+    const resolveAccessMailbox = (access) => {
+      const mailboxName = String(access?.mailboxName || access?.mailbox_nome || access?.caixa || '').trim();
+      const mailboxId = String(access?.mailboxId || access?.mailbox_id || '').trim();
+
+      if (mailboxName) return mailboxName;
+      if (!mailboxId || mailboxId === 'pessoal') return 'Pessoal';
+      return mailboxId;
+    };
+
+    const accessEvents = Array.isArray(ctx.item?.acessos)
+      ? ctx.item.acessos
+      : (Array.isArray(ctx.doc?.acessos) ? ctx.doc.acessos : []);
+
+    const grouped = new Map();
+
+    for (const access of accessEvents) {
+      const at = new Date(access?.at || access?.createdAt || access?.data || 0);
+      if (!isFinite(at.getTime())) continue;
+
+      const actor = resolveAccessActor(access);
+      const mailbox = resolveAccessMailbox(access);
+      const key = `${mailbox}::${actor}`.toLowerCase();
+
+      const current = grouped.get(key) || {
+        actor,
+        mailbox,
+        count: 0,
+        firstAt: at,
+        lastAt: at
+      };
+
+      current.count += 1;
+
+      if (at.getTime() < current.firstAt.getTime()) current.firstAt = at;
+      if (at.getTime() > current.lastAt.getTime()) current.lastAt = at;
+
+      grouped.set(key, current);
+    }
+
+    const rows = Array.from(grouped.values())
+      .sort((a, b) => String(a.actor || '').localeCompare(String(b.actor || ''), 'pt-BR', { sensitivity: 'base' }));
+
+    const fromDisplay = String(
+      ctx.item?.from?.display ||
+      ctx.item?.from?.nome ||
+      ctx.item?.from?.name ||
+      ctx.item?.from?.email ||
+      ctx.item?.from?.mailboxName ||
+      ctx.item?.from?.mailboxId ||
+      ''
+    ).trim();
+
+    const paraList = Array.isArray(ctx.item?.to)
+      ? ctx.item.to.map(m => String(m?.display || m?.nome || m?.name || m?.email || m?.mailboxName || m?.mailboxId || '').trim()).filter(Boolean)
+      : [];
+
+    doc.font('Helvetica-Bold').fontSize(14).fillColor('#0f172a');
+    doc.text('CAIXA DE MENSAGEM - HISTÓRICO DE ACESSOS', {
+      align: 'center'
+    });
+
+    doc.moveDown(1);
+
+    textLine('Protocolo', ctx.item?.protocolo);
+    textLine('Data', formatDateTimeBr(ctx.item?.createdAt));
+    textLine('Assunto', ctx.item?.assunto);
+    textLine('De', fromDisplay || '—');
+    textLine('Para', paraList.length ? paraList.join(' ; ') : '—');
+
+    doc.moveDown(1);
+
+    doc.font('Helvetica-Bold').fontSize(12).fillColor('#0f172a');
+    doc.text('Acessos', { align: 'center' });
+    doc.moveDown(0.6);
+
+    const left = doc.page.margins.left;
+    const right = doc.page.margins.right;
+    const contentW = doc.page.width - left - right;
+
+    const colActorW = Math.round(contentW * 0.34);
+    const colMailboxW = Math.round(contentW * 0.22);
+    const colQtdW = Math.round(contentW * 0.12);
+    const colFirstW = Math.round(contentW * 0.16);
+    const colLastW = contentW - colActorW - colMailboxW - colQtdW - colFirstW;
+    const rowH = 24;
+
+    const ensureSpace = (height = rowH) => {
+      const bottom = doc.page.height - doc.page.margins.bottom;
+      if ((doc.y + height) > bottom) doc.addPage();
+    };
+
+    const drawHeader = () => {
+      ensureSpace(rowH + 4);
+
+      const y = doc.y;
+
+      doc.save();
+      doc.rect(left, y, contentW, rowH)
+        .fillColor('#f1f5f9')
+        .fill();
+      doc.rect(left, y, contentW, rowH)
+        .lineWidth(0.5)
+        .strokeColor('#e2e8f0')
+        .stroke();
+      doc.restore();
+
+      doc.font('Helvetica-Bold').fontSize(9).fillColor('#0f172a');
+
+      const py = y + 7;
+      doc.text('Usuário', left + 5, py, { width: colActorW - 10, lineBreak: false, ellipsis: true });
+      doc.text('Caixa', left + colActorW + 5, py, { width: colMailboxW - 10, lineBreak: false, ellipsis: true });
+      doc.text('Qtd.', left + colActorW + colMailboxW + 5, py, { width: colQtdW - 10, align: 'center', lineBreak: false });
+      doc.text('Primeiro', left + colActorW + colMailboxW + colQtdW + 5, py, { width: colFirstW - 10, align: 'center', lineBreak: false });
+      doc.text('Último', left + colActorW + colMailboxW + colQtdW + colFirstW + 5, py, { width: colLastW - 10, align: 'center', lineBreak: false });
+
+      doc.y = y + rowH;
+    };
+
+    drawHeader();
+
+    if (!rows.length) {
+      doc.moveDown(0.8);
+      doc.font('Helvetica').fontSize(10).fillColor('#334155');
+      doc.text('Sem histórico de acessos.', { align: 'center' });
+    } else {
+      for (const row of rows) {
+        ensureSpace(rowH + 4);
+
+        const y = doc.y;
+
+        doc.save();
+        doc.rect(left, y, contentW, rowH)
+          .lineWidth(0.5)
+          .strokeColor('#e2e8f0')
+          .stroke();
+        doc.restore();
+
+        doc.font('Helvetica').fontSize(9).fillColor('#0f172a');
+
+        const py = y + 7;
+        doc.text(String(row.actor || '—'), left + 5, py, { width: colActorW - 10, lineBreak: false, ellipsis: true });
+        doc.text(String(row.mailbox || '—'), left + colActorW + 5, py, { width: colMailboxW - 10, lineBreak: false, ellipsis: true });
+        doc.text(String(row.count || 0), left + colActorW + colMailboxW + 5, py, { width: colQtdW - 10, align: 'center', lineBreak: false });
+        doc.text(formatDateTimeBr(row.firstAt) || '—', left + colActorW + colMailboxW + colQtdW + 5, py, { width: colFirstW - 10, align: 'center', lineBreak: false });
+        doc.text(formatDateTimeBr(row.lastAt) || '—', left + colActorW + colMailboxW + colQtdW + colFirstW + 5, py, { width: colLastW - 10, align: 'center', lineBreak: false });
+
+        doc.y = y + rowH;
+      }
+    }
+
+    const drawFooter = () => {
+      const range = doc.bufferedPageRange();
+      const total = range.count;
+      const now = new Date();
+      const emitente = String(ctx.ctxUser?.nome || ctx.ctxUser?.name || ctx.ctxUser?.email || 'Usuário').trim();
+
+      for (let i = 0; i < total; i++) {
+        doc.switchToPage(range.start + i);
+
+        const pageW = doc.page.width;
+        const pageH = doc.page.height;
+        const pageLeft = doc.page.margins.left;
+        const pageRight = doc.page.margins.right;
+        const width = pageW - pageLeft - pageRight;
+        const y = pageH - 42;
+
+        doc.save();
+        doc.moveTo(pageLeft, y - 8)
+          .lineTo(pageW - pageRight, y - 8)
+          .lineWidth(0.5)
+          .strokeColor('#e2e8f0')
+          .stroke();
+
+        doc.font('Helvetica').fontSize(8).fillColor('#334155');
+        doc.text(`Gerado por ${emitente} em ${formatDateTimeBr(now)}`, pageLeft, y, {
+          width,
+          align: 'left',
+          lineBreak: false,
+          ellipsis: true
+        });
+
+        doc.text(`Página ${i + 1}/${total}`, pageLeft, y, {
+          width,
+          align: 'right',
+          lineBreak: false
+        });
+
+        doc.restore();
+      }
+    };
+
+    drawFooter();
+    doc.end();
+  } catch (e) {
+    console.error('[mensagens][GET /api/msg/messages/:id/historico-acessos.pdf] erro:', e);
+    try {
+      return res.status(500).end('Falha ao gerar PDF');
+    } catch {
+      return res.end();
+    }
+  }
+});
+
 router.get('/messages/:id/imprimir.pdf', async (req, res) => {
   try {
     const ctx = await loadMessageDetailContextForRequest(req, res);
