@@ -7813,7 +7813,7 @@
           return;
         } catch {
           // Fallback: tenta PDF do backend (modo antigo)
-          const url = `${String(basePath || '').trim()}/api/msg/messages/${encodeURIComponent(msgId)}/imprimir.pdf?mailboxId=${encodeURIComponent(mb)}&order=${encodeURIComponent(ord)}`;
+          const url = `/mensagens/api/msg/messages/${encodeURIComponent(msgId)}/imprimir.pdf?mailboxId=${encodeURIComponent(mb)}&order=${encodeURIComponent(ord)}`;
           try {
             const w = window.open(url, '_blank');
             if (!w) window.location.assign(url);

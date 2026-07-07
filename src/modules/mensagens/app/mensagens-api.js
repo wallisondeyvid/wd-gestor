@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import express from 'express';
 import multer from 'multer';
+import PDFDocument from 'pdfkit';
 import { put, del } from '@vercel/blob';
 
 import CondMsgGroup from '#models/cond_msg_group.js';
@@ -2749,93 +2750,361 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
   }
 });
 
+async function loadMessageDetailContextForRequest(req, res) {
+  let ctxUser = getCtxUser(req);
+  if (!ctxUser) {
+    return {
+      handled: true,
+      status: 401,
+      error: 'Não autenticado'
+    };
+  }
+
+  const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || '').trim() || 'pessoal';
+
+  if (mongoose.connection.readyState !== 1) {
+    const ok = await ensureMongoReady();
+
+    if (!ok) {
+      try { res.set('Retry-After', '5'); } catch {}
+      return {
+        handled: true,
+        status: 503,
+        error: 'DB indisponível'
+      };
+    }
+  }
+
+  const id = String(req.params?.id || '').trim();
+
+  if (!id || !mongoose.isValidObjectId(id)) {
+    return {
+      handled: true,
+      status: 400,
+      error: 'id inválido'
+    };
+  }
+
+  let scope = null;
+  let ownerMatcher = null;
+
+  if (mailboxId === 'pessoal') {
+    scope = resolvePersonalMessageScope(ctxUser, req);
+
+    if (!scope.owner) {
+      return {
+        handled: true,
+        status: 400,
+        error: 'Usuário inválido para carregar mensagem.'
+      };
+    }
+
+    const ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
+    ownerMatcher = buildPersonalOwnerMatcher(scope, ownerCandidatesLower);
+  } else {
+    const mailbox = await loadMsgMailboxForSignature(mailboxId, ctxUser);
+
+    scope = {
+      mailboxId: String(mailbox?._id || mailboxId),
+      owner: ''
+    };
+
+    ownerMatcher = null;
+  }
+
+  const doc = await CondMsgMessage.findOne({
+    _id: id,
+    ativo: { $ne: false }
+  }).lean();
+
+  if (!doc) {
+    return {
+      handled: true,
+      status: 404,
+      error: 'Mensagem não encontrada'
+    };
+  }
+
+  if (messageDeletedForScope(doc, scope, ownerMatcher)) {
+    return {
+      handled: true,
+      status: 404,
+      error: 'Mensagem não encontrada'
+    };
+  }
+
+  if (!canAccessMessageForScope(doc, ctxUser, scope, ownerMatcher)) {
+    return {
+      handled: true,
+      status: 403,
+      error: 'Acesso negado'
+    };
+  }
+
+  const item = toMessageDetailItemScoped(doc, scope, ownerMatcher);
+
+  const rootId = doc.thread_root_id || doc._id;
+
+  const rawThread = await CondMsgMessage.find({
+    ativo: { $ne: false },
+    $or: [
+      { _id: rootId },
+      { thread_root_id: rootId }
+    ]
+  })
+    .sort({ createdAt: 1 })
+    .limit(220)
+    .lean();
+
+  const thread = (rawThread || [])
+    .filter(d => {
+      if (messageDeletedForScope(d, scope, ownerMatcher)) return false;
+      return canAccessMessageForScope(d, ctxUser, scope, ownerMatcher);
+    })
+    .map(d => toMessageDetailItemScoped(d, scope, ownerMatcher))
+    .filter(Boolean);
+
+  return {
+    handled: false,
+    ctxUser,
+    mailboxId,
+    id,
+    scope,
+    ownerMatcher,
+    doc,
+    item,
+    thread
+  };
+}
+
+router.get('/messages/:id/imprimir.pdf', async (req, res) => {
+  try {
+    const ctx = await loadMessageDetailContextForRequest(req, res);
+
+    if (ctx.handled) {
+      return res.status(ctx.status).end(ctx.error);
+    }
+
+    const order = String(req.query?.order || '').trim().toLowerCase() === 'reverse'
+      ? 'reverse'
+      : 'normal';
+
+    const thread = Array.isArray(ctx.thread) ? [...ctx.thread] : [];
+    const items = order === 'reverse' ? thread.reverse() : thread;
+
+    const filenameBase = String(ctx.item?.protocolo || ctx.id || 'mensagem')
+      .replace(/[^\w.-]+/g, '_');
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="mensagem-${filenameBase}.pdf"`);
+
+    try {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    } catch {}
+
+    const doc = new PDFDocument({
+      size: 'A4',
+      margins: { top: 50, left: 50, right: 50, bottom: 60 },
+      bufferPages: true
+    });
+
+    doc.pipe(res);
+
+    const PDF_TZ = 'America/Sao_Paulo';
+
+    const formatDateTimeBr = (dt) => {
+      const d = dt instanceof Date ? dt : new Date(dt);
+      if (!isFinite(d.getTime())) return '';
+
+      try {
+        const date = new Intl.DateTimeFormat('pt-BR', {
+          timeZone: PDF_TZ,
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }).format(d);
+
+        const time = new Intl.DateTimeFormat('pt-BR', {
+          timeZone: PDF_TZ,
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }).format(d);
+
+        return `${date} ${time}`;
+      } catch {
+        return '';
+      }
+    };
+
+    const stripHtml = (value) => {
+      return String(value || '')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>/gi, '\n\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    };
+
+    const textLine = (label, value) => {
+      doc.font('Helvetica-Bold').fontSize(10).fillColor('#0f172a');
+      doc.text(`${label}: `, { continued: true });
+      doc.font('Helvetica').fontSize(10).fillColor('#0f172a');
+      doc.text(String(value || '—'));
+      doc.moveDown(0.25);
+    };
+
+    const drawFooter = () => {
+      const range = doc.bufferedPageRange();
+      const total = range.count;
+      const now = new Date();
+      const emitente = String(ctx.ctxUser?.nome || ctx.ctxUser?.name || ctx.ctxUser?.email || 'Usuário').trim();
+
+      for (let i = 0; i < total; i++) {
+        doc.switchToPage(range.start + i);
+
+        const pageW = doc.page.width;
+        const pageH = doc.page.height;
+        const left = doc.page.margins.left;
+        const right = doc.page.margins.right;
+        const width = pageW - left - right;
+        const y = pageH - 42;
+
+        doc.save();
+        doc.moveTo(left, y - 8)
+          .lineTo(pageW - right, y - 8)
+          .lineWidth(0.5)
+          .strokeColor('#e2e8f0')
+          .stroke();
+
+        doc.font('Helvetica').fontSize(8).fillColor('#334155');
+        doc.text(`Gerado por ${emitente} em ${formatDateTimeBr(now)}`, left, y, {
+          width,
+          align: 'left',
+          lineBreak: false,
+          ellipsis: true
+        });
+
+        doc.text(`Página ${i + 1}/${total}`, left, y, {
+          width,
+          align: 'right',
+          lineBreak: false
+        });
+
+        doc.restore();
+      }
+    };
+
+    doc.font('Helvetica-Bold').fontSize(14).fillColor('#0f172a');
+    doc.text('CAIXA DE MENSAGEM - IMPRESSÃO', {
+      align: 'center'
+    });
+
+    doc.moveDown(1);
+
+    textLine('Protocolo', ctx.item?.protocolo);
+    textLine('Assunto', ctx.item?.assunto);
+    textLine('Data', formatDateTimeBr(ctx.item?.createdAt));
+
+    const fromDisplay = String(
+      ctx.item?.from?.display ||
+      ctx.item?.from?.nome ||
+      ctx.item?.from?.name ||
+      ctx.item?.from?.email ||
+      ctx.item?.from?.mailboxName ||
+      ctx.item?.from?.mailboxId ||
+      ''
+    ).trim();
+
+    textLine('De', fromDisplay);
+
+    const paraList = Array.isArray(ctx.item?.to)
+      ? ctx.item.to.map(m => String(m?.display || m?.nome || m?.name || m?.email || m?.mailboxName || m?.mailboxId || '').trim()).filter(Boolean)
+      : [];
+
+    textLine('Para', paraList.length ? paraList.join(' ; ') : '—');
+
+    doc.moveDown(1);
+
+    for (const item of items) {
+      const assunto = String(item?.assunto || '').trim();
+      const remetente = String(
+        item?.from?.display ||
+        item?.from?.nome ||
+        item?.from?.name ||
+        item?.from?.email ||
+        item?.from?.mailboxName ||
+        item?.from?.mailboxId ||
+        ''
+      ).trim();
+
+      const data = formatDateTimeBr(item?.createdAt);
+      const body = stripHtml(item?.bodyHtml || item?.bodyText || '');
+
+      doc.font('Helvetica-Bold').fontSize(11).fillColor('#0f172a');
+      doc.text(assunto || 'Mensagem');
+      doc.font('Helvetica').fontSize(9).fillColor('#334155');
+      doc.text(`De: ${remetente || '—'} | Data: ${data || '—'}`);
+      doc.moveDown(0.5);
+
+      doc.font('Helvetica').fontSize(10).fillColor('#0f172a');
+      doc.text(body || '—', {
+        align: 'left'
+      });
+
+      if (Array.isArray(item?.anexos) && item.anexos.length) {
+        doc.moveDown(0.5);
+        doc.font('Helvetica-Bold').fontSize(9).fillColor('#0f172a');
+        doc.text('Anexos:');
+        doc.font('Helvetica').fontSize(9).fillColor('#334155');
+
+        for (const anexo of item.anexos) {
+          doc.text(`- ${String(anexo?.nome || 'arquivo').trim()}`);
+        }
+      }
+
+      doc.moveDown(1);
+      doc.moveTo(doc.page.margins.left, doc.y)
+        .lineTo(doc.page.width - doc.page.margins.right, doc.y)
+        .lineWidth(0.5)
+        .strokeColor('#e2e8f0')
+        .stroke();
+
+      doc.moveDown(1);
+    }
+
+    drawFooter();
+    doc.end();
+  } catch (e) {
+    console.error('[mensagens][GET /api/msg/messages/:id/imprimir.pdf] erro:', e);
+    try {
+      return res.status(500).end('Falha ao gerar PDF');
+    } catch {
+      return res.end();
+    }
+  }
+});
+
 router.get('/messages/:id', async (req, res, next) => {
   try {
-    let ctxUser = getCtxUser(req);
-    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+    const ctx = await loadMessageDetailContextForRequest(req, res);
 
-    const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || '').trim() || 'pessoal';
-
-    if (mongoose.connection.readyState !== 1) {
-      const ok = await ensureMongoReady();
-
-      if (!ok) {
-        try { res.set('Retry-After', '5'); } catch {}
-        return res.status(503).json({ error: 'DB indisponível' });
-      }
+    if (ctx.handled) {
+      return res.status(ctx.status).json({ error: ctx.error });
     }
-
-    const id = String(req.params?.id || '').trim();
-
-    if (!id || !mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ error: 'id inválido' });
-    }
-
-    let scope = null;
-    let ownerMatcher = null;
-
-    if (mailboxId === 'pessoal') {
-      scope = resolvePersonalMessageScope(ctxUser, req);
-
-      if (!scope.owner) {
-        return res.status(400).json({ error: 'Usuário inválido para carregar mensagem.' });
-      }
-
-      const ownerCandidatesLower = buildPersonalOwnerCandidates(ctxUser, req, scope);
-      ownerMatcher = buildPersonalOwnerMatcher(scope, ownerCandidatesLower);
-    } else {
-      const mailbox = await loadMsgMailboxForSignature(mailboxId, ctxUser);
-
-      scope = {
-        mailboxId: String(mailbox?._id || mailboxId),
-        owner: ''
-      };
-
-      ownerMatcher = null;
-    }
-
-    const doc = await CondMsgMessage.findOne({
-      _id: id,
-      ativo: { $ne: false }
-    }).lean();
-
-    if (!doc) return res.status(404).json({ error: 'Mensagem não encontrada' });
-
-    if (messageDeletedForScope(doc, scope, ownerMatcher)) {
-      return res.status(404).json({ error: 'Mensagem não encontrada' });
-    }
-
-    if (!canAccessMessageForScope(doc, ctxUser, scope, ownerMatcher)) {
-      return res.status(403).json({ error: 'Acesso negado' });
-    }
-
-    const item = toMessageDetailItemScoped(doc, scope, ownerMatcher);
-
-    const rootId = doc.thread_root_id || doc._id;
-
-    const rawThread = await CondMsgMessage.find({
-      ativo: { $ne: false },
-      $or: [
-        { _id: rootId },
-        { thread_root_id: rootId }
-      ]
-    })
-      .sort({ createdAt: 1 })
-      .limit(220)
-      .lean();
-
-    const thread = (rawThread || [])
-      .filter(d => {
-        if (messageDeletedForScope(d, scope, ownerMatcher)) return false;
-        return canAccessMessageForScope(d, ctxUser, scope, ownerMatcher);
-      })
-      .map(d => toMessageDetailItemScoped(d, scope, ownerMatcher))
-      .filter(Boolean);
 
     return res.json({
       ok: true,
-      item,
-      thread
+      item: ctx.item,
+      thread: ctx.thread
     });
   } catch (e) {
     console.error('[mensagens][GET /api/msg/messages/:id] erro:', e);
