@@ -1910,7 +1910,7 @@
     // O backend já manda no-store, mas isso reforça no cliente.
     qs.set('_ts', String(Date.now()));
 
-    const tries = buildApiUrlTries(bp, `/api/msg/messages?${qs.toString()}`);
+    const tries = [`/mensagens/api/msg/messages?${qs.toString()}`];
     let last = { r: null, json: null, url: '' };
     const signal = opts && typeof opts === 'object' ? opts.signal : undefined;
     for (const url of tries) {
@@ -2068,7 +2068,7 @@
 
   async function apiMessagesAction(basePath, mailboxId, ids, action, extra) {
     const bp = String(basePath || '').trim();
-    const url = bp ? `${bp}/api/msg/messages/actions` : '/api/msg/messages/actions';
+    const url = '/mensagens/api/msg/messages/actions';
     const payload = { mailboxId: mailboxId || 'pessoal', ids: Array.isArray(ids) ? ids : [], action, ...(extra || {}) };
     const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'fetch' };
     try {
@@ -2838,9 +2838,7 @@
   async function apiFetchMessageDetail(basePath, mailboxId, id, opts) {
     const bp = String(basePath || '').trim();
     const mb = String(mailboxId || 'pessoal').trim() || 'pessoal';
-    const url = bp
-      ? `${bp}/api/msg/messages/${encodeURIComponent(id)}?mailboxId=${encodeURIComponent(mb)}`
-      : `/api/msg/messages/${encodeURIComponent(id)}?mailboxId=${encodeURIComponent(mb)}`;
+    const url = `/mensagens/api/msg/messages/${encodeURIComponent(id)}?mailboxId=${encodeURIComponent(mb)}`;
     const signal = opts && typeof opts === 'object' ? opts.signal : undefined;
     const r = await fetch(url, { credentials: 'same-origin', signal });
     const json = await r.json().catch(() => null);
@@ -2853,9 +2851,7 @@
 
   async function apiMarkMessageRead(basePath, mailboxId, id, opts) {
     const bp = String(basePath || '').trim();
-    const url = bp
-      ? `${bp}/api/msg/messages/${encodeURIComponent(id)}/read`
-      : `/api/msg/messages/${encodeURIComponent(id)}/read`;
+    const url = `/mensagens/api/msg/messages/${encodeURIComponent(id)}/read`;
     const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'fetch' };
     try {
       const low = String(bp || '').trim().toLowerCase();
@@ -6249,7 +6245,7 @@
         attachments.forEach(f => fd.append('anexos', f));
 
         try {
-          const url = basePath ? `${basePath}/api/msg/messages` : '/api/msg/messages';
+          const url = '/mensagens/api/msg/messages';
           const headers = { 'Accept': 'application/json', 'X-Requested-With': 'fetch' };
           try {
             const path = (typeof window !== 'undefined' && window.location) ? String(window.location.pathname || '') : '';
