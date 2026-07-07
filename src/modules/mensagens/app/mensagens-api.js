@@ -1876,13 +1876,6 @@ router.delete('/groups/:id', async (req, res, next) => {
 });
 
 router.post('/messages', (req, res, next) => {
-  const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
-  const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
-    || refLower.includes('/portal-morador');
-
-  // Importante: para Portal, cair na façade ANTES de ler o body.
-  if (fromPortal) return next();
-
   return mensagensUpload.array('anexos', 15)(req, res, async (uploadErr) => {
     if (uploadErr) {
       return res.status(400).json({
@@ -2190,13 +2183,6 @@ router.post('/messages', (req, res, next) => {
 
 router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, res, next) => {
   try {
-    const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
-    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
-      || refLower.includes('/portal-morador');
-
-    // Portal continua na façade.
-    if (fromPortal) return next();
-
     let ctxUser = getCtxUser(req);
     if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
 
@@ -2474,13 +2460,6 @@ router.post('/messages/actions', express.json({ limit: '128kb' }), async (req, r
 
 router.get('/messages/:id', async (req, res, next) => {
   try {
-    const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
-    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
-      || refLower.includes('/portal-morador');
-
-    // Portal continua na façade.
-    if (fromPortal) return next();
-
     let ctxUser = getCtxUser(req);
     if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
 
@@ -2575,13 +2554,6 @@ router.get('/messages/:id', async (req, res, next) => {
 
 router.post('/messages/:id/read', express.json({ limit: '64kb' }), async (req, res, next) => {
   try {
-    const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
-    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
-      || refLower.includes('/portal-morador');
-
-    // Portal continua na façade.
-    if (fromPortal) return next();
-
     let ctxUser = getCtxUser(req);
     if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
 
@@ -2703,13 +2675,6 @@ router.post('/messages/:id/read', express.json({ limit: '64kb' }), async (req, r
 
 router.get('/messages', async (req, res, next) => {
   try {
-    const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
-    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
-      || refLower.includes('/portal-morador');
-
-    // Portal continua na façade neste microcorte.
-    if (fromPortal) return next();
-
     let ctxUser = getCtxUser(req);
     if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
 
@@ -3308,14 +3273,6 @@ router.get('/messages', async (req, res, next) => {
 
 router.get('/mailboxes/recipients', async (req, res, next) => {
   try {
-    const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
-    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
-      || refLower.includes('/portal-morador');
-
-    // Neste microcorte, só migramos o contexto Gestor/Mensagens.
-    // Portal continua caindo na façade do Condomínios.
-    if (fromPortal) return next();
-
     let ctxUser = getCtxUser(req);
     if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
 
@@ -3435,14 +3392,6 @@ router.get('/mailboxes/recipients', async (req, res, next) => {
 
 router.get('/mailboxes', async (req, res, next) => {
   try {
-    const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
-    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
-      || refLower.includes('/portal-morador');
-
-    // Neste microcorte, só migramos o contexto Gestor/Mensagens.
-    // Portal continua caindo na façade do Condomínios.
-    if (fromPortal) return next();
-
     let ctxUser = getCtxUser(req);
     if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
 

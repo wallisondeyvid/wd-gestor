@@ -47,8 +47,15 @@
     const bp = String(basePath || '').trim();
     const mb = String(mailboxId || 'pessoal').trim() || 'pessoal';
 
-    const url = `${bp}/api/msg/groups?mailboxId=${encodeURIComponent(mb)}`;
-    const resp = await fetch(url, { credentials: 'same-origin' });
+    const url = `/mensagens/api/msg/groups?mailboxId=${encodeURIComponent(mb)}`;
+    const resp = await fetch(url, {
+      credentials: 'same-origin',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'fetch',
+        'x-wdg-portal': '1'
+      }
+    });
 
     const json = await resp.json().catch(() => null);
     if (!resp.ok || !Array.isArray(json)) return [];

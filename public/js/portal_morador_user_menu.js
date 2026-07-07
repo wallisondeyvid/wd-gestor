@@ -1937,7 +1937,7 @@
           // Usa paginação mínima e lê `total` para detectar mudanças mesmo com muitas não lidas.
           var qs = 'mailboxId=' + encodeURIComponent(mailboxId)
             + '&folder=entrada&status=nao_lidas&page=1&pageSize=1&_ts=' + Date.now();
-          var tries = buildApiUrlTries(BASE_PATH, '/api/msg/messages?' + qs);
+          var tries = ['/mensagens/api/msg/messages?' + qs];
           var result = await fetchJsonWithFallback(tries, { credentials: 'same-origin', cache: 'no-store' });
           if (!result || !result.r) {
             if (debug) console.warn('[PM MSG NOTIFY] polling falhou: sem resposta', { tries });
