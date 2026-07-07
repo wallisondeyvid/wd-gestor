@@ -5464,7 +5464,7 @@
     const mb = normalizeMailboxIdForSignature(mailboxId);
     const bp = String(basePath || '').trim();
     const qs = `?mailboxId=${encodeURIComponent(mb)}`;
-    const url = bp ? `${bp}/api/msg/signature${qs}` : `/api/msg/signature${qs}`;
+    const url = `/mensagens/api/msg/signature${qs}`;
     const headers = { 'Accept': 'application/json', 'X-Requested-With': 'fetch' };
     try {
       const path = (typeof window !== 'undefined' && window.location) ? String(window.location.pathname || '') : '';
@@ -5483,7 +5483,7 @@
     const mb = normalizeMailboxIdForSignature(mailboxId);
     const bp = String(basePath || '').trim();
     const qs = `?mailboxId=${encodeURIComponent(mb)}`;
-    const url = bp ? `${bp}/api/msg/signature${qs}` : `/api/msg/signature${qs}`;
+    const url = `/mensagens/api/msg/signature${qs}`;
     const payload = { text: String(text || ''), enabled: !!enabled };
     const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'fetch' };
     try {
