@@ -2225,9 +2225,7 @@
 
     const qs = `?mailboxId=${encodeURIComponent(mb)}`;
     const bp = String(basePath || '').trim();
-    const tries = bp
-      ? [`${bp}/api/msg/groups${qs}`]
-      : [`/api/msg/groups${qs}`];
+    const tries = [`/mensagens/api/msg/groups${qs}`];
     for (const url of tries) {
       try {
         const r = await fetch(url, { credentials: 'same-origin' });
@@ -2265,9 +2263,7 @@
 
   async function apiCreateGroup(basePath, payload) {
     const bp = String(basePath || '').trim();
-    const tries = bp
-      ? [`${bp}/api/msg/groups`]
-      : [`/api/msg/groups`];
+    const tries = ['/mensagens/api/msg/groups'];
     for (const url of tries) {
       try {
         const r = await fetch(url, {
@@ -2290,9 +2286,7 @@
     const gid = String(id || '').trim();
     if (!gid) return null;
     const bp = String(basePath || '').trim();
-    const tries = bp
-      ? [`${bp}/api/msg/groups/${encodeURIComponent(gid)}`]
-      : [`/api/msg/groups/${encodeURIComponent(gid)}`];
+    const tries = [`/mensagens/api/msg/groups/${encodeURIComponent(gid)}`];
     for (const url of tries) {
       try {
         const r = await fetch(url, {
@@ -2315,9 +2309,7 @@
     const gid = String(id || '').trim();
     if (!gid) return false;
     const bp = String(basePath || '').trim();
-    const tries = bp
-      ? [`${bp}/api/msg/groups/${encodeURIComponent(gid)}`]
-      : [`/api/msg/groups/${encodeURIComponent(gid)}`];
+    const tries = [`/mensagens/api/msg/groups/${encodeURIComponent(gid)}`];
     for (const url of tries) {
       try {
         const r = await fetch(url, { method: 'DELETE', credentials: 'same-origin' });
