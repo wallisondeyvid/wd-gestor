@@ -399,6 +399,18 @@ function mailboxIsPublic(mailboxDoc) {
   );
 }
 
+function defaultCreatorPermsServer() {
+  return {
+    administrar: true,
+    gerenciarMarcador: true,
+    lerMensagem: true,
+    criarMensagem: true,
+    gerenciarGrupos: true,
+    mensagemGeral: false,
+    excluirMensagem: true
+  };
+}
+
 function mailboxIsHabitacao(mailboxDoc) {
   try {
     const linkType = String(mailboxDoc?.link_type || '').trim().toLowerCase();
