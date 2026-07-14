@@ -1529,7 +1529,7 @@
 
   async function apiFetchMyRecipientPerms(basePath) {
     const bp = normalizeBasePath(basePath);
-    const tries = buildApiUrlTries(bp, '/api/msg/recipients/perms');
+    const tries = ['/mensagens/api/msg/recipients/perms'];
     for (const url of tries) {
       try {
         const target = appendQs(url, { _ts: Date.now() });
