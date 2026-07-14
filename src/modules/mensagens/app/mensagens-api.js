@@ -80,6 +80,101 @@ async function cleanupMsgBlobAttachments(anexos, token = '') {
   }
 }
 
+async function hardDeleteMailboxWithCleanup(id, opts = {}) {
+  const tag = String(opts?.logTag || '[mensagens][hardDeleteMailbox]');
+
+  let deletedMessages = 0;
+  let cleanedMessageStates = 0;
+  let deletedGroups = 0;
+  let deletedMarkers = 0;
+  let deletedSignatures = 0;
+
+  try {
+    const r = await CondMsgGroup.deleteMany({ mailbox_id: id });
+    deletedGroups = Number(r?.deletedCount) || 0;
+  } catch (e) {
+    console.warn(tag, 'falha ao excluir grupos:', e?.message || e);
+  }
+
+  try {
+    const r = await CondMsgMarker.deleteMany({ mailbox_id: id });
+    deletedMarkers = Number(r?.deletedCount) || 0;
+  } catch (e) {
+    console.warn(tag, 'falha ao excluir marcadores:', e?.message || e);
+  }
+
+  try {
+    const r = await CondMsgSignaturePref.deleteMany({ mailbox_id: id });
+    deletedSignatures = Number(r?.deletedCount) || 0;
+  } catch (e) {
+    console.warn(tag, 'falha ao excluir assinaturas:', e?.message || e);
+  }
+
+  try {
+    const affected = await CondMsgMessage.find({
+      ativo: { $ne: false },
+      'states.mailbox_id': id
+    })
+      .select('_id')
+      .lean();
+
+    const ids = (affected || [])
+      .map(d => String(d?._id || ''))
+      .filter(mongoose.isValidObjectId);
+
+    if (ids.length) {
+      const upd = await CondMsgMessage.updateMany(
+        { _id: { $in: ids } },
+        { $pull: { states: { mailbox_id: id } } }
+      );
+
+      cleanedMessageStates = Number(upd?.modifiedCount) || Number(upd?.nModified) || 0;
+
+      const toDeleteFilter = {
+        _id: { $in: ids },
+        $or: [
+          { states: { $exists: false } },
+          { states: { $size: 0 } }
+        ]
+      };
+
+      if (process.env.ENABLE_DELETE_OLD_BLOB === '1') {
+        try {
+          const blobToken = process.env.BLOB_READ_WRITE_TOKEN
+            || process.env.WDGESTOR_DB_DADOS_READ_WRITE_TOKEN
+            || process.env.VERCEL_BLOB_RW_TOKEN
+            || '';
+
+          const doomed = await CondMsgMessage.find(toDeleteFilter)
+            .select('anexos')
+            .lean();
+
+          for (const m of (doomed || [])) {
+            await cleanupMsgBlobAttachments(m?.anexos, blobToken);
+          }
+        } catch (e) {
+          console.warn(tag, 'falha ao limpar anexos blob:', e?.message || e);
+        }
+      }
+
+      const delDb = await CondMsgMessage.deleteMany(toDeleteFilter);
+      deletedMessages = Number(delDb?.deletedCount) || 0;
+    }
+  } catch (e) {
+    console.warn(tag, 'falha ao limpar mensagens:', e?.message || e);
+  }
+
+  await CondMsgMailbox.deleteOne({ _id: id });
+
+  return {
+    groups: deletedGroups,
+    markers: deletedMarkers,
+    signatures: deletedSignatures,
+    messages: deletedMessages,
+    messageStatesTouched: cleanedMessageStates
+  };
+}
+
 function getCtxUser(req) {
   try {
     const directUser = req?.user && typeof req.user === 'object' ? req.user : null;
