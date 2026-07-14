@@ -4486,6 +4486,59 @@ router.get('/mailboxes', async (req, res, next) => {
   }
 });
 
+router.delete('/mailboxes/:id', async (req, res, next) => {
+  try {
+    let ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    if (mongoose.connection.readyState !== 1) {
+      try { res.set('Retry-After', '5'); } catch {}
+      return res.status(503).json({ error: 'DB indisponível' });
+    }
+
+    const id = String(req.params.id || '').trim();
+    if (!id || !mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: 'id inválido' });
+    }
+
+    const admin = userCanScopeAll(ctxUser);
+
+    const doc = await CondMsgMailbox.findById(id);
+    if (!doc || doc.ativo === false) {
+      return res.status(404).json({ error: 'Caixa não encontrada' });
+    }
+
+    try {
+      if (mailboxIsHabitacao(doc)) {
+        return res.status(400).json({ error: 'Não é permitido excluir caixa de habitação.' });
+      }
+    } catch { /* noop */ }
+
+    try {
+      const t = String(doc.type || '').trim().toLowerCase();
+      if (t && t !== 'grupo') {
+        return res.status(400).json({ error: 'Somente caixas de grupo podem ser excluídas.' });
+      }
+    } catch { /* noop */ }
+
+    if (!admin && !mailboxIsMember(doc, ctxUser)) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    if (!mailboxCanEdit(doc, ctxUser)) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    const deleted = await hardDeleteMailboxWithCleanup(id, {
+      logTag: '[mensagens][DELETE /mailboxes/:id]'
+    });
+
+    return res.json({ ok: true, id, deleted: { mailbox: 1, ...deleted } });
+  } catch (e) {
+    return next(e);
+  }
+});
+
 router.get('/recipients/perms', async (req, res) => {
   try {
     let ctxUser = getCtxUser(req);
