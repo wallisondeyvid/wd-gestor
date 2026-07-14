@@ -1738,7 +1738,7 @@
   async function apiFetchMailboxes(basePath) {
     const bp = normalizeBasePath(basePath);
     const debug = isDebugEnabled();
-    const tries = buildApiUrlTries(bp, '/api/msg/mailboxes');
+    const tries = ['/mensagens/api/msg/mailboxes'];
     const ctx = getCtx();
     const adminUnitId = isMasterOrAdmin(ctx?.role) ? getActiveUnitIdForAdmin() : '';
     for (const url of tries) {
@@ -1785,7 +1785,7 @@
   async function apiFetchRecipientMailboxes(basePath) {
     const bp = normalizeBasePath(basePath);
     const debug = isDebugEnabled();
-    const tries = buildApiUrlTries(bp, '/api/msg/mailboxes/recipients');
+    const tries = ['/mensagens/api/msg/mailboxes/recipients'];
     const ctx = getCtx();
     const adminUnitId = isMasterOrAdmin(ctx?.role) ? getActiveUnitIdForAdmin() : '';
     for (const url of tries) {
@@ -1831,9 +1831,7 @@
 
   async function apiCreateMailbox(basePath, payload) {
     const bp = String(basePath || '').trim();
-    const tries = bp
-      ? [`${bp}/api/msg/mailboxes`]
-      : [`/api/msg/mailboxes`];
+    const tries = ['/mensagens/api/msg/mailboxes'];
     for (const url of tries) {
       try {
         const r = await fetch(url, {
@@ -1854,9 +1852,7 @@
 
   async function apiPatchMailbox(basePath, id, patch) {
     const bp = String(basePath || '').trim();
-    const tries = bp
-      ? [`${bp}/api/msg/mailboxes/${encodeURIComponent(id)}`]
-      : [`/api/msg/mailboxes/${encodeURIComponent(id)}`];
+    const tries = [`/mensagens/api/msg/mailboxes/${encodeURIComponent(id)}`];
     for (const url of tries) {
       try {
         const r = await fetch(url, {
@@ -1877,9 +1873,7 @@
 
   async function apiDeleteMailbox(basePath, id) {
     const bp = String(basePath || '').trim();
-    const tries = bp
-      ? [`${bp}/api/msg/mailboxes/${encodeURIComponent(id)}`]
-      : [`/api/msg/mailboxes/${encodeURIComponent(id)}`];
+    const tries = [`/mensagens/api/msg/mailboxes/${encodeURIComponent(id)}`];
     for (const url of tries) {
       try {
         const r = await fetch(url, { method: 'DELETE', credentials: 'same-origin' });
@@ -2677,7 +2671,7 @@
 
   function buildAllMailboxes(ctx) {
     // Em produção, a fonte da verdade é o servidor.
-    // O endpoint `/api/msg/mailboxes` já devolve apenas caixas visíveis para o usuário.
+    // O endpoint `/mensagens/api/msg/mailboxes` já devolve apenas caixas visíveis para o usuário.
     // Se filtrarmos aqui de novo, o Portal pode esconder caixas de habitação quando `userEmail` não existe no dataset.
     const all = buildAllMailboxesUnfiltered(ctx);
     const custom = loadCustomMailboxes();
