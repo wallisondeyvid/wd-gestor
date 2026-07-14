@@ -431,6 +431,41 @@ function mailboxIsMember(mailboxDoc, user) {
   });
 }
 
+function mailboxCanEdit(mailboxDoc, user) {
+  if (!mailboxDoc || !user) return false;
+  if (userCanScopeAll(user)) return true;
+
+  const meList = getUserIdentityKeyCandidates(user);
+  if (!meList.length) return false;
+
+  const ops = Array.isArray(mailboxDoc.operators) ? mailboxDoc.operators : [];
+
+  const found = ops.find(op => {
+    const u = (typeof op === 'string') ? op : (op && typeof op === 'object' ? op.user : '');
+    const k = String(u || '').trim().toLowerCase();
+    return k && meList.includes(k);
+  });
+
+  const hasExplicitOverride = !!(
+    found &&
+    typeof found === 'object' &&
+    found.perms &&
+    typeof found.perms === 'object'
+  );
+
+  const perms = hasExplicitOverride ? found.perms : null;
+
+  if (perms && typeof perms === 'object') {
+    if (perms.administrar) return true;
+    return false;
+  }
+
+  const createdBy = String(mailboxDoc.createdBy || '').trim().toLowerCase();
+  if (createdBy && meList.includes(createdBy)) return true;
+
+  return false;
+}
+
 function mailboxCanManageMarker(mailboxDoc, user) {
   if (!mailboxDoc || !user) return false;
   if (userCanScopeAll(user)) return true;
