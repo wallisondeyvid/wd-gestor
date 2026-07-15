@@ -3102,12 +3102,16 @@
     if (USERS.cache && (now - USERS.cacheAt) < USERS.ttlMs) return USERS.cache;
     if (USERS.inflight) return USERS.inflight;
 
+    const bp = String(basePath || '').trim();
+
     const tries = [
-      `${basePath}/api/usuarios/busca.v2`,
-      `${basePath}/api/usuarios/busca`,
-      `/api/usuarios/busca.v2`,
-      `/api/usuarios/busca`
-    ];
+      '/condominios/api/usuarios/busca.v2',
+      '/condominios/api/usuarios/busca',
+      bp ? `${bp}/api/usuarios/busca.v2` : '',
+      bp ? `${bp}/api/usuarios/busca` : '',
+      '/api/usuarios/busca.v2',
+      '/api/usuarios/busca'
+    ].filter((url, idx, arr) => url && arr.indexOf(url) === idx);
 
     USERS.inflight = (async () => {
       let list = [];
