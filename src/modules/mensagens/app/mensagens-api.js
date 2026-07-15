@@ -4513,9 +4513,18 @@ router.post('/mailboxes', express.json(), async (req, res, next) => {
 
     const admin = userCanScopeAll(ctxUser);
 
+    const bodyUnidadeId = String(
+      req.body?.unitId ||
+      req.body?.unidade_id ||
+      req.body?.unidadeId ||
+      ''
+    ).trim();
+
+    const ctxUnidadeId = String(getUserUnidadeId(ctxUser) || '').trim();
+
     const unidadeId = admin
-      ? String(req.body?.unitId || req.body?.unidade_id || req.body?.unidadeId || '').trim()
-      : String(getUserUnidadeId(ctxUser) || '').trim();
+      ? (bodyUnidadeId || ctxUnidadeId)
+      : ctxUnidadeId;
 
     if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
       return res.status(400).json({ error: 'unidade_id inválido' });
