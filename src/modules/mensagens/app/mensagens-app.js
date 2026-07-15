@@ -30,7 +30,19 @@ app.get('/js/caixa_de_mensagem.js', (req, res) => {
 app.use('/js', express.static(path.join(ROOT, 'public/mensagens/js')));
 
 function getCtxUser(req) {
-  return req?.session?.user || req?.user || null;
+  const sessionUser = req?.session?.user || null;
+  const reqUser = req?.user || null;
+
+  if (reqUser && typeof reqUser === 'object') {
+    return {
+      ...(sessionUser && typeof sessionUser === 'object' ? sessionUser : {}),
+      ...reqUser,
+      role: reqUser.role || sessionUser?.role || '',
+      isMaster: !!(reqUser.isMaster || sessionUser?.isMaster || reqUser.role === 'master' || sessionUser?.role === 'master')
+    };
+  }
+
+  return sessionUser || null;
 }
 
 async function renderCaixaMensagens(req, res) {
