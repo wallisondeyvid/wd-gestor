@@ -7613,13 +7613,18 @@
             const size = escapeHtml(fmtBytes(a?.tamanho));
             const meta = [mime, size].filter(Boolean).join(' · ');
             const acessosHtml = renderAccessAvatars(acessos);
+            const downloadName = escapeHtml(safeZipEntryName(rawNome || 'arquivo'));
+
             return [
               `    <div class="list-group-item px-3 py-1 ${disabled}">`,
               '      <div class="d-flex align-items-start justify-content-between gap-3" style="min-width:0; max-width:100%;">',
-              `        <a class="text-decoration-none text-body" title="${escapeHtml(rawNome)}" style="min-width:0; max-width:100%; flex:1 1 auto; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" href="${href}" ${hrefRaw ? 'target="_blank" rel="noopener"' : ''}>` +
+              `        <a class="text-decoration-none text-body" title="${escapeHtml(rawNome)}" style="min-width:0; max-width:100%; flex:1 1 auto; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" href="${href}" ${hrefRaw ? `target="_blank" rel="noopener" download="${downloadName}"` : ''}>` +
               `          ${inlineImgIcon(basePath, 'anexo.png', 'Anexo', 'bi bi-paperclip', 16, 'me-2')}${nome}` +
               '        </a>',
-              (meta ? `        <div class="text-muted small text-nowrap" style="flex:0 0 auto; text-align:right;">${meta}</div>` : ''),
+              '        <div class="d-flex align-items-center gap-2" style="flex:0 0 auto;">',
+              (meta ? `          <div class="text-muted small text-nowrap" style="text-align:right;">${meta}</div>` : ''),
+              hrefRaw ? `          <a class="btn btn-sm btn-outline-primary py-0" href="${href}" target="_blank" rel="noopener" download="${downloadName}">Baixar</a>` : '',
+              '        </div>',
               '      </div>',
               `      <div class="mt-1" data-att-access-row="1" style="display:none;">${acessosHtml}</div>`,
               '    </div>'
