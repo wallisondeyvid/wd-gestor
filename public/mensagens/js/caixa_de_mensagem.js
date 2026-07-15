@@ -4419,12 +4419,14 @@
     const bp = String(basePath || '').trim();
     const altCondoBp = bp && bp.includes('/portal-morador') ? bp.replace('/portal-morador', '/condominios') : '';
     const tries = [
+      '/gestor/api/unidades',
+      '/gestor/api/unidades?light=1',
       (bp ? `${bp}/api/unidades` : ''),
       // Portal do Morador normalmente não tem proxy para /api/unidades; usar o módulo condomínios direto.
       (altCondoBp ? `${altCondoBp}/api/unidades` : ''),
-      `/condominios/api/unidades`,
-      `/api/unidades`
-    ];
+      '/condominios/api/unidades',
+      '/api/unidades'
+    ].filter((url, idx, arr) => url && arr.indexOf(url) === idx);
     for (const url of tries) {
       if (!url) continue;
       try {
