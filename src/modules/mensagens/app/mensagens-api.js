@@ -4498,6 +4498,55 @@ router.get('/mailboxes', async (req, res, next) => {
   }
 });
 
+router.post('/mailboxes', express.json(), async (req, res, next) => {
+  try {
+    let ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    if (mongoose.connection.readyState !== 1) {
+      try { res.set('Retry-After', '5'); } catch {}
+      return res.status(503).json({ error: 'DB indisponível' });
+    }
+
+    const name = String(req.body?.name || req.body?.nome || '').trim();
+    if (!name) return res.status(400).json({ error: 'name é obrigatório' });
+
+    const admin = userCanScopeAll(ctxUser);
+
+    const unidadeId = admin
+      ? String(req.body?.unitId || req.body?.unidade_id || req.body?.unidadeId || '').trim()
+      : String(getUserUnidadeId(ctxUser) || '').trim();
+
+    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+      return res.status(400).json({ error: 'unidade_id inválido' });
+    }
+
+    let unidadeNome = String(
+      req.body?.unitName ||
+      req.body?.unidade_nome ||
+      req.body?.unidadeNome ||
+      ''
+    ).trim();
+
+    const creator = getMsgOwnerKey(ctxUser, req) || String(ctxUser?.nome || ctxUser?.name || '').trim();
+    const operators = [{ user: creator, perms: defaultCreatorPermsServer() }];
+
+    const doc = await CondMsgMailbox.create({
+      name,
+      type: 'grupo',
+      unidade_id: unidadeId,
+      unidade_nome: unidadeNome,
+      createdBy: creator,
+      operators,
+      ativo: true
+    });
+
+    return res.status(201).json(toMailboxClient(doc));
+  } catch (e) {
+    return next(e);
+  }
+});
+
 router.delete('/mailboxes/:id', async (req, res, next) => {
   try {
     let ctxUser = getCtxUser(req);
