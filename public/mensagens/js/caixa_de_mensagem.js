@@ -4874,9 +4874,18 @@
         createForm.addEventListener('submit', (ev) => {
           ev.preventDefault();
           const name = qs('#cfgBoxName')?.value?.trim() || '';
-          const unitId = qs('#cfgUnit')?.value || '';
-          const unitName = qs('#cfgUnit')?.selectedOptions?.[0]?.textContent || '';
-          if (!name || !unitId || !unitName) return;
+          const unitIdRaw = String(qs('#cfgUnit')?.value || '').trim();
+          const unitName = String(qs('#cfgUnit')?.selectedOptions?.[0]?.textContent || '').trim();
+
+          const unitId = looksLikeObjectId(unitIdRaw) ? unitIdRaw : '';
+
+          if (!name || !unitId || !unitName) {
+            bodyEl.insertAdjacentHTML(
+              'afterbegin',
+              '<div class="alert alert-warning" role="alert">Selecione uma unidade válida antes de criar a caixa.</div>'
+            );
+            return;
+          }
 
           (async () => {
             const created = await apiCreateMailbox(basePath, { name, unitId, unitName });
