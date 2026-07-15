@@ -1482,6 +1482,16 @@
     return r === 'master' || r === 'admin';
   }
 
+  function isCurrentUserMasterOrAdmin(ctx) {
+    try {
+      const role = String(ctx?.role || document.body?.dataset?.userRole || '').trim().toLowerCase();
+      const masterFlag = String(document.body?.dataset?.userMaster || '').trim() === '1';
+      return masterFlag || role === 'master' || role === 'admin';
+    } catch {
+      return false;
+    }
+  }
+
   function normalizeId(text) {
     return String(text || '')
       .trim()
@@ -4541,7 +4551,7 @@
         return false;
       }
     })();
-    const roleIsMA = isMasterOrAdmin(ctx?.role) || document.body?.dataset?.userMaster === '1';
+    const roleIsMA = isCurrentUserMasterOrAdmin(ctx);
 
     // No Portal, o servidor já devolve apenas caixas acessíveis (inclui públicas/habitação quando aplicável).
     // Não filtramos por e-mail/nome local, pois o dataset do Portal pode vir incompleto.
