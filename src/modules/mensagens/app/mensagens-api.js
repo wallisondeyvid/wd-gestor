@@ -4547,6 +4547,86 @@ router.post('/mailboxes', express.json(), async (req, res, next) => {
   }
 });
 
+router.patch('/mailboxes/:id', express.json(), async (req, res, next) => {
+  try {
+    let ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
+
+    if (mongoose.connection.readyState !== 1) {
+      try { res.set('Retry-After', '5'); } catch {}
+      return res.status(503).json({ error: 'DB indisponível' });
+    }
+
+    const id = String(req.params.id || '').trim();
+    if (!id || !mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: 'id inválido' });
+    }
+
+    const admin = userCanScopeAll(ctxUser);
+
+    const doc = await CondMsgMailbox.findById(id);
+    if (!doc || doc.ativo === false) {
+      return res.status(404).json({ error: 'Caixa não encontrada' });
+    }
+
+    if (!admin && !mailboxIsMember(doc, ctxUser)) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    const wantsOperatorsUpdate = !!(
+      req.body &&
+      Object.prototype.hasOwnProperty.call(req.body, 'operators')
+    );
+
+    if (wantsOperatorsUpdate) {
+      if (!admin) {
+        const perms = mailboxGetUserPerms(doc, ctxUser);
+        if (!perms || !perms.administrar) {
+          return res.status(403).json({
+            error: 'Somente quem tem Administrar a caixa pode alterar permissões'
+          });
+        }
+      }
+    } else if (!mailboxCanEdit(doc, ctxUser)) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    if (req.body && (req.body.name != null || req.body.nome != null)) {
+      const name = String(req.body.name || req.body.nome || '').trim();
+      if (!name) return res.status(400).json({ error: 'name inválido' });
+      doc.name = name;
+    }
+
+    if (wantsOperatorsUpdate) {
+      const raw = Array.isArray(req.body.operators) ? req.body.operators : [];
+
+      const safe = raw
+        .filter(Boolean)
+        .slice(0, 200)
+        .map(op => {
+          if (typeof op === 'string') {
+            const user = String(op || '').trim();
+            return user ? { user, perms: sanitizeMailboxPerms({}) } : null;
+          }
+
+          const user = String(op?.user || '').trim();
+          const perms = sanitizeMailboxPerms(op?.perms);
+          return user ? { user, perms } : null;
+        })
+        .filter(Boolean);
+
+      if (!safe.length) return res.status(400).json({ error: 'operators inválido' });
+      doc.operators = safe;
+    }
+
+    await doc.save();
+
+    return res.json(toMailboxClient(doc));
+  } catch (e) {
+    return next(e);
+  }
+});
+
 router.delete('/mailboxes/:id', async (req, res, next) => {
   try {
     let ctxUser = getCtxUser(req);
