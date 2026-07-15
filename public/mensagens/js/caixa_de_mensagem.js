@@ -4421,11 +4421,14 @@
 
   async function fetchUnidadesList(basePath) {
     const bp = String(basePath || '').trim();
+    const bpCanExposeUnidades = bp && !bp.includes('/mensagens');
     const altCondoBp = bp && bp.includes('/portal-morador') ? bp.replace('/portal-morador', '/condominios') : '';
+
     const tries = [
       '/gestor/api/unidades',
       '/gestor/api/unidades?light=1',
-      (bp ? `${bp}/api/unidades` : ''),
+      // Mensagens não possui /api/unidades; evitar 404 ruidoso.
+      (bpCanExposeUnidades ? `${bp}/api/unidades` : ''),
       // Portal do Morador normalmente não tem proxy para /api/unidades; usar o módulo condomínios direto.
       (altCondoBp ? `${altCondoBp}/api/unidades` : ''),
       '/condominios/api/unidades',
