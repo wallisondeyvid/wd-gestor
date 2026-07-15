@@ -4513,18 +4513,41 @@ router.post('/mailboxes', express.json(), async (req, res, next) => {
 
     const admin = userCanScopeAll(ctxUser);
 
-    const bodyUnidadeId = String(
+    const bodyUnidadeIdRaw = String(
       req.body?.unitId ||
       req.body?.unidade_id ||
       req.body?.unidadeId ||
       ''
     ).trim();
 
-    const ctxUnidadeId = String(getUserUnidadeId(ctxUser) || '').trim();
+    const bodyUnidadeId = mongoose.isValidObjectId(bodyUnidadeIdRaw)
+      ? bodyUnidadeIdRaw
+      : '';
+
+    const ctxUnidadeIdRaw = String(getUserUnidadeId(ctxUser) || '').trim();
+
+    const sessionUnidadeIdRaw = String(
+      req?.session?.unidade_id ||
+      req?.session?.unidadeId ||
+      req?.session?.activeUnidadeId ||
+      req?.session?.unidadeAtivaId ||
+      req?.session?.selectedUnidadeId ||
+      req?.session?.user?.unidade_id ||
+      req?.session?.user?.unidadeId ||
+      ''
+    ).trim();
+
+    const ctxUnidadeId = mongoose.isValidObjectId(ctxUnidadeIdRaw)
+      ? ctxUnidadeIdRaw
+      : '';
+
+    const sessionUnidadeId = mongoose.isValidObjectId(sessionUnidadeIdRaw)
+      ? sessionUnidadeIdRaw
+      : '';
 
     const unidadeId = admin
-      ? (bodyUnidadeId || ctxUnidadeId)
-      : ctxUnidadeId;
+      ? (bodyUnidadeId || ctxUnidadeId || sessionUnidadeId)
+      : (ctxUnidadeId || sessionUnidadeId);
 
     if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
       return res.status(400).json({ error: 'unidade_id inválido' });
