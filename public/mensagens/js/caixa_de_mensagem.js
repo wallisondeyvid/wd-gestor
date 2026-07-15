@@ -4541,7 +4541,7 @@
         return false;
       }
     })();
-    const roleIsMA = isMasterOrAdmin(ctx.role);
+    const roleIsMA = isMasterOrAdmin(ctx?.role) || document.body?.dataset?.userMaster === '1';
 
     // No Portal, o servidor já devolve apenas caixas acessíveis (inclui públicas/habitação quando aplicável).
     // Não filtramos por e-mail/nome local, pois o dataset do Portal pode vir incompleto.
