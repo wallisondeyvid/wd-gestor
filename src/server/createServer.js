@@ -725,9 +725,17 @@ export async function createServer(options = {}) {
         ? 'Se os dados informados corresponderem a um usuário cadastrado, enviaremos as instruções de recuperação.'
         : null;
 
-      return res.render('gestor/esquecisenha', {
+      const isPortalMorador = isPortalMoradorSegment(seg);
+      const viewName = isPortalMorador ? 'portal-morador/esquecisenha' : 'gestor/esquecisenha';
+
+      if (isPortalMorador) {
+        moduleLabel = 'Portal do Morador';
+      }
+
+      return res.render(viewName, {
         basePath,
         moduleLabel,
+        moduleName: moduleLabel,
         solicitacaoRecebida,
         recoveryMessage,
       }, (err, html) => {

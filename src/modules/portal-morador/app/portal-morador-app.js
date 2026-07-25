@@ -555,6 +555,47 @@ app.get('/dashboard', (req, res) => {
 // Login do Portal: trate POST aqui para evitar qualquer roteamento genérico/compat no app pai.
 app.post('/login', (req, res, next) => Promise.resolve(portalLoginPost(req, res)).catch(next));
 
+app.get('/esquecisenha', (req, res) => {
+  const basePath = req.baseUrl || '/portal-morador';
+  const status = String(req?.query?.status || '').toLowerCase();
+  const erroCode = String(req?.query?.erro || '').toLowerCase();
+  const solicitacaoRecebida = status === 'recebida';
+
+  let erro = null;
+  if (erroCode === 'cpf') erro = 'Informe um CPF válido.';
+  if (erroCode === 'servidor') erro = 'Não foi possível solicitar a recuperação agora. Tente novamente.';
+
+  return res.render('esquecisenha', {
+    basePath,
+    moduleLabel: 'Portal do Morador',
+    moduleName: 'Portal do Morador',
+    solicitacaoRecebida,
+    erro,
+    recoveryMessage: solicitacaoRecebida
+      ? 'Se os dados informados corresponderem a um morador cadastrado, enviaremos as instruções de recuperação.'
+      : null
+  });
+});
+
+app.post('/esquecisenha', express.urlencoded({ extended: false }), async (req, res) => {
+  try {
+    const basePath = req.baseUrl || '/portal-morador';
+    const cpf = String(req.body?.cpf || '').replace(/\D/g, '');
+
+    if (cpf.length !== 11) {
+      return res.redirect(303, `${basePath}/esquecisenha?erro=cpf`);
+    }
+
+    // Fluxo seguro: não revela se o CPF existe ou não.
+    // A lógica real de token/e-mail será implementada no próximo microcorte.
+    return res.redirect(303, `${basePath}/esquecisenha?status=recebida`);
+  } catch (err) {
+    console.error('[portal-morador][POST /esquecisenha] erro:', err?.message || err);
+    const basePath = req.baseUrl || '/portal-morador';
+    return res.redirect(303, `${basePath}/esquecisenha?erro=servidor`);
+  }
+});
+
 // Novo fluxo de login em etapas (AJAX)
 app.get('/api/auth/context', requirePortalLogin, (req, res, next) => Promise.resolve(portalAuthContextGet(req, res)).catch(next));
 app.post('/api/auth/selecionar', requirePortalLogin, (req, res, next) => Promise.resolve(portalSelectVinculoPost(req, res)).catch(next));

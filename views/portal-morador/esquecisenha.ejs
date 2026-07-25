@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recuperar acesso - Portal do Morador</title>
+
+  <% const BP = typeof basePath === 'string' && basePath ? basePath : '/portal-morador'; %>
+
+  <link rel="icon" type="image/png" href="<%= BP %>/images/logoWDGestor.png?v=5">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="<%= BP %>/css/portal-morador/login.css?v=<%= Date.now() %>">
+
+  <style>
+    .pm-recovery-page .pm-login-card {
+      min-height: 560px;
+    }
+
+    .pm-recovery-page .pm-login-hero .pm-brand img {
+      width: 150px !important;
+      max-width: 150px !important;
+      height: auto !important;
+      object-fit: contain !important;
+    }
+
+    .pm-recovery-page .pm-login-form {
+      justify-content: center;
+    }
+
+    .pm-recovery-page .pm-recovery-help {
+      font-size: .88rem;
+      color: #667085;
+      line-height: 1.45;
+      margin-top: .5rem;
+    }
+
+    .pm-recovery-page .pm-recovery-info {
+      border: 1px solid rgba(13, 110, 253, .16);
+      background: rgba(13, 110, 253, .045);
+      border-radius: 16px;
+      padding: .85rem 1rem;
+      color: #344054;
+      font-size: .88rem;
+      line-height: 1.45;
+      margin-bottom: 1.25rem;
+    }
+
+    .pm-recovery-page .pm-recovery-info i {
+      color: #0d6efd;
+    }
+
+    .pm-recovery-page .pm-recovery-success {
+      border: 1px solid rgba(25, 135, 84, .22);
+      background: rgba(25, 135, 84, .08);
+      border-radius: 16px;
+      padding: .95rem 1rem;
+      color: #146c43;
+      font-weight: 600;
+      font-size: .92rem;
+      line-height: 1.45;
+      margin-bottom: 1.25rem;
+    }
+
+    .pm-recovery-page .pm-recovery-success i {
+      color: #198754;
+    }
+  </style>
+</head>
+
+<body class="pm-login-body pm-recovery-page">
+  <div class="pm-login-shell position-relative">
+    <div class="pm-login-card">
+
+      <section class="pm-login-hero">
+        <div class="pm-brand">
+          <img src="<%= BP %>/images/logoWDGestor.png?v=5" alt="WD Gestor">
+          <div class="pm-brand-text">
+            <h4 class="mb-1 fw-bold">PORTAL DO MORADOR</h4>
+            <small>Recuperação de acesso</small>
+          </div>
+        </div>
+
+        <div class="pm-hero-content">
+          <h1>Esqueceu sua senha?</h1>
+          <p>
+            Informe seus dados para recuperar o acesso ao Portal do Morador com segurança.
+          </p>
+
+<div class="pm-feature-grid">
+  <div class="pm-feature-card">
+    <span><i class="bi bi-shield-lock"></i></span>
+    <strong>Segurança</strong>
+    <small>Recuperação protegida</small>
+  </div>
+
+  <div class="pm-feature-card">
+    <span><i class="bi bi-envelope-check"></i></span>
+    <strong>E-mail</strong>
+    <small>Instruções enviadas ao cadastro</small>
+  </div>
+
+  <div class="pm-feature-card">
+    <span><i class="bi bi-building"></i></span>
+    <strong>Condomínio</strong>
+    <small>Acesso vinculado à moradia</small>
+  </div>
+
+  <div class="pm-feature-card">
+    <span><i class="bi bi-check-circle"></i></span>
+    <strong>Validação</strong>
+    <small>Dados conferidos com segurança</small>
+  </div>
+</div>
+      </section>
+
+      <section class="pm-login-form">
+        <div class="pm-brand pm-brand-compact">
+          <div class="pm-brand-text">
+            <h5 class="mb-1 fw-bold">Recuperar acesso</h5>
+            <small>MÓDULO GESTÃO DE CONDOMÍNIO</small>
+          </div>
+        </div>
+
+        <% if (typeof recoveryMessage !== 'undefined' && recoveryMessage) { %>
+          <div class="pm-recovery-success">
+            <i class="bi bi-check-circle me-1"></i>
+            <%= recoveryMessage %>
+          </div>
+        <% } %>
+
+        <% if (typeof erro !== 'undefined' && erro) { %>
+          <div class="pm-alert"><%= erro %></div>
+        <% } %>
+
+        <div class="pm-recovery-info">
+          <i class="bi bi-info-circle me-1"></i>
+          Digite o CPF vinculado ao seu cadastro de morador. Se houver um acesso ativo, enviaremos as instruções de recuperação ao e-mail cadastrado.
+        </div>
+
+        <form id="pmRecoveryForm" action="<%= BP %>/esquecisenha" method="POST" novalidate>
+          <div class="pm-field">
+            <label for="cpf">CPF</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-person-vcard"></i></span>
+              <input
+                type="text"
+                class="form-control"
+                id="cpf"
+                name="cpf"
+                placeholder="000.000.000-00"
+                autocomplete="off"
+                maxlength="14"
+                required
+              >
+            </div>
+            <div class="pm-recovery-help">
+              Use apenas o CPF do morador cadastrado no condomínio.
+            </div>
+          </div>
+
+          <div class="pm-button-row">
+            <button type="submit" class="pm-cta-btn" id="pmRecoverySubmit">
+              <i class="bi bi-envelope-check me-2"></i>Solicitar recuperação
+            </button>
+          </div>
+
+          <div class="text-center text-muted pm-access-help" style="font-size:.9rem;">
+            Lembrou sua senha?
+            <a href="<%= BP %>/login" class="fw-semibold" style="color:#0d4fbf;">Voltar ao login</a>
+          </div>
+
+          <div class="pm-hero-chip pm-access-chip">Acesso exclusivo para moradores</div>
+        </form>
+      </section>
+
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const form = document.getElementById('pmRecoveryForm');
+      const cpfEl = document.getElementById('cpf');
+      const btn = document.getElementById('pmRecoverySubmit');
+
+      function onlyDigits(value){
+        return String(value || '').replace(/\D/g, '');
+      }
+
+      function maskCpf(value){
+        const d = onlyDigits(value).slice(0, 11);
+        return d
+          .replace(/^(\d{3})(\d)/, '$1.$2')
+          .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+          .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+      }
+
+      cpfEl?.addEventListener('input', () => {
+        cpfEl.value = maskCpf(cpfEl.value);
+      });
+
+      form?.addEventListener('submit', (ev) => {
+        const cpf = onlyDigits(cpfEl?.value || '');
+        if (cpf.length !== 11) {
+          ev.preventDefault();
+          alert('Informe um CPF válido.');
+          cpfEl?.focus();
+          return;
+        }
+
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Solicitando...';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
