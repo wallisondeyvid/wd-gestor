@@ -1124,8 +1124,8 @@ try {
         if (isStatic) return next();
 
         // IMPORTANTE: não interceptar rotas de API do módulo.
-        // O gate é de UI (renderiza HTML) e, se aplicado em /api/*, quebra clientes que esperam JSON
-        // (ex.: Portal do Morador proxyando /portal-morador/api/msg/* -> /condominios/api/msg/*).
+        // O gate é de UI (renderiza HTML) e, se aplicado em /api/*, quebra clientes que esperam JSON.
+        // O Portal do Morador usa APIs próprias/standalone e pode manter fallbacks legados de API.
         const isApi = new RegExp('^' + escFirst + '\\/(api)(?:/|$)', 'i').test(pathOnly);
         if (isApi) {
           if (gateDebug) { try { res.set('X-Planned-Gate', 'skip-api;mode:' + gateMode); } catch{} }
