@@ -384,6 +384,22 @@ export async function createServer(options = {}) {
         return null;
       }
 
+      const source = String(req.originalUrl || req.url || '').split('#')[0];
+      const sourcePath = source.split('?')[0];
+      const targetPath = target.split('?')[0];
+
+      const sourceIsPortalMorador = /^\/portal-morador(?:\/|$)/i.test(sourcePath)
+        || /^\/portal_morador(?:\/|$)/i.test(sourcePath);
+
+      const sourceIsPublicAuthPage = /(^|\/)(login|primeiroacesso)(\/)?$/i.test(sourcePath);
+
+      const targetIsPortalMoradorAuthPage = /^\/portal-morador\/(login|primeiroacesso)(\/)?$/i.test(targetPath)
+        || /^\/portal_morador\/(login|primeiroacesso)(\/)?$/i.test(targetPath);
+
+      if (sourceIsPortalMorador && targetIsPortalMoradorAuthPage && !sourceIsPublicAuthPage) {
+        return null;
+      }
+
       const qIndex = target.indexOf('?');
       const qs = qIndex >= 0 ? target.slice(qIndex + 1) : (url.includes('?') ? url.slice(url.indexOf('?') + 1) : '');
       const { erro, mensagem } = resolveState(qs ? ('?' + qs) : target, { isLogin, isPA });
