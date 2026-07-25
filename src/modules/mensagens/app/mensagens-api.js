@@ -180,6 +180,33 @@ function getCtxUser(req) {
     const directUser = req?.user && typeof req.user === 'object' ? req.user : null;
     const sessionUser = req?.session?.user && typeof req.session.user === 'object' ? req.session.user : null;
 
+    const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
+    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
+      || refLower.includes('/portal-morador');
+
+    const directPortalUser = fromPortal && req?.portalUser && typeof req.portalUser === 'object'
+      ? req.portalUser
+      : null;
+
+    const sessionPortalUser = fromPortal && req?.session?.portalUser && typeof req.session.portalUser === 'object'
+      ? req.session.portalUser
+      : null;
+
+    const portalUser = directPortalUser || sessionPortalUser || null;
+
+    if (portalUser) {
+      return {
+        ...portalUser,
+        id: portalUser.cond_usuario_id || portalUser.id || portalUser._id,
+        _id: portalUser.cond_usuario_id || portalUser._id || portalUser.id,
+        cond_usuario_id: portalUser.cond_usuario_id || portalUser.id || portalUser._id,
+        email: portalUser.email || portalUser.userEmail || '',
+        role: portalUser.role || portalUser.perfil || 'morador',
+        tipo_acesso: portalUser.tipo_acesso || 'morador',
+        origem: 'portal-morador'
+      };
+    }
+
     if (directUser && sessionUser) {
       return {
         ...directUser,
@@ -187,6 +214,8 @@ function getCtxUser(req) {
         id: sessionUser.id || sessionUser._id || directUser.id || directUser._id,
         _id: sessionUser._id || sessionUser.id || directUser._id || directUser.id,
         email: sessionUser.email || directUser.email,
+        role: sessionUser.role || directUser.role,
+        isMaster: !!(sessionUser.isMaster || directUser.isMaster),
         foto: directUser.foto || sessionUser.foto
       };
     }
