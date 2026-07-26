@@ -175,6 +175,101 @@ async function hardDeleteMailboxWithCleanup(id, opts = {}) {
   };
 }
 
+function getPortalCookieValue(req) {
+  try {
+    const rawCookie = String(req?.headers?.cookie || '').trim();
+    if (!rawCookie) return '';
+
+    const parts = rawCookie.split(';').map(part => part.trim()).filter(Boolean);
+
+    for (const part of parts) {
+      const idx = part.indexOf('=');
+      if (idx < 0) continue;
+
+      const name = part.slice(0, idx).trim();
+      const value = part.slice(idx + 1).trim();
+
+      if (name === 'wdg_portal') {
+        try {
+          return decodeURIComponent(value);
+        } catch {
+          return value;
+        }
+      }
+    }
+
+    return '';
+  } catch {
+    return '';
+  }
+}
+
+function getPortalUserFromCookie(req) {
+  try {
+    const token = getPortalCookieValue(req);
+    if (!token) return null;
+
+    const secret = String(process.env.PORTAL_COOKIE_SECRET || '').trim();
+    if (!secret) return null;
+
+    const [data, signature] = token.split('.');
+    if (!data || !signature) return null;
+
+    const expected = crypto
+      .createHmac('sha256', secret)
+      .update(data)
+      .digest('base64url');
+
+    const expectedBuffer = Buffer.from(expected);
+    const signatureBuffer = Buffer.from(signature);
+
+    if (
+      expectedBuffer.length !== signatureBuffer.length ||
+      !crypto.timingSafeEqual(expectedBuffer, signatureBuffer)
+    ) {
+      return null;
+    }
+
+    const payload = JSON.parse(Buffer.from(data, 'base64url').toString('utf8'));
+
+    if (!payload || typeof payload !== 'object') return null;
+
+    const exp = Number(payload.exp || 0);
+    if (exp && exp < Date.now()) return null;
+
+    const userId = String(payload.userId || '').trim();
+    const session = payload.session && typeof payload.session === 'object'
+      ? payload.session
+      : null;
+
+    if (!session) return null;
+    if (session.portal_acesso_ativo === false) return null;
+
+    const portalUser = {
+      ...session,
+      id: session.id || session.cond_usuario_id || userId || null,
+      _id: session.cond_usuario_id || session._id || session.id || userId || null,
+      cond_usuario_id: session.cond_usuario_id || session.id || userId || null,
+      email: session.email || session.userEmail || '',
+      userEmail: session.userEmail || session.email || '',
+      role: session.role || session.perfil || 'morador',
+      tipo_acesso: session.tipo_acesso || 'morador',
+      origem: 'portal-morador'
+    };
+
+    try {
+      req.portalUser = req.portalUser || portalUser;
+      req.__wdgPortalCookieUserId = req.__wdgPortalCookieUserId || userId || portalUser.cond_usuario_id || '';
+    } catch {
+      /* noop */
+    }
+
+    return portalUser;
+  } catch {
+    return null;
+  }
+}
+
 function getCtxUser(req) {
   try {
     const directUser = req?.user && typeof req.user === 'object' ? req.user : null;
@@ -192,7 +287,8 @@ function getCtxUser(req) {
       ? req.session.portalUser
       : null;
 
-    const portalUser = directPortalUser || sessionPortalUser || null;
+    const cookiePortalUser = fromPortal ? getPortalUserFromCookie(req) : null;
+    const portalUser = directPortalUser || sessionPortalUser || cookiePortalUser || null;
 
     if (portalUser) {
       return {
