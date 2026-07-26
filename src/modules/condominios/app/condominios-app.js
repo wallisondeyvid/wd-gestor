@@ -21086,7 +21086,7 @@ app.get('/dashboard', requireCondominiosPageLogin, (req, res) => {
 app.get('/configuracoes/geral', async (req, res) => {
   const ctxUser = getCtxUser(req);
   if (!ctxUser) {
-    const nextUrl = encodeURIComponent(String(req.originalUrl || req.url || '/condominios'));
+    const nextUrl = encodeURIComponent('/mensagens/dashboard?view=cfg_geral');
     return res.redirect(`/gestor/login?next=${nextUrl}`);
   }
   if (!userCanScopeAll(ctxUser)) {
@@ -21096,8 +21096,8 @@ app.get('/configuracoes/geral', async (req, res) => {
       description: 'Esta página é exclusiva para administradores.'
     });
   }
-  const bp = req.baseUrl || '/condominios';
-  return res.redirect(`${bp}/administracao/caixa-de-mensagem?view=cfg_geral`);
+
+  return res.redirect('/mensagens/dashboard?view=cfg_geral');
 });
 
 // Página cadastrar habitação (estrutura inicial do módulo)
@@ -24064,113 +24064,14 @@ app.get('/administracao/comunicados', async (req, res) => {
 
 // Administração > Caixa de Mensagem
 app.get('/administracao/caixa-de-mensagem', async (req, res) => {
-  try {
-    const ctxUser = getCtxUser(req);
-    if (!ctxUser) {
-      const nextUrl = encodeURIComponent(String(req.originalUrl || req.url || '/condominios'));
-      return res.redirect(`/gestor/login?next=${nextUrl}`);
-    }
+  const ctxUser = getCtxUser(req);
 
-    // IMPORTANTE (Vercel/CDN): esta página injeta URLs versionadas de JS/CSS.
-    // Se o HTML for cacheado, o cliente pode continuar referenciando assets antigos.
-    try {
-      res.setHeader('Cache-Control', 'no-store');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-      res.setHeader('Surrogate-Control', 'no-store');
-      res.setHeader('CDN-Cache-Control', 'no-store');
-      res.setHeader('X-WDG-Asset-Version', String(res?.locals?.assetVersion || 'dev'));
-    } catch { /* noop */ }
-
-    return res.render('caixa_de_mensagem', {
-      moduleLabel: 'Gestão de Condomínios',
-      user: ctxUser
-    }, (err, html) => {
-      if (err) {
-        console.error('[condominios][ui][caixa-de-mensagem] render erro:', err);
-        try {
-          const bp = req.baseUrl || '/condominios';
-          const assetV = String(res?.locals?.assetVersion || 'dev');
-          res.setHeader('X-WDG-Asset-Version', assetV);
-          res.setHeader('Cache-Control', 'no-store');
-          const safeNome = (ctxUser && ctxUser.nome) ? String(ctxUser.nome) : '';
-          const safeEmail = (ctxUser && ctxUser.email) ? String(ctxUser.email) : '';
-          const safeRole = (ctxUser && ctxUser.role) ? String(ctxUser.role) : '';
-          const safeUnitId = (ctxUser && ctxUser.unidade_id) ? String((ctxUser.unidade_id._id || ctxUser.unidade_id || ctxUser.unidadeId || '')) : '';
-          const safeUnitName = (ctxUser && (ctxUser.unidade_nome || ctxUser.unidadeNome || (ctxUser.unidade_id && ctxUser.unidade_id.nome)))
-            ? String(ctxUser.unidade_nome || ctxUser.unidadeNome || ctxUser.unidade_id.nome)
-            : '';
-          const fallbackHtml = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Caixa de Mensagem - WDGestor</title>
-  <link rel="icon" href="/favicon.ico?v=2" sizes="any">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
-  <link rel="stylesheet" href="${bp}/css/condominios-modern.css?v=1" />
-</head>
-<body class="wdg-layout wdg-msg"
-  data-base-path="${bp}"
-  data-user-name="${safeNome.replace(/"/g,'&quot;')}"
-  data-user-email="${safeEmail.replace(/"/g,'&quot;')}"
-  data-user-role="${safeRole.replace(/"/g,'&quot;')}"
-  data-user-unit-id="${safeUnitId.replace(/"/g,'&quot;')}"
-  data-user-unit-name="${safeUnitName.replace(/"/g,'&quot;')}">
-
-  <main class="container-fluid py-3">
-    <div class="alert alert-warning small">
-      Carregando Caixa de Mensagem em modo compatibilidade (falha ao renderizar layout). Se persistir, avise o suporte.
-    </div>
-
-    <div class="row g-3">
-      <div class="col-12 col-lg-4">
-        <div class="card">
-          <div class="card-body">
-            <label class="form-label" for="msgMailboxSelect">Selecionar caixa</label>
-            <select id="msgMailboxSelect" class="form-select form-select-sm" aria-label="Selecionar caixa de mensagem"></select>
-            <hr />
-            <div class="list-group" id="msgMenu" role="navigation" aria-label="Menu de mensagens"></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 col-lg-8">
-        <div class="card">
-          <div class="card-body">
-            <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap">
-              <div>
-                <h2 class="h5 m-0" id="msgTitle">Caixa de entrada</h2>
-                <p class="text-muted small m-0" id="msgSubtitle" style="display:none;"></p>
-              </div>
-              <div id="msgChip" class="badge text-bg-primary">Mensagens</div>
-            </div>
-            <div class="mt-3" id="msgBody"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="${bp}/js/condominios/caixa_de_mensagem.js?v=${assetV}"></script>
-</body>
-</html>`;
-          return res.status(200).type('text/html; charset=utf-8').send(fallbackHtml);
-        } catch {
-          return res.status(500).type('text/plain; charset=utf-8').send('Falha ao carregar a Caixa de Mensagem.');
-        }
-      }
-      try {
-        res.setHeader('X-WDG-Asset-Version', String(res?.locals?.assetVersion || 'dev'));
-      } catch { /* noop */ }
-      return res.status(200).send(html);
-    });
-  } catch (err) {
-    console.error('[condominios][ui][caixa-de-mensagem] erro:', err);
-    return res.status(500).type('text/plain; charset=utf-8').send('Falha ao carregar a Caixa de Mensagem.');
+  if (!ctxUser) {
+    const nextUrl = encodeURIComponent('/mensagens/dashboard');
+    return res.redirect(`/gestor/login?next=${nextUrl}`);
   }
+
+  return res.redirect(302, '/mensagens/dashboard');
 });
 
 function getCtxUser(req) {
