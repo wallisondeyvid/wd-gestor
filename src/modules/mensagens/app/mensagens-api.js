@@ -752,6 +752,24 @@ function buildPersonalOwnerCandidates(ctxUser, req, scope) {
   if (baseEmail && isEmailish(baseEmail)) {
     add(`${baseEmail}::portal`);
     add(`${baseEmail}::colab`);
+
+    const habIds = [
+      ctxUser?.habitacao_id,
+      ctxUser?.habitacaoId,
+      ctxUser?.hab_id,
+      ctxUser?.habId,
+      req?.portalUser?.habitacao_id,
+      req?.portalUser?.habitacaoId,
+      req?.session?.portalUser?.habitacao_id,
+      req?.session?.portalUser?.habitacaoId,
+    ];
+
+    for (const habIdRaw of habIds) {
+      const habId = String(habIdRaw || '').trim();
+      if (!habId) continue;
+      add(`${baseEmail}::portal::hab:${habId}`);
+      add(`${baseEmail}::hab:${habId}`);
+    }
   }
 
   return out;
