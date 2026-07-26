@@ -823,27 +823,6 @@ app.set('view engine', 'ejs');
 
 // Assets compartilhados (servidos das pastas globais; o prefixo público é adicionado no mount)
 app.use('/css', express.static(path.join(ROOT, 'public/css')));
-// JS crítico: não cachear (evita telas continuarem com versão antiga após deploy)
-app.get('/js/condominios/caixa_de_mensagem.js', (req, res) => {
-  try {
-    res.set('Cache-Control', 'no-store');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
-    res.set('Surrogate-Control', 'no-store');
-    res.set('CDN-Cache-Control', 'no-store');
-    res.set('X-WDG-Asset-Version', String(res.locals.assetVersion || 'dev'));
-  } catch {
-    /* noop */
-  }
-  // Garante que nunca responda 304 para esse JS crítico (evita continuar rodando versão antiga).
-  try {
-    delete req.headers['if-none-match'];
-    delete req.headers['if-modified-since'];
-  } catch {
-    /* noop */
-  }
-  return res.sendFile(path.join(ROOT, 'public/js/condominios/caixa_de_mensagem.js'));
-});
 app.use('/js', express.static(path.join(ROOT, 'public/js')));
 app.use('/images', express.static(path.join(ROOT, 'images')));
 app.use('/img', express.static(path.join(ROOT, 'public/img')));
