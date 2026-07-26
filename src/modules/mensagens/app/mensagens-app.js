@@ -155,15 +155,7 @@ app.put('/api/usuario/senha', express.json({ limit: '128kb' }), (_req, res) => {
   });
 });
 
-function redirectToCondominiosApi(req, res) {
-  const original = String(req.originalUrl || req.url || '');
-  const suffix = original.replace(/^\/mensagens\/api\/msg/i, '');
-  const target = `/condominios/api/msg${suffix || ''}`;
-  return res.redirect(307, target);
-}
-
 app.use('/api/msg', mensagensApiRouter);
-app.use('/api/msg', redirectToCondominiosApi);
 
 app.get('/', renderCaixaMensagens);
 
