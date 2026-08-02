@@ -84,3 +84,37 @@ test('navbar compartilhado consulta badge de mensagens pelo módulo standalone',
     'cache antigo de não lidas do Condomínios não deve ser usado'
   );
 });
+
+test('navbar compartilhado preserva rotas absolutas de módulos conhecidos', () => {
+  const src = readSource();
+
+  assert.match(
+    src,
+    /const\s+absoluteModuleBases\s*=\s*\[[^\]]*'\/gestor'[^\]]*'\/condominios'[^\]]*'\/escalas'[^\]]*'\/mensagens'[^\]]*\]/s,
+    'buildHref deve conhecer as bases absolutas dos módulos, incluindo /mensagens'
+  );
+
+  assert.match(
+    src,
+    /if\(isAbsoluteModulePath\(rawPath\)\)\s*return\s+rawPath;/,
+    'buildHref deve preservar rotas absolutas de outros módulos'
+  );
+
+  assert.match(
+    src,
+    /const\s+desiredPath\s*=\s*'\/mensagens\/dashboard';/,
+    'item Caixa de Mensagens no menu deve apontar direto para /mensagens/dashboard'
+  );
+
+  assert.match(
+    src,
+    /\{\s*label:\s*'Caixa de Mensagens',\s*path:\s*desiredPath\s*\}/,
+    'menu deve usar o rótulo Caixa de Mensagens apontando para desiredPath'
+  );
+
+  assert.doesNotMatch(
+    src,
+    /const\s+desiredPath\s*=\s*'\/administracao\/caixa-de-mensagem';/,
+    'menu não deve mais apontar para a rota legada de Caixa de Mensagens em Condomínios'
+  );
+});

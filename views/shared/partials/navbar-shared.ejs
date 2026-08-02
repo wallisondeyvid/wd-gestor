@@ -24,21 +24,34 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   const _displayName = _isMaster ? 'Master' : ((user && user.nome) ? user.nome : null);
   function buildHref(p){
     if(!p) return '#';
-    // Se estiver em modo sem prefixação automática (prefixMenuPaths:false)
-    // permitimos passar caminhos completos já (ex: '/gestor/unidades').
-    // Porém, se o caminho começa com '/' mas NÃO contém o moduleBasePath logo após a barra
-    // e não contém 'http' (externo), prefixamos manualmente para manter consistência.
-    if(!_prefix){
-      if(p.startsWith('http')) return p;
-      if(p.startsWith(__nbBase + '/')) return p; // já está correto
-      if(p === __nbBase) return p; // ex: '/gestor'
-      if(p.startsWith('/')) return __nbBase + p; // ex: '/unidades' => '/gestor/unidades'
-      // caminho relativo sem barra inicial -> anexar '/'
-      return __nbBase + (p.startsWith('/') ? '' : '/') + p;
+
+    const rawPath = String(p || '').trim();
+    const absoluteModuleBases = ['/gestor', '/condominios', '/condominio', '/escalas', '/mensagens', '/portal-morador', '/portal_morador'];
+
+    function isAbsoluteModulePath(value){
+      return absoluteModuleBases.some(function(base){
+        return value === base || value.startsWith(base + '/');
+      });
     }
-    // Modo prefix automático: assume p relativo ao módulo
-    return __nbBase + p;
+
+    if(rawPath.startsWith('http')) return rawPath;
+    if(isAbsoluteModulePath(rawPath)) return rawPath;
+
+    // Se estiver em modo sem prefixação automática (prefixMenuPaths:false),
+    // permitimos caminhos relativos ao módulo atual e preservamos rotas absolutas
+    // de outros módulos conhecidos.
+    if(!_prefix){
+      if(rawPath.startsWith(__nbBase + '/')) return rawPath;
+      if(rawPath === __nbBase) return rawPath;
+      if(rawPath.startsWith('/')) return __nbBase + rawPath;
+      return __nbBase + '/' + rawPath;
+    }
+
+    // Modo prefix automático: assume caminho relativo ao módulo,
+    // exceto quando for rota absoluta de outro módulo conhecido.
+    return __nbBase + rawPath;
   }
+
   // Helper global para montar URL da foto do usuário
   function _fotoUrlEJS(f){
     if(!f) return __nbBase + '/img/user-placeholder.svg';
@@ -136,7 +149,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
     if(!['/condominios', '/condominio'].includes(__nbBase)) return tree;
     if(!Array.isArray(tree)) return tree;
     const normalizeLabel = (label) => (label||'').toString().trim().toLowerCase();
-    const desiredPath = '/administracao/caixa-de-mensagem';
+    const desiredPath = '/mensagens/dashboard';
     let adminNode = tree.find(node => normalizeLabel(node.label) === 'administração' || normalizeLabel(node.label) === 'administracao');
     if(!adminNode){
       adminNode = { label: 'Administração', children: [] };
@@ -144,7 +157,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
     }
     if(!Array.isArray(adminNode.children)) adminNode.children = [];
     if(!adminNode.children.some(child => child.path === desiredPath)){
-      adminNode.children.push({ label: 'Caixa de Mensagem', path: desiredPath });
+      adminNode.children.push({ label: 'Caixa de Mensagens', path: desiredPath });
     }
     return tree;
   }
