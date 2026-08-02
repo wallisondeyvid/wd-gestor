@@ -3574,57 +3574,6 @@ function buildMsgPersonalReadNameFallback({ scope, ctxUser, fromPortal, allowNam
   };
 }
 
-async function preparePortalPersonalReadSideContext({
-  ctxUser,
-  req,
-  mailboxId,
-  allowRefererPortal = false,
-  allowNameFallbackWhenEmailResolved = false,
-  includePortalEmailCandidatesInOwnerCandidates = false,
-  includePortalHabitacaoOwnerVariantsInOwnerCandidates = false,
-}) {
-  const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
-  const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
-    || (allowRefererPortal && refLower.includes('/portal-morador'));
-  const admin = userCanScopeAll(ctxUser);
-
-  let nextCtxUser = ctxUser;
-  let portalEmailCandidatesLower = [];
-  if (fromPortal && !admin && String(mailboxId || '').trim() === 'pessoal') {
-    try {
-      nextCtxUser = await resolvePortalPersonalReadCtxUser(nextCtxUser, req);
-      portalEmailCandidatesLower = await collectPortalEmailCandidatesLower(nextCtxUser, req);
-    } catch { /* noop */ }
-  }
-
-  const scope = resolveMailboxScope(nextCtxUser, mailboxId, req);
-  const ownerCandidatesLower = buildMsgPersonalReadOwnerCandidates({
-    scope,
-    ctxUser: nextCtxUser,
-    req,
-    fromPortal,
-    admin,
-    portalEmailCandidatesLower,
-    includePortalEmailCandidates: includePortalEmailCandidatesInOwnerCandidates,
-    includePortalHabitacaoOwnerVariants: includePortalHabitacaoOwnerVariantsInOwnerCandidates,
-  });
-  const nameFallback = buildMsgPersonalReadNameFallback({
-    scope,
-    ctxUser: nextCtxUser,
-    fromPortal,
-    allowNameFallbackWhenEmailResolved,
-  });
-
-  return {
-    ctxUser: nextCtxUser,
-    fromPortal,
-    admin,
-    scope,
-    ownerCandidatesLower,
-    nameFallback,
-  };
-}
-
 async function preparePortalMailboxReadSideContext({
   ctxUser,
   req,
