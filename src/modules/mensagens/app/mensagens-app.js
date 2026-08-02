@@ -139,12 +139,192 @@ app.get(['/api/usuario/foto', '/api/usuarios/foto'], (req, res) => {
   return sendUserPlaceholder(req, res);
 });
 
-app.get('/api/modulos', (_req, res) => {
-  return res.json({
-    success: true,
-    data: [],
-    modulos: []
-  });
+app.get('/api/modulos', async (req, res) => {
+  try {
+    const sessionUser = req.user || req.session?.mensagensUser || req.session?.user || null;
+
+    if (req.session && !req.session.mensagensUser && sessionUser) {
+      req.session.mensagensUser = {
+        id: sessionUser.id || sessionUser._id || null,
+        _id: sessionUser._id || sessionUser.id || null,
+        email: sessionUser.email || null,
+        nome: sessionUser.nome || sessionUser.name || 'Usuário',
+        role: String(sessionUser.role || sessionUser.globalRole || sessionUser.global_role || sessionUser.effectiveRole || 'user').toLowerCase(),
+        isMaster: !!sessionUser.isMaster,
+        unidade_id: sessionUser.unidade_id || sessionUser.unidadeId || sessionUser.unidade_principal_id || null,
+        unidadeId: sessionUser.unidadeId || sessionUser.unidade_id || sessionUser.unidade_principal_id || null,
+        unidade_principal_id: sessionUser.unidade_principal_id || sessionUser.unidade_id || sessionUser.unidadeId || null,
+        funcionario_id: sessionUser.funcionario_id || null
+      };
+    }
+
+    const email = String(req.user?.email || sessionUser?.email || '').trim().toLowerCase();
+
+    const User = (await import('#models/user.js')).default;
+    const userDoc = email ? await User.findOne({ email }).lean().catch(() => null) : null;
+
+    const role = String(
+      req.user?.role ||
+      sessionUser?.role ||
+      userDoc?.role ||
+      sessionUser?.global_role ||
+      userDoc?.global_role ||
+      'user'
+    ).toLowerCase();
+
+    const mapMods = (mods) => (mods || []).filter(Boolean).map(m => ({
+      _id: m._id,
+      nome: m.nome,
+      descricao: m.descricao,
+      status: m.status,
+      url_base: m.url_base
+    }));
+
+    const withCompat = (mods) => {
+      const data = mapMods(mods);
+      return res.json({ success: true, data, modulos: data });
+    };
+
+    const uniqById = (mods) => {
+      const out = [];
+      const seen = new Set();
+
+      for (const m of (mods || [])) {
+        const id = m?._id ? String(m._id) : '';
+        if (id && seen.has(id)) continue;
+        if (id) seen.add(id);
+        out.push(m);
+      }
+
+      return out;
+    };
+
+    const tryLoadUnidadeComModulos = async (unidadeId) => {
+      if (!unidadeId) return null;
+
+      try {
+        const Unidade = (await import('#models/unidade.js')).default;
+
+        const unidade = await Unidade.findById(unidadeId)
+          .select('_id is_principal subunidade unidade_principal_id modulosAcessiveis')
+          .populate('modulosAcessiveis')
+          .lean();
+
+        if (!unidade) return null;
+        if (unidade?.modulosAcessiveis?.length) return unidade;
+
+        if (unidade.subunidade && unidade.unidade_principal_id) {
+          const principal = await Unidade.findById(unidade.unidade_principal_id)
+            .select('_id is_principal subunidade unidade_principal_id modulosAcessiveis')
+            .populate('modulosAcessiveis')
+            .lean();
+
+          if (principal) return principal;
+        }
+
+        return unidade;
+      } catch {
+        return null;
+      }
+    };
+
+    if (role === 'master' || role === 'admin' || req.user?.isMaster || sessionUser?.isMaster) {
+      const Modulo = (await import('#models/modulo.js')).default;
+      const todos = await Modulo.find({})
+        .select('_id nome descricao status url_base')
+        .lean();
+
+      return withCompat(todos);
+    }
+
+    if (role === 'diretor') {
+      const unidadeId =
+        req.user?.unidade_id ||
+        sessionUser?.unidade_id ||
+        sessionUser?.unidadeId ||
+        userDoc?.unidade_id ||
+        req.user?.unidade_principal_id ||
+        sessionUser?.unidade_principal_id ||
+        userDoc?.unidade_principal_id ||
+        null;
+
+      const unidade = await tryLoadUnidadeComModulos(unidadeId);
+
+      if (unidade?.modulosAcessiveis?.length) {
+        return withCompat(unidade.modulosAcessiveis);
+      }
+    }
+
+    if (role === 'user') {
+      try {
+        const Funcionario = (await import('#models/Funcionario.js')).default;
+        const Funcao = (await import('#models/funcao.js')).default;
+
+        const funcionarioId = req.user?.funcionario_id || sessionUser?.funcionario_id || userDoc?.funcionario_id || null;
+        const unidadeIdFuncionario = req.user?.unidade_id || sessionUser?.unidade_id || sessionUser?.unidadeId || userDoc?.unidade_id || null;
+        const cpfFuncionario = String(userDoc?.cpf || req.user?.cpf || sessionUser?.cpf || '').replace(/\D/g, '');
+
+        let funcionario = null;
+
+        if (funcionarioId) {
+          funcionario = await Funcionario.findById(funcionarioId)
+            .select('_id funcao_id unidade_id usuario_id cpf email')
+            .lean();
+        }
+
+        if (!funcionario && (userDoc?._id || req.user?._id || sessionUser?._id)) {
+          const uid = userDoc?._id || req.user?._id || sessionUser?._id;
+
+          funcionario = await Funcionario.findOne({ usuario_id: uid })
+            .select('_id funcao_id unidade_id usuario_id cpf email')
+            .lean();
+        }
+
+        if (!funcionario && cpfFuncionario && unidadeIdFuncionario) {
+          funcionario = await Funcionario.findOne({ cpf: cpfFuncionario, unidade_id: unidadeIdFuncionario })
+            .select('_id funcao_id unidade_id usuario_id cpf email')
+            .lean();
+        }
+
+        const unidadeId =
+          funcionario?.unidade_id ||
+          req.user?.unidade_id ||
+          sessionUser?.unidade_id ||
+          sessionUser?.unidadeId ||
+          userDoc?.unidade_id ||
+          req.user?.unidade_principal_id ||
+          sessionUser?.unidade_principal_id ||
+          userDoc?.unidade_principal_id ||
+          null;
+
+        const unidade = await tryLoadUnidadeComModulos(unidadeId);
+        const modsUnidade = (unidade?.modulosAcessiveis || []).filter(Boolean);
+
+        let modsFuncao = [];
+
+        if (funcionario?.funcao_id) {
+          const funcao = await Funcao.findById(funcionario.funcao_id)
+            .populate('modulos_habilitados')
+            .lean();
+
+          modsFuncao = (funcao?.modulos_habilitados || []).filter(Boolean);
+        }
+
+        const union = uniqById([...modsFuncao, ...modsUnidade]);
+
+        if (union.length) {
+          return withCompat(union);
+        }
+      } catch {
+        /* fallback abaixo */
+      }
+    }
+
+    return withCompat([]);
+  } catch (err) {
+    console.warn('[mensagens][api/modulos] falha ao listar módulos:', err?.message || err);
+    return res.json({ success: true, data: [], modulos: [] });
+  }
 });
 
 app.put('/api/usuario/senha', express.json({ limit: '128kb' }), (_req, res) => {
