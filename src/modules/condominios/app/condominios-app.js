@@ -4538,6 +4538,15 @@ function isScopeSender(doc, scope) {
   return false;
 }
 
+// Caixa de Mensagens foi migrada para o módulo standalone /mensagens.
+// As rotas antigas em /condominios/api/msg/* ficam bloqueadas para evitar
+// uso acidental do backend legado dentro de Condomínios.
+app.use('/api/msg', (req, res) => {
+  return res.status(410).json({
+    error: 'Caixa de Mensagens migrada para /mensagens/api/msg'
+  });
+});
+
 // API: detalhe de mensagem
 app.get('/api/msg/messages/:id', async (req, res) => {
   try {
