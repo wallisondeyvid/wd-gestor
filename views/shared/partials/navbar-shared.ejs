@@ -317,15 +317,19 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
       </div>
   <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center navbar-wd-actions">
         <% if (user) { %>
-          <% if (['/condominios', '/condominio'].includes(__nbBase)) { %>
-            <li class="nav-item">
-              <a class="nav-link nav-wd-icon-link position-relative d-flex align-items-center justify-content-center" id="navMsgNotifyLink" href="<%= buildHref('/administracao/caixa-de-mensagem') %>" aria-label="Caixa de Mensagem">
-                <img src="<%= __nbBase %>/images/mensagem.png" alt="Mensagens" style="width:22px;height:22px;" />
-                <span id="navMsgNotifyBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none; font-size:.70rem; line-height:1; min-width:1.4em;"></span>
-              </a>
-            </li>
-          <% } %>
-          <% 
+                    <li class="nav-item">
+            <a class="nav-link nav-wd-icon-link position-relative d-flex align-items-center justify-content-center"
+               id="navMsgNotifyLink"
+               href="/mensagens/dashboard"
+               aria-label="Caixa de Mensagens"
+               title="Caixa de Mensagens">
+              <i class="bi bi-envelope-fill" aria-hidden="true" style="font-size:1.15rem;color:#ffd54f;"></i>
+              <span id="navMsgNotifyBadge"
+                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                    style="display:none; font-size:.70rem; line-height:1; min-width:1.4em;"></span>
+            </a>
+          </li>
+<% 
             let __foto = (user && user.foto) ? String(user.foto).trim() : '';
             let __placeholderAvatar = __nbBase + '/img/user-placeholder.svg';
             let __src = __placeholderAvatar;
@@ -791,24 +795,14 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   document.addEventListener('DOMContentLoaded', function(){
     try {
       if(!__NB_HAS_USER) return;
-      // Normaliza base do módulo para que funcione também em rotas /condominios/admin/*.
-      var __NB_API_BASE = (function(){
-        try {
-          var b = String(__NB_BASE || '').trim();
-          if (b.indexOf('/condominios') === 0) return '/condominios';
-        } catch(_){ }
-        try {
-          var p = String(location && location.pathname ? location.pathname : '');
-          if (p.indexOf('/condominios') === 0) return '/condominios';
-        } catch(_2){ }
-        return '';
-      })();
-      if(__NB_API_BASE !== '/condominios') return;
+      // Caixa de Mensagens agora é módulo standalone.
+      // O atalho e o contador usam sempre a API oficial de /mensagens.
+      var __NB_API_BASE = '/mensagens';
 
       var badge = document.getElementById('navMsgNotifyBadge');
       if(!badge) return;
 
-      var LS_UNREAD_KEY = 'wdg:condominios:unreadCount';
+      var LS_UNREAD_KEY = 'wdg:mensagens:unreadCount';
       function readCachedUnread(){
         try {
           var v = Number(localStorage.getItem(LS_UNREAD_KEY));
@@ -1059,7 +1053,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
 
           n.onclick = function(){
             try { window.focus(); } catch(_){ }
-            try { location.href = __NB_API_BASE + '/administracao/caixa-de-mensagem'; } catch(_2){ }
+            try { location.href = '/mensagens/dashboard'; } catch(_2){ }
             try { n.close(); } catch(_3){ }
           };
 
@@ -1268,7 +1262,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
           var isMsgPage = false;
           try {
             var p = String(location && location.pathname ? location.pathname : '');
-            isMsgPage = p.indexOf(__NB_API_BASE + '/administracao/caixa-de-mensagem') === 0;
+            isMsgPage = p.indexOf('/mensagens') === 0;
           } catch(_){ }
 
           // Intervalos:
