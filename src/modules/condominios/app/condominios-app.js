@@ -2986,32 +2986,6 @@ function mailboxHasPerm(perms, key) {
   }
 }
 
-function mailboxCanEdit(mailboxDoc, user) {
-  if (!mailboxDoc || !user) return false;
-  if (userCanScopeAll(user)) return true;
-  const meList = getUserIdentityKeyCandidates(user);
-  if (!meList.length) return false;
-  const ops = Array.isArray(mailboxDoc.operators) ? mailboxDoc.operators : [];
-  const found = ops.find(op => {
-    const u = (typeof op === 'string') ? op : (op && typeof op === 'object' ? op.user : '');
-    const k = String(u || '').trim().toLowerCase();
-    return k && meList.includes(k);
-  });
-  const hasExplicitOverride = !!(found && typeof found === 'object' && found.perms && typeof found.perms === 'object');
-  const perms = hasExplicitOverride ? found.perms : null;
-  if (perms && typeof perms === 'object') {
-    // Administração é separada de "gerenciar grupos":
-    // - Quem tem apenas gerenciarGrupos NÃO deve conseguir editar permissões/caixa.
-    if (perms.administrar) return true;
-    return false;
-  }
-
-  // Criador: permitido por padrão, mas apenas quando NÃO há override explícito em operators[].
-  const createdBy = String(mailboxDoc.createdBy || '').trim().toLowerCase();
-  if (createdBy && meList.includes(createdBy)) return true;
-  return false;
-}
-
 function mailboxCanSendMessage(mailboxDoc, user) {
   if (!mailboxDoc || !user) return false;
   if (userCanScopeAll(user)) return true;
@@ -16388,22 +16362,6 @@ function toSettingsClient(doc) {
         .filter(p => isEmailish(p.email))
       : []
   };
-}
-
-async function getOrInitMsgSettingsForUnidade(unidadeId) {
-  const uid = String(unidadeId || '').trim();
-  if (!uid || !mongoose.isValidObjectId(uid)) return null;
-  const unitObjectId = new mongoose.Types.ObjectId(uid);
-
-  const existing = await CondMsgSettings.findOne({ unidade_id: unitObjectId }).lean();
-  if (existing) return existing;
-
-  try {
-    const created = await CondMsgSettings.create({ unidade_id: unitObjectId, permitir_pessoal_para_pessoal: true });
-    return created?.toObject ? created.toObject() : created;
-  } catch {
-    return await CondMsgSettings.findOne({ unidade_id: unitObjectId }).lean();
-  }
 }
 
 function bytesToHuman(bytes) {
