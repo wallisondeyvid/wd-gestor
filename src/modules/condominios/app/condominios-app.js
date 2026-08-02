@@ -58,7 +58,6 @@ import { listarBlocosService, obterBlocoPorIdService, listarBlocosRelacionadosSe
 import { listarAndaresService, obterAndarPorIdService, listarAndaresRelacionadosService } from '#modules/condominios/app/services/andares.service.js';
 import DocumentoValidado from '#models/DocumentoValidado.js';
 import CondMsgMailbox from '#models/cond_msg_mailbox.js';
-import CondMsgSettings from '#models/cond_msg_settings.js';
 import CondDirigenciaSettings from '#models/cond_dirigencia_settings.js';
 import CondDirigenciaCargo from '#models/cond_dirigencia_cargo.js';
 import CondDirigenciaMandato from '#models/cond_dirigencia_mandato.js';
@@ -2868,21 +2867,6 @@ function mailboxMatchesHabitacaoIds(mailboxDoc, habIds) {
   }
 }
 
-function mailboxIsMember(mailboxDoc, user) {
-  if (!mailboxDoc || !user) return false;
-  const meList = getUserIdentityKeyCandidates(user);
-  if (!meList.length) return false;
-  const createdBy = String(mailboxDoc.createdBy || '').trim().toLowerCase();
-  if (createdBy && meList.includes(createdBy)) return true;
-  const ops = Array.isArray(mailboxDoc.operators) ? mailboxDoc.operators : [];
-  return ops.some(op => {
-    const u = (typeof op === 'string') ? op : (op && typeof op === 'object' ? op.user : '');
-    const k = String(u || '').trim().toLowerCase();
-    if (!k) return false;
-    return meList.includes(k);
-  });
-}
-
 function mailboxMatchesPortalHabitacoes(mailboxDoc, ctxUser, unidadeId) {
   try {
     if (!mailboxDoc || !ctxUser) return false;
@@ -2908,53 +2892,6 @@ function mailboxIsHabitacao(mailboxDoc) {
 
 // Regra de privacidade: caixas vinculadas à habitação são exclusivas de moradores/proprietário.
 // Mesmo usuário master/admin do Gestor NÃO deve ter acesso por padrão.
-async function canAccessMsgMailbox(mailboxDoc, ctxUser, req) {
-  try {
-    if (!mailboxDoc) return true;
-
-    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1';
-    const admin = userCanScopeAll(ctxUser);
-
-    // Habitação: somente via Portal e apenas quando a habitação pertence ao usuário.
-    if (mailboxIsHabitacao(mailboxDoc)) {
-      if (!fromPortal) return false;
-
-      let u = ctxUser;
-      try {
-        // Melhorar a chance de ter e-mail no ctxUser do Portal.
-        if (!admin) u = await ensurePortalEmailInCtxUser(u, req);
-      } catch {
-        /* noop */
-      }
-
-      const unidadeId = mailboxDoc?.unidade_id ? String(mailboxDoc.unidade_id) : getUserUnidadeId(u);
-
-      // Preferir checagens sem DB (snapshot/vínculos). Se não bater, cai para o coletor (DB) do Portal.
-      try {
-        if (mailboxMatchesPortalHabitacoes(mailboxDoc, u, unidadeId)) return true;
-      } catch { /* noop */ }
-
-      try {
-        const habIds = await collectPortalHabitacaoIds(u, req, unidadeId);
-        if (habIds.length && mailboxMatchesHabitacaoIds(mailboxDoc, habIds)) return true;
-      } catch {
-        /* noop */
-      }
-
-      return false;
-    }
-
-    // Caixas públicas do condomínio podem ser lidas pelo Portal.
-    if (fromPortal && mailboxIsPublic(mailboxDoc)) return true;
-
-    // Demais caixas: admin pode, senão precisa ser membro.
-    if (admin) return true;
-    return mailboxIsMember(mailboxDoc, ctxUser);
-  } catch {
-    return false;
-  }
-}
-
 function mailboxIsPublic(mailboxDoc) {
   if (!mailboxDoc) return false;
 
@@ -2984,33 +2921,6 @@ function mailboxHasPerm(perms, key) {
   } catch {
     return false;
   }
-}
-
-function mailboxCanSendMessage(mailboxDoc, user) {
-  if (!mailboxDoc || !user) return false;
-  if (userCanScopeAll(user)) return true;
-
-  const meList = getUserIdentityKeyCandidates(user);
-  if (!meList.length) return false;
-
-  const ops = Array.isArray(mailboxDoc.operators) ? mailboxDoc.operators : [];
-  const found = ops.find(op => {
-    const u = (typeof op === 'string') ? op : (op && typeof op === 'object' ? op.user : '');
-    const k = String(u || '').trim().toLowerCase();
-    return k && meList.includes(k);
-  });
-  const hasExplicitOverride = !!(found && typeof found === 'object' && found.perms && typeof found.perms === 'object');
-  const perms = hasExplicitOverride ? found.perms : null;
-  if (perms && typeof perms === 'object') {
-    if (perms.administrar) return true;
-    if (perms.criarMensagem) return true;
-    return false;
-  }
-
-  // Criador: permitido por padrão, mas apenas quando NÃO há override explícito em operators[].
-  const createdBy = String(mailboxDoc.createdBy || '').trim().toLowerCase();
-  if (createdBy && meList.includes(createdBy)) return true;
-  return false;
 }
 
 function mailboxCanManageMarker(mailboxDoc, user) {
@@ -16287,81 +16197,6 @@ function normalizeOwnerKeyList(list, max = 500) {
     out.push(v);
   }
   return out;
-}
-
-function sanitizeMsgSettingsPayload(body) {
-  const b = body && typeof body === 'object' ? body : {};
-
-  const rawPerms = (b.portal_user_perms ?? b.portalUserPerms ?? b.portalUserPermissions ?? b.permissoes_portal_usuarios ?? b.permissoesPortalUsuarios);
-  const portal_user_perms = (() => {
-    const list = Array.isArray(rawPerms) ? rawPerms : [];
-    const out = [];
-    const seen = new Set();
-    for (const it of list) {
-      if (out.length >= 3000) break;
-      const o = (it && typeof it === 'object') ? it : {};
-      const email = String(o.email || o.user || o.usuario || '').trim().toLowerCase();
-      if (!isEmailish(email)) continue;
-      if (seen.has(email)) continue;
-      seen.add(email);
-
-      // Defaults permissivos (true) quando não informado.
-      const p2p = (o.permitir_pessoal_para_pessoal ?? o.p2p ?? o.pessoalParaPessoal);
-      const toHab = (o.permitir_pessoal_para_habitacao ?? o.toHab ?? o.pessoalParaHabitacao);
-      const toCol = (o.permitir_pessoal_para_colaborador ?? o.toColaborador ?? o.pessoalParaColaborador);
-
-      out.push({
-        email,
-        permitir_pessoal_para_pessoal: (p2p === undefined || p2p === null) ? true : !!p2p,
-        permitir_pessoal_para_habitacao: (toHab === undefined || toHab === null) ? true : !!toHab,
-        permitir_pessoal_para_colaborador: (toCol === undefined || toCol === null) ? true : !!toCol
-      });
-    }
-    return out;
-  })();
-
-  return {
-    suspender_caixas_pessoais: !!(b.suspender_caixas_pessoais ?? b.suspenderCaixasPessoais ?? b.suspender_pessoais),
-    suspender_caixas_grupo: !!(b.suspender_caixas_grupo ?? b.suspenderCaixasGrupo ?? b.suspender_grupos),
-    permitir_pessoal_para_pessoal: (b.permitir_pessoal_para_pessoal ?? b.permitirPessoalParaPessoal ?? b.permitir_p2p ?? b.allowP2P),
-    // Legado: lista única (Portal + Colaborador)
-    pessoais_suspensas: normalizeOwnerKeyList(b.pessoais_suspensas ?? b.pessoaisSuspensas ?? b.suspensas ?? []),
-    // Novo: listas separadas
-    pessoais_suspensas_portal: normalizeOwnerKeyList(b.pessoais_suspensas_portal ?? b.pessoaisSuspensasPortal ?? b.suspensasPortal ?? []),
-    pessoais_suspensas_colaborador: normalizeOwnerKeyList(b.pessoais_suspensas_colaborador ?? b.pessoaisSuspensasColaborador ?? b.suspensasColaborador ?? []),
-    portal_user_perms
-  };
-}
-
-function toSettingsClient(doc) {
-  const d = doc && typeof doc === 'object' ? doc : {};
-  const legacy = Array.isArray(d.pessoais_suspensas) ? d.pessoais_suspensas.slice() : [];
-  const portal = Array.isArray(d.pessoais_suspensas_portal) ? d.pessoais_suspensas_portal.slice() : [];
-  const colab = Array.isArray(d.pessoais_suspensas_colaborador) ? d.pessoais_suspensas_colaborador.slice() : [];
-  const hasNew = (portal.length + colab.length) > 0;
-  const effectivePortal = hasNew ? portal : legacy;
-  const effectiveColab = hasNew ? colab : legacy;
-  return {
-    unidade_id: d.unidade_id ? String(d.unidade_id) : '',
-    suspender_caixas_pessoais: !!d.suspender_caixas_pessoais,
-    suspender_caixas_grupo: !!d.suspender_caixas_grupo,
-    permitir_pessoal_para_pessoal: (d.permitir_pessoal_para_pessoal !== false),
-    // Legado ainda é enviado para compatibilidade
-    pessoais_suspensas: legacy,
-    // Novo: listas separadas (UI nova usa isso)
-    pessoais_suspensas_portal: effectivePortal,
-    pessoais_suspensas_colaborador: effectiveColab,
-    portal_user_perms: Array.isArray(d.portal_user_perms)
-      ? d.portal_user_perms
-        .map(p => ({
-          email: String(p?.email || '').trim().toLowerCase(),
-          permitir_pessoal_para_pessoal: (p?.permitir_pessoal_para_pessoal !== false),
-          permitir_pessoal_para_habitacao: (p?.permitir_pessoal_para_habitacao !== false),
-          permitir_pessoal_para_colaborador: (p?.permitir_pessoal_para_colaborador !== false)
-        }))
-        .filter(p => isEmailish(p.email))
-      : []
-  };
 }
 
 function bytesToHuman(bytes) {
