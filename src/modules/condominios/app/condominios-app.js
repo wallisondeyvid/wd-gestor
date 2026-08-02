@@ -62,10 +62,7 @@ import CondMsgSettings from '#models/cond_msg_settings.js';
 import CondDirigenciaSettings from '#models/cond_dirigencia_settings.js';
 import CondDirigenciaCargo from '#models/cond_dirigencia_cargo.js';
 import CondDirigenciaMandato from '#models/cond_dirigencia_mandato.js';
-import CondMsgGroup from '#models/cond_msg_group.js';
 import CondMsgMessage from '#models/cond_msg_message.js';
-import CondMsgMarker from '#models/cond_msg_marker.js';
-import CondMsgSignaturePref from '#models/cond_msg_signature_pref.js';
 import PDFDocument from 'pdfkit';
 // Service de criação de usuário com senha provisória (reutiliza fluxo do Gestor)
 // Não criar usuários no módulo Gestor a partir do Condomínios
