@@ -508,7 +508,7 @@ app.get('/js/condominios/caixa_de_mensagem.js', (req, res) => {
   } catch {
     /* noop */
   }
-  return res.sendFile(path.join(ROOT, 'public/js/condominios/caixa_de_mensagem.js'));
+  return res.sendFile(path.join(ROOT, 'public/mensagens/js/caixa_de_mensagem.js'));
 });
 app.use('/js', express.static(path.join(ROOT, 'public/js')));
 app.use('/images', express.static(path.join(ROOT, 'images')));
