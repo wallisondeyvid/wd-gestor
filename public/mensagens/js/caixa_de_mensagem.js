@@ -11246,7 +11246,7 @@
     ensureMsgMarkerDropdownPortalFix();
 
     // Suporte a deep-link: /mensagens/nova?mailboxId=...&groupId=...
-    // E também: /administracao/caixa-de-mensagem?view=entrada|saida|arquivo|lixeira|nova|grupos|cfg_caixas|cfg_geral
+    // E também: /mensagens/dashboard?view=entrada|saida|arquivo|lixeira|nova|grupos|cfg_caixas|cfg_geral
     let qpMailboxId = '';
     let qpGroupId = '';
     let qpView = '';
