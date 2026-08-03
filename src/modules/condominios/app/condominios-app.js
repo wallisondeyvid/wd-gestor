@@ -1065,7 +1065,7 @@ app.get('/api/usuarios/foto', async (req, res) => {
 // Importante: vem DEPOIS do /api/usuarios/foto para evitar conflito e 503.
 // ATENÇÃO: o router do Gestor aplica `requireLogin` via `router.use('/api', requireLogin)`.
 // Se montarmos o router inteiro aqui, ele intercepta QUALQUER rota que comece com `/api/*`
-// (ex.: `/api/msg/*`, `/api/unidades`, `/api/usuarios/busca`) e devolve 401 antes dos
+// (ex.: `/api/unidades`, `/api/usuarios/busca`) e devolve 401 antes dos
 // handlers deste módulo — quebrando o Portal do Morador.
 // Então, delegamos ao router do Gestor apenas para os endpoints que ele realmente implementa.
 app.use((req, res, next) => {
