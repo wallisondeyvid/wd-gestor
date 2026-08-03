@@ -15935,9 +15935,7 @@ function getCtxUser(req) {
     };
 
     const url = String(req?.originalUrl || req?.url || '');
-    const isMsgApi = url.includes('/api/msg');
     const isPortalSharedApi = (
-      isMsgApi ||
       url.includes('/api/unidades') ||
       url.includes('/api/usuarios/busca') ||
       url.includes('/api/usuarios/foto')
@@ -15994,33 +15992,6 @@ function getCtxUser(req) {
     /* noop */
   }
   try {
-    const hdr = (k) => {
-      try {
-        return req?.headers?.[k] || req?.headers?.[String(k || '').toLowerCase()] || null;
-      } catch {
-        return null;
-      }
-    };
-
-    const url = String(req?.originalUrl || req?.url || '');
-    const isMsgApi = url.includes('/api/msg');
-    const fromPortal = isPortalRequestLocal(req);
-
-    // REGRA DE SEGURANÇA: nunca misturar identidades entre Portal e Gestor.
-    // Se a request parece Portal e é API de mensagens, NÃO caia em session.user.
-    if (fromPortal && isMsgApi) {
-      if (req?.session?.portalUser) return req.session.portalUser;
-      try {
-        const payload = readPortalSessionCookie(req);
-        try {
-          if (payload?.userId) req.__wdgPortalCookieUserId = String(payload.userId);
-        } catch { /* noop */ }
-        const cookieSession = payload?.session || null;
-        if (cookieSession && cookieSession.portal_acesso_ativo !== false) return cookieSession;
-      } catch { /* noop */ }
-      return null;
-    }
-
     if (req && req.session && req.session.user) return req.session.user;
     return null;
   } catch {
