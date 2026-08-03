@@ -9,6 +9,7 @@ import CondMsgMailbox from '#models/cond_msg_mailbox.js';
 import CondMsgMessage from '#models/cond_msg_message.js';
 import CondMsgMarker from '#models/cond_msg_marker.js';
 import CondMsgSignaturePref from '#models/cond_msg_signature_pref.js';
+import CondMsgSettings from '#models/cond_msg_settings.js';
 
 import {
   getMsgOwnerKey,
@@ -38,6 +39,97 @@ const mensagensUpload = multer({
     fieldSize: 2 * 1024 * 1024
   }
 });
+
+function requireMsgAdmin(req, res) {
+  const user = getCtxUser(req);
+
+  if (!user) {
+    res.status(401).json({
+      success: false,
+      error: 'Não autenticado',
+      message: 'Não autenticado'
+    });
+    return null;
+  }
+
+  if (!userCanScopeAll(user)) {
+    res.status(403).json({
+      success: false,
+      error: 'Acesso negado',
+      message: 'Acesso negado'
+    });
+    return null;
+  }
+
+  return user;
+}
+
+function normalizeEmailList(raw) {
+  const list = Array.isArray(raw) ? raw : [];
+  const out = [];
+  const seen = new Set();
+
+  for (const item of list) {
+    const email = String(item || '').trim().toLowerCase();
+    if (!email || !email.includes('@')) continue;
+    if (seen.has(email)) continue;
+    seen.add(email);
+    out.push(email);
+  }
+
+  return out;
+}
+
+function sanitizePortalUserPerms(raw) {
+  const list = Array.isArray(raw) ? raw : [];
+  const out = [];
+  const seen = new Set();
+
+  for (const item of list) {
+    const email = String(item?.email || item?.user || '').trim().toLowerCase();
+    if (!email || !email.includes('@')) continue;
+    if (seen.has(email)) continue;
+    seen.add(email);
+
+    out.push({
+      email,
+      permitir_pessoal_para_pessoal: item?.permitir_pessoal_para_pessoal !== false,
+      permitir_pessoal_para_habitacao: item?.permitir_pessoal_para_habitacao !== false,
+      permitir_pessoal_para_colaborador: item?.permitir_pessoal_para_colaborador !== false
+    });
+  }
+
+  return out;
+}
+
+function settingsToClient(doc) {
+  const s = doc && typeof doc.toObject === 'function' ? doc.toObject() : (doc || {});
+
+  return {
+    _id: s._id ? String(s._id) : null,
+    unidade_id: s.unidade_id ? String(s.unidade_id) : '',
+    suspender_caixas_pessoais: !!s.suspender_caixas_pessoais,
+    suspender_caixas_grupo: !!s.suspender_caixas_grupo,
+    permitir_pessoal_para_pessoal: s.permitir_pessoal_para_pessoal !== false,
+    pessoais_suspensas: normalizeEmailList(s.pessoais_suspensas),
+    pessoais_suspensas_portal: normalizeEmailList(s.pessoais_suspensas_portal),
+    pessoais_suspensas_colaborador: normalizeEmailList(s.pessoais_suspensas_colaborador),
+    portal_user_perms: sanitizePortalUserPerms(s.portal_user_perms),
+    updatedBy: String(s.updatedBy || ''),
+    createdAt: s.createdAt || null,
+    updatedAt: s.updatedAt || null
+  };
+}
+
+function pickAdminUnidadeId(req) {
+  return String(
+    req?.query?.unidade_id ||
+    req?.body?.unidade_id ||
+    req?.query?.unidadeId ||
+    req?.body?.unidadeId ||
+    ''
+  ).trim();
+}
 
 function safeUploadName(name) {
   const raw = String(name || 'arquivo').trim() || 'arquivo';
@@ -1787,6 +1879,102 @@ router.get('/health', (req, res) => {
     module: 'mensagens',
     api: 'msg'
   });
+});
+
+router.get('/admin/settings', async (req, res, next) => {
+  try {
+    const adminUser = requireMsgAdmin(req, res);
+    if (!adminUser) return;
+
+    const unidadeId = pickAdminUnidadeId(req);
+    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'unidade_id inválido',
+        message: 'unidade_id inválido'
+      });
+    }
+
+    const ready = await ensureMongoReady();
+    if (!ready) {
+      return res.status(503).json({
+        success: false,
+        error: 'Banco de dados indisponível',
+        message: 'Banco de dados indisponível'
+      });
+    }
+
+    const settings = await getOrInitMsgSettingsForUnidade(unidadeId);
+
+    return res.json({
+      success: true,
+      settings: settingsToClient(settings)
+    });
+  } catch (e) {
+    console.error('[mensagens][GET /api/msg/admin/settings] erro:', e);
+    return next(e);
+  }
+});
+
+router.put('/admin/settings', express.json({ limit: '256kb' }), async (req, res, next) => {
+  try {
+    const adminUser = requireMsgAdmin(req, res);
+    if (!adminUser) return;
+
+    const unidadeId = pickAdminUnidadeId(req);
+    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'unidade_id inválido',
+        message: 'unidade_id inválido'
+      });
+    }
+
+    const ready = await ensureMongoReady();
+    if (!ready) {
+      return res.status(503).json({
+        success: false,
+        error: 'Banco de dados indisponível',
+        message: 'Banco de dados indisponível'
+      });
+    }
+
+    await getOrInitMsgSettingsForUnidade(unidadeId);
+
+    const payload = req.body || {};
+    const set = {
+      pessoais_suspensas_portal: normalizeEmailList(payload.pessoais_suspensas_portal),
+      pessoais_suspensas_colaborador: normalizeEmailList(payload.pessoais_suspensas_colaborador),
+      portal_user_perms: sanitizePortalUserPerms(payload.portal_user_perms),
+      updatedBy: String(adminUser?.email || adminUser?.nome || adminUser?.name || adminUser?._id || adminUser?.id || '').trim()
+    };
+
+    if (Object.prototype.hasOwnProperty.call(payload, 'suspender_caixas_pessoais')) {
+      set.suspender_caixas_pessoais = !!payload.suspender_caixas_pessoais;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(payload, 'suspender_caixas_grupo')) {
+      set.suspender_caixas_grupo = !!payload.suspender_caixas_grupo;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(payload, 'permitir_pessoal_para_pessoal')) {
+      set.permitir_pessoal_para_pessoal = payload.permitir_pessoal_para_pessoal !== false;
+    }
+
+    const settings = await CondMsgSettings.findOneAndUpdate(
+      { unidade_id: new mongoose.Types.ObjectId(unidadeId) },
+      { $set: set },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    ).lean();
+
+    return res.json({
+      success: true,
+      settings: settingsToClient(settings)
+    });
+  } catch (e) {
+    console.error('[mensagens][PUT /api/msg/admin/settings] erro:', e);
+    return next(e);
+  }
 });
 
 router.get('/signature', async (req, res, next) => {

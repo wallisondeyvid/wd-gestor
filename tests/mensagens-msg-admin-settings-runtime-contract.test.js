@@ -59,7 +59,7 @@ async function closeWithTeardownGuard(close, teardownGuard) {
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-test('GET /mensagens/api/msg/admin/settings permanece nao migrado no modulo mensagens', async () => {
+test('GET /mensagens/api/msg/admin/settings está migrado e exige autenticação admin', async () => {
   const { app, close } = await createServer({ skipDb: true });
   const teardownGuard = installTeardownSuppression();
 
@@ -69,9 +69,9 @@ test('GET /mensagens/api/msg/admin/settings permanece nao migrado no modulo mens
       .set('Accept', 'application/json')
       .set('Connection', 'close');
 
-    assert.equal(res.status, 404, JSON.stringify(res.body));
+    assert.equal(res.status, 401, JSON.stringify(res.body));
     assert.equal(res.body?.success, false, JSON.stringify(res.body));
-    assert.match(String(res.body?.message || ''), /^Recurso n.o encontrado$/u);
+    assert.match(String(res.body?.message || res.body?.error || ''), /não autenticado/i);
   } finally {
     try {
       await closeWithTeardownGuard(close, teardownGuard);
@@ -81,7 +81,7 @@ test('GET /mensagens/api/msg/admin/settings permanece nao migrado no modulo mens
   }
 });
 
-test('PUT /mensagens/api/msg/admin/settings permanece nao migrado no modulo mensagens', async () => {
+test('PUT /mensagens/api/msg/admin/settings está migrado e exige autenticação admin', async () => {
   const { app, close } = await createServer({ skipDb: true });
   const teardownGuard = installTeardownSuppression();
 
@@ -95,9 +95,9 @@ test('PUT /mensagens/api/msg/admin/settings permanece nao migrado no modulo mens
         permitir_pessoal_para_pessoal: false,
       });
 
-    assert.equal(res.status, 404, JSON.stringify(res.body));
+    assert.equal(res.status, 401, JSON.stringify(res.body));
     assert.equal(res.body?.success, false, JSON.stringify(res.body));
-    assert.match(String(res.body?.message || ''), /^Recurso n.o encontrado$/u);
+    assert.match(String(res.body?.message || res.body?.error || ''), /não autenticado/i);
   } finally {
     try {
       await closeWithTeardownGuard(close, teardownGuard);

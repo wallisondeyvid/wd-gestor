@@ -1,29 +1,17 @@
-﻿import assert from 'node:assert/strict';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import test from 'node:test';
+﻿import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
 
-const moduleDir = path.resolve(process.cwd(), 'src/modules/mensagens/app');
+const sourcePath = 'src/modules/mensagens/app/mensagens-api.js';
 
-async function readMensagemSources() {
-  const files = [
-    'mensagens-api.js',
-    'mensagens-api-helpers.js',
-    'mensagens-app.js',
-    'mensagens-settings.js',
-  ];
+test('admin/settings foi migrado para o módulo Mensagens', () => {
+  const src = fs.readFileSync(sourcePath, 'utf8');
 
-  const chunks = await Promise.all(
-    files.map(async (file) => fs.readFile(path.join(moduleDir, file), 'utf8')),
-  );
-
-  return chunks.join('\n');
-}
-
-test('modulo mensagens nao registra rotas admin settings legadas', async () => {
-  const source = await readMensagemSources();
-
-  assert.doesNotMatch(source, /admin\/settings/);
-  assert.doesNotMatch(source, /api\/msg\/admin\/settings/);
-  assert.doesNotMatch(source, /prepareMsgAdminSettingsContext/);
+  assert.match(src, /import\s+CondMsgSettings\s+from\s+'#models\/cond_msg_settings\.js';/);
+  assert.match(src, /router\.get\('\/admin\/settings'/);
+  assert.match(src, /router\.put\('\/admin\/settings'/);
+  assert.match(src, /function\s+requireMsgAdmin\s*\(/);
+  assert.match(src, /function\s+settingsToClient\s*\(/);
+  assert.match(src, /getOrInitMsgSettingsForUnidade\(unidadeId\)/);
+  assert.match(src, /CondMsgSettings\.findOneAndUpdate\(/);
 });
