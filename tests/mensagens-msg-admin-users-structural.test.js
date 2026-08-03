@@ -1,28 +1,24 @@
-﻿import assert from 'node:assert/strict';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import test from 'node:test';
+﻿import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
 
-const moduleDir = path.resolve(process.cwd(), 'src/modules/mensagens/app');
+const sourcePath = 'src/modules/mensagens/app/mensagens-api.js';
 
-async function readMensagemSources() {
-  const files = [
-    'mensagens-api.js',
-    'mensagens-api-helpers.js',
-    'mensagens-app.js',
-    'mensagens-settings.js',
-  ];
+test('admin/users foi migrado para o módulo Mensagens', () => {
+  const src = fs.readFileSync(sourcePath, 'utf8');
 
-  const chunks = await Promise.all(
-    files.map(async (file) => fs.readFile(path.join(moduleDir, file), 'utf8')),
-  );
+  assert.match(src, /import\s+CondUsuario\s+from\s+'#models\/cond_usuario\.js';/);
+  assert.match(src, /import\s+CondMorador\s+from\s+'#models\/cond_morador\.js';/);
+  assert.match(src, /import\s+Funcionario\s+from\s+'#models\/Funcionario\.js';/);
 
-  return chunks.join('\n');
-}
+  assert.match(src, /router\.get\('\/admin\/users'/);
+  assert.match(src, /function\s+pushAdminUserRow\s*\(/);
 
-test('modulo mensagens nao registra rotas admin users legadas', async () => {
-  const source = await readMensagemSources();
+  assert.match(src, /Funcionario\.find\(\s*\{\s*unidade_id:\s*unidadeObjectId/);
+  assert.match(src, /CondMorador\.find\(\s*\{\s*unidade_id:\s*unidadeObjectId/);
+  assert.match(src, /CondUsuario\.find\(\s*\{/);
 
-  assert.doesNotMatch(source, /admin\/users/);
-  assert.doesNotMatch(source, /api\/msg\/admin\/users/);
+  assert.match(src, /origem:\s*'portal'/);
+  assert.match(src, /origem:\s*'colaborador'/);
+  assert.match(src, /habitacao_id:\s*habitacaoId/);
 });

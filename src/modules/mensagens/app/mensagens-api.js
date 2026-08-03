@@ -10,6 +10,9 @@ import CondMsgMessage from '#models/cond_msg_message.js';
 import CondMsgMarker from '#models/cond_msg_marker.js';
 import CondMsgSignaturePref from '#models/cond_msg_signature_pref.js';
 import CondMsgSettings from '#models/cond_msg_settings.js';
+import CondUsuario from '#models/cond_usuario.js';
+import CondMorador from '#models/cond_morador.js';
+import Funcionario from '#models/Funcionario.js';
 
 import {
   getMsgOwnerKey,
@@ -119,6 +122,32 @@ function settingsToClient(doc) {
     createdAt: s.createdAt || null,
     updatedAt: s.updatedAt || null
   };
+}
+
+function normalizeEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function pushAdminUserRow(out, seen, raw) {
+  const email = normalizeEmail(raw?.email);
+  if (!email || !email.includes('@')) return;
+
+  const origem = String(raw?.origem || '').trim().toLowerCase() === 'portal'
+    ? 'portal'
+    : 'colaborador';
+
+  const habitacaoId = String(raw?.habitacao_id || raw?.habitacaoId || '').trim();
+  const key = [origem, email, habitacaoId].join('|');
+  if (seen.has(key)) return;
+  seen.add(key);
+
+  out.push({
+    email,
+    nome: String(raw?.nome || '').trim(),
+    origem,
+    habitacao: String(raw?.habitacao || '').trim(),
+    habitacao_id: habitacaoId
+  });
 }
 
 function pickAdminUnidadeId(req) {
@@ -1879,6 +1908,141 @@ router.get('/health', (req, res) => {
     module: 'mensagens',
     api: 'msg'
   });
+});
+
+router.get('/admin/users', async (req, res, next) => {
+  try {
+    const adminUser = requireMsgAdmin(req, res);
+    if (!adminUser) return;
+
+    const unidadeId = pickAdminUnidadeId(req);
+    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'unidade_id inválido',
+        message: 'unidade_id inválido'
+      });
+    }
+
+    const ready = await ensureMongoReady();
+    if (!ready) {
+      return res.status(503).json({
+        success: false,
+        error: 'Banco de dados indisponível',
+        message: 'Banco de dados indisponível'
+      });
+    }
+
+    const unidadeObjectId = new mongoose.Types.ObjectId(unidadeId);
+    const data = [];
+    const seen = new Set();
+
+    const [funcionarios, moradores, condUsuariosDiretos] = await Promise.all([
+      Funcionario.find({ unidade_id: unidadeObjectId, ativo: { $ne: false } })
+        .select('email nome nome_social')
+        .sort({ nome: 1 })
+        .lean()
+        .catch(() => []),
+
+      CondMorador.find({ unidade_id: unidadeObjectId, ativo: { $ne: false } })
+        .select('email nome responsavel_email responsavel_nome habitacao_id cond_usuario_id')
+        .sort({ nome: 1 })
+        .lean()
+        .catch(() => []),
+
+      CondUsuario.find({
+        unidade_id: unidadeObjectId,
+        ativo: { $ne: false },
+        portal_acesso_ativo: { $ne: false },
+        email: { $exists: true, $ne: '' }
+      })
+        .select('email nome')
+        .sort({ nome: 1 })
+        .lean()
+        .catch(() => [])
+    ]);
+
+    const condIds = [];
+    for (const morador of moradores || []) {
+      const cid = String(morador?.cond_usuario_id || '').trim();
+      if (cid && mongoose.isValidObjectId(cid)) {
+        condIds.push(new mongoose.Types.ObjectId(cid));
+      }
+    }
+
+    const condUsuariosPorIdList = condIds.length
+      ? await CondUsuario.find({
+          _id: { $in: Array.from(new Set(condIds.map(id => String(id)))).map(id => new mongoose.Types.ObjectId(id)) },
+          ativo: { $ne: false },
+          portal_acesso_ativo: { $ne: false }
+        })
+          .select('email nome')
+          .lean()
+          .catch(() => [])
+      : [];
+
+    const condById = new Map(
+      (condUsuariosPorIdList || []).map(u => [String(u?._id || ''), u])
+    );
+
+    for (const func of funcionarios || []) {
+      pushAdminUserRow(data, seen, {
+        email: func?.email,
+        nome: func?.nome_social || func?.nome,
+        origem: 'colaborador',
+        habitacao: '',
+        habitacao_id: ''
+      });
+    }
+
+    for (const morador of moradores || []) {
+      const linkedUser = morador?.cond_usuario_id
+        ? condById.get(String(morador.cond_usuario_id)) || null
+        : null;
+
+      const habitacaoId = String(morador?.habitacao_id || '').trim();
+
+      pushAdminUserRow(data, seen, {
+        email: linkedUser?.email || morador?.email,
+        nome: linkedUser?.nome || morador?.nome,
+        origem: 'portal',
+        habitacao: habitacaoId,
+        habitacao_id: habitacaoId
+      });
+
+      pushAdminUserRow(data, seen, {
+        email: morador?.responsavel_email,
+        nome: morador?.responsavel_nome || morador?.nome,
+        origem: 'portal',
+        habitacao: habitacaoId,
+        habitacao_id: habitacaoId
+      });
+    }
+
+    for (const user of condUsuariosDiretos || []) {
+      pushAdminUserRow(data, seen, {
+        email: user?.email,
+        nome: user?.nome,
+        origem: 'portal',
+        habitacao: '',
+        habitacao_id: ''
+      });
+    }
+
+    data.sort((a, b) => {
+      const origemCmp = String(a.origem).localeCompare(String(b.origem), 'pt-BR');
+      if (origemCmp) return origemCmp;
+      return String(a.nome || a.email).localeCompare(String(b.nome || b.email), 'pt-BR');
+    });
+
+    return res.json({
+      success: true,
+      data
+    });
+  } catch (e) {
+    console.error('[mensagens][GET /api/msg/admin/users] erro:', e);
+    return next(e);
+  }
 });
 
 router.get('/admin/settings', async (req, res, next) => {
