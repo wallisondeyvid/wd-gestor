@@ -1,30 +1,25 @@
-﻿import assert from 'node:assert/strict';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import test from 'node:test';
+﻿import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
 
-const moduleDir = path.resolve(process.cwd(), 'src/modules/mensagens/app');
+const sourcePath = 'src/modules/mensagens/app/mensagens-api.js';
 
-async function readMensagemSources() {
-  const files = [
-    'mensagens-api.js',
-    'mensagens-api-helpers.js',
-    'mensagens-app.js',
-    'mensagens-settings.js',
-  ];
+test('admin/metrics foi migrado para o módulo Mensagens', () => {
+  const src = fs.readFileSync(sourcePath, 'utf8');
 
-  const chunks = await Promise.all(
-    files.map(async (file) => fs.readFile(path.join(moduleDir, file), 'utf8')),
-  );
+  assert.match(src, /router\.get\('\/admin\/metrics\/users'/);
+  assert.match(src, /router\.get\('\/admin\/metrics\/mailboxes'/);
+  assert.match(src, /router\.get\('\/admin\/metrics\/timeseries\/users'/);
+  assert.match(src, /router\.get\('\/admin\/metrics\/timeseries\/mailboxes'/);
 
-  return chunks.join('\n');
-}
+  assert.match(src, /function\s+adminBytesToHuman\s*\(/);
+  assert.match(src, /function\s+parseAdminMetricsRange\s*\(/);
+  assert.match(src, /function\s+buildAdminMsgBytesAddFields\s*\(/);
+  assert.match(src, /function\s+sumAdminMetricTotals\s*\(/);
 
-test('modulo mensagens nao registra rotas admin metrics legadas', async () => {
-  const source = await readMensagemSources();
-
-  assert.doesNotMatch(source, /admin\/metrics/);
-  assert.doesNotMatch(source, /api\/msg\/admin\/metrics/);
-  assert.doesNotMatch(source, /metrics\/users/);
-  assert.doesNotMatch(source, /metrics\/mailboxes/);
+  assert.match(src, /CondMsgMessage\.aggregate\(/);
+  assert.match(src, /from_owner/);
+  assert.match(src, /from_mailbox_id/);
+  assert.match(src, /states\.mailbox_id/);
+  assert.match(src, /interval:\s*'day'/);
 });

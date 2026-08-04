@@ -78,7 +78,7 @@ function buildQuery() {
   }).toString();
 }
 
-test('GETs /mensagens/api/msg/admin/metrics permanecem nao migrados no modulo mensagens', async () => {
+test('GETs /mensagens/api/msg/admin/metrics estão migrados e exigem autenticação admin', async () => {
   const { app, close } = await createServer({ skipDb: true });
   const teardownGuard = installTeardownSuppression();
 
@@ -89,11 +89,11 @@ test('GETs /mensagens/api/msg/admin/metrics permanecem nao migrados no modulo me
         .set('Accept', 'application/json')
         .set('Connection', 'close');
 
-      assert.equal(res.status, 404, `${endpoint} => ${JSON.stringify(res.body)}`);
+      assert.equal(res.status, 401, `${endpoint} => ${JSON.stringify(res.body)}`);
       assert.equal(res.body?.success, false, `${endpoint} => ${JSON.stringify(res.body)}`);
       assert.match(
-        String(res.body?.message || ''),
-        /^Recurso n.o encontrado$/u,
+        String(res.body?.message || res.body?.error || ''),
+        /não autenticado/i,
         `${endpoint} => ${JSON.stringify(res.body)}`,
       );
     }

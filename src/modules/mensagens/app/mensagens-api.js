@@ -185,6 +185,138 @@ function mailboxAdminCanHardDelete(doc) {
   return type === 'grupo' && !linkType && !linkId;
 }
 
+function adminBytesToHuman(bytes) {
+  const n = Number(bytes) || 0;
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(n < 10 * 1024 ? 1 : 0) + ' KB';
+  if (n < 1024 * 1024 * 1024) return (n / (1024 * 1024)).toFixed(n < 10 * 1024 * 1024 ? 1 : 0) + ' MB';
+  return (n / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+}
+
+function parseAdminMetricsRange(query = {}) {
+  const now = new Date();
+  const defaultTo = new Date(now);
+  const defaultFrom = new Date(now);
+  defaultFrom.setUTCDate(defaultFrom.getUTCDate() - 30);
+
+  const parse = (value, fallback, endOfDay = false) => {
+    const raw = String(value || '').trim();
+    if (!raw) return fallback;
+
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(raw)
+      ? new Date(raw + (endOfDay ? 'T23:59:59.999Z' : 'T00:00:00.000Z'))
+      : new Date(raw);
+
+    return Number.isFinite(date.getTime()) ? date : fallback;
+  };
+
+  const from = parse(query.from, defaultFrom, false);
+  const to = parse(query.to, defaultTo, true);
+
+  return {
+    from,
+    to,
+    fromIso: from.toISOString(),
+    toIso: to.toISOString()
+  };
+}
+
+function buildAdminMsgBytesAddFields() {
+  return {
+    bodyBytes: {
+      $strLenBytes: {
+        $ifNull: ['$body_text', { $ifNull: ['$body_html', ''] }]
+      }
+    },
+    anexosBytes: {
+      $reduce: {
+        input: { $ifNull: ['$anexos', []] },
+        initialValue: 0,
+        in: {
+          $add: [
+            '$value',
+            { $ifNull: ['$this.tamanho', 0] }
+          ]
+        }
+      }
+    }
+  };
+}
+
+function normalizeAdminMetricRow(row) {
+  const sentBytes = Number(row?.sentBytes) || 0;
+  const receivedBytes = Number(row?.receivedBytes) || 0;
+
+  return {
+    ...row,
+    sentCount: Number(row?.sentCount) || 0,
+    sentBytes,
+    receivedCount: Number(row?.receivedCount) || 0,
+    receivedBytes,
+    sentBytesHuman: adminBytesToHuman(sentBytes),
+    receivedBytesHuman: adminBytesToHuman(receivedBytes)
+  };
+}
+
+function sumAdminMetricTotals(rows = []) {
+  const totals = (Array.isArray(rows) ? rows : []).reduce((acc, r) => {
+    acc.sentCount += Number(r?.sentCount) || 0;
+    acc.sentBytes += Number(r?.sentBytes) || 0;
+    acc.receivedCount += Number(r?.receivedCount) || 0;
+    acc.receivedBytes += Number(r?.receivedBytes) || 0;
+    return acc;
+  }, { sentCount: 0, sentBytes: 0, receivedCount: 0, receivedBytes: 0 });
+
+  return {
+    ...totals,
+    sentBytesHuman: adminBytesToHuman(totals.sentBytes),
+    receivedBytesHuman: adminBytesToHuman(totals.receivedBytes)
+  };
+}
+
+function mergeAdminMetricMaps(sentAgg = [], recvAgg = [], keyName = 'email') {
+  const map = new Map();
+
+  for (const r of sentAgg || []) {
+    const key = String(r?._id || '').trim().toLowerCase();
+    if (!key) continue;
+    map.set(key, {
+      [keyName]: key,
+      sentCount: Number(r?.sentCount) || 0,
+      sentBytes: Number(r?.sentBytes) || 0,
+      receivedCount: 0,
+      receivedBytes: 0
+    });
+  }
+
+  for (const r of recvAgg || []) {
+    const key = String(r?._id || '').trim().toLowerCase();
+    if (!key) continue;
+    const cur = map.get(key) || {
+      [keyName]: key,
+      sentCount: 0,
+      sentBytes: 0,
+      receivedCount: 0,
+      receivedBytes: 0
+    };
+    cur.receivedCount = Number(r?.receivedCount) || 0;
+    cur.receivedBytes = Number(r?.receivedBytes) || 0;
+    map.set(key, cur);
+  }
+
+  return Array.from(map.values()).map(normalizeAdminMetricRow);
+}
+
+function dateKeyUtcExpression() {
+  return {
+    $dateToString: {
+      format: '%Y-%m-%d',
+      date: '$createdAt',
+      timezone: 'UTC'
+    }
+  };
+}
+
 function pickAdminUnidadeId(req) {
   return String(
     req?.query?.unidade_id ||
@@ -1943,6 +2075,323 @@ router.get('/health', (req, res) => {
     module: 'mensagens',
     api: 'msg'
   });
+});
+
+router.get('/admin/metrics/users', async (req, res, next) => {
+  try {
+    const adminUser = requireMsgAdmin(req, res);
+    if (!adminUser) return;
+
+    const unidadeId = pickAdminUnidadeId(req);
+    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+      return res.status(400).json({ success: false, error: 'unidade_id inválido', message: 'unidade_id inválido' });
+    }
+
+    const ready = await ensureMongoReady();
+    if (!ready) return res.status(503).json({ success: false, error: 'Banco de dados indisponível', message: 'Banco de dados indisponível' });
+
+    const { from, to, fromIso, toIso } = parseAdminMetricsRange(req.query || {});
+    const unidadeObjectId = new mongoose.Types.ObjectId(unidadeId);
+    const match = {
+      ativo: { $ne: false },
+      unidade_id: unidadeObjectId,
+      createdAt: { $gte: from, $lte: to }
+    };
+    const addFields = buildAdminMsgBytesAddFields();
+
+    const [sentAgg, recvAgg] = await Promise.all([
+      CondMsgMessage.aggregate([
+        { $match: match },
+        { $addFields: addFields },
+        {
+          $group: {
+            _id: { $ifNull: ['$from_owner', ''] },
+            sentCount: { $sum: 1 },
+            sentBytes: { $sum: { $add: ['$bodyBytes', '$anexosBytes'] } }
+          }
+        },
+        { $match: { _id: { $ne: '' } } }
+      ]),
+      CondMsgMessage.aggregate([
+        { $match: match },
+        { $addFields: addFields },
+        { $unwind: '$states' },
+        { $match: { 'states.mailbox_id': 'pessoal' } },
+        {
+          $group: {
+            _id: { $ifNull: ['$states.owner', ''] },
+            receivedCount: { $sum: 1 },
+            receivedBytes: { $sum: { $add: ['$bodyBytes', '$anexosBytes'] } }
+          }
+        },
+        { $match: { _id: { $ne: '' } } }
+      ])
+    ]);
+
+    const data = mergeAdminMetricMaps(sentAgg, recvAgg, 'email')
+      .sort((a, b) => (b.sentCount + b.receivedCount) - (a.sentCount + a.receivedCount));
+
+    return res.json({
+      ok: true,
+      success: true,
+      unidade_id: unidadeId,
+      from: fromIso,
+      to: toIso,
+      totals: sumAdminMetricTotals(data),
+      data
+    });
+  } catch (e) {
+    console.error('[mensagens][GET /api/msg/admin/metrics/users] erro:', e);
+    return next(e);
+  }
+});
+
+router.get('/admin/metrics/mailboxes', async (req, res, next) => {
+  try {
+    const adminUser = requireMsgAdmin(req, res);
+    if (!adminUser) return;
+
+    const unidadeId = pickAdminUnidadeId(req);
+    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+      return res.status(400).json({ success: false, error: 'unidade_id inválido', message: 'unidade_id inválido' });
+    }
+
+    const ready = await ensureMongoReady();
+    if (!ready) return res.status(503).json({ success: false, error: 'Banco de dados indisponível', message: 'Banco de dados indisponível' });
+
+    const { from, to, fromIso, toIso } = parseAdminMetricsRange(req.query || {});
+    const unidadeObjectId = new mongoose.Types.ObjectId(unidadeId);
+    const match = {
+      ativo: { $ne: false },
+      unidade_id: unidadeObjectId,
+      createdAt: { $gte: from, $lte: to }
+    };
+    const addFields = buildAdminMsgBytesAddFields();
+
+    const [sentAgg, recvAgg, mailboxes] = await Promise.all([
+      CondMsgMessage.aggregate([
+        { $match: match },
+        { $addFields: addFields },
+        {
+          $group: {
+            _id: { $ifNull: ['$from_mailbox_id', ''] },
+            sentCount: { $sum: 1 },
+            sentBytes: { $sum: { $add: ['$bodyBytes', '$anexosBytes'] } }
+          }
+        },
+        { $match: { _id: { $ne: '' } } }
+      ]),
+      CondMsgMessage.aggregate([
+        { $match: match },
+        { $addFields: addFields },
+        { $unwind: '$states' },
+        {
+          $group: {
+            _id: { $ifNull: ['$states.mailbox_id', ''] },
+            receivedCount: { $sum: 1 },
+            receivedBytes: { $sum: { $add: ['$bodyBytes', '$anexosBytes'] } }
+          }
+        },
+        { $match: { _id: { $ne: '' } } }
+      ]),
+      CondMsgMailbox.find({ unidade_id: unidadeObjectId })
+        .select('name type ativo link_type link_id public')
+        .lean()
+        .catch(() => [])
+    ]);
+
+    const meta = new Map();
+    meta.set('pessoal', {
+      mailboxName: 'Pessoal',
+      mailboxType: 'pessoal',
+      ativo: true,
+      link_type: '',
+      link_id: '',
+      public: false
+    });
+
+    for (const mb of mailboxes || []) {
+      const id = String(mb?._id || '').trim();
+      if (!id) continue;
+      meta.set(id, {
+        mailboxName: String(mb?.name || '').trim(),
+        mailboxType: String(mb?.type || 'grupo').trim() || 'grupo',
+        ativo: mb?.ativo !== false,
+        link_type: String(mb?.link_type || '').trim(),
+        link_id: mb?.link_id ? String(mb.link_id) : '',
+        public: !!mb?.public
+      });
+    }
+
+    const data = mergeAdminMetricMaps(sentAgg, recvAgg, 'mailboxId')
+      .map(row => {
+        const m = meta.get(String(row.mailboxId || '').trim()) || {};
+        return {
+          ...row,
+          mailboxName: m.mailboxName || row.mailboxId,
+          mailboxType: m.mailboxType || '',
+          ativo: m.ativo !== false,
+          link_type: m.link_type || '',
+          link_id: m.link_id || '',
+          public: !!m.public
+        };
+      })
+      .sort((a, b) => (b.sentCount + b.receivedCount) - (a.sentCount + a.receivedCount));
+
+    return res.json({
+      ok: true,
+      success: true,
+      unidade_id: unidadeId,
+      from: fromIso,
+      to: toIso,
+      totals: sumAdminMetricTotals(data),
+      data
+    });
+  } catch (e) {
+    console.error('[mensagens][GET /api/msg/admin/metrics/mailboxes] erro:', e);
+    return next(e);
+  }
+});
+
+router.get('/admin/metrics/timeseries/users', async (req, res, next) => {
+  try {
+    const adminUser = requireMsgAdmin(req, res);
+    if (!adminUser) return;
+
+    const unidadeId = pickAdminUnidadeId(req);
+    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+      return res.status(400).json({ success: false, error: 'unidade_id inválido', message: 'unidade_id inválido' });
+    }
+
+    const ready = await ensureMongoReady();
+    if (!ready) return res.status(503).json({ success: false, error: 'Banco de dados indisponível', message: 'Banco de dados indisponível' });
+
+    const { from, to } = parseAdminMetricsRange(req.query || {});
+    const unidadeObjectId = new mongoose.Types.ObjectId(unidadeId);
+    const match = {
+      ativo: { $ne: false },
+      unidade_id: unidadeObjectId,
+      createdAt: { $gte: from, $lte: to }
+    };
+    const addFields = buildAdminMsgBytesAddFields();
+
+    const [sentAgg, recvAgg] = await Promise.all([
+      CondMsgMessage.aggregate([
+        { $match: match },
+        { $addFields: addFields },
+        {
+          $group: {
+            _id: dateKeyUtcExpression(),
+            sentCount: { $sum: 1 },
+            sentBytes: { $sum: { $add: ['$bodyBytes', '$anexosBytes'] } }
+          }
+        }
+      ]),
+      CondMsgMessage.aggregate([
+        { $match: match },
+        { $addFields: addFields },
+        { $unwind: '$states' },
+        { $match: { 'states.mailbox_id': 'pessoal' } },
+        {
+          $group: {
+            _id: dateKeyUtcExpression(),
+            receivedCount: { $sum: 1 },
+            receivedBytes: { $sum: { $add: ['$bodyBytes', '$anexosBytes'] } }
+          }
+        }
+      ])
+    ]);
+
+    const points = mergeAdminMetricMaps(sentAgg, recvAgg, 'date')
+      .map(row => ({
+        date: row.date,
+        sentCount: row.sentCount,
+        sentBytes: row.sentBytes,
+        receivedCount: row.receivedCount,
+        receivedBytes: row.receivedBytes
+      }))
+      .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+    return res.json({
+      ok: true,
+      success: true,
+      interval: 'day',
+      points
+    });
+  } catch (e) {
+    console.error('[mensagens][GET /api/msg/admin/metrics/timeseries/users] erro:', e);
+    return next(e);
+  }
+});
+
+router.get('/admin/metrics/timeseries/mailboxes', async (req, res, next) => {
+  try {
+    const adminUser = requireMsgAdmin(req, res);
+    if (!adminUser) return;
+
+    const unidadeId = pickAdminUnidadeId(req);
+    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+      return res.status(400).json({ success: false, error: 'unidade_id inválido', message: 'unidade_id inválido' });
+    }
+
+    const ready = await ensureMongoReady();
+    if (!ready) return res.status(503).json({ success: false, error: 'Banco de dados indisponível', message: 'Banco de dados indisponível' });
+
+    const { from, to } = parseAdminMetricsRange(req.query || {});
+    const unidadeObjectId = new mongoose.Types.ObjectId(unidadeId);
+    const match = {
+      ativo: { $ne: false },
+      unidade_id: unidadeObjectId,
+      createdAt: { $gte: from, $lte: to }
+    };
+    const addFields = buildAdminMsgBytesAddFields();
+
+    const [sentAgg, recvAgg] = await Promise.all([
+      CondMsgMessage.aggregate([
+        { $match: match },
+        { $addFields: addFields },
+        {
+          $group: {
+            _id: dateKeyUtcExpression(),
+            sentCount: { $sum: 1 },
+            sentBytes: { $sum: { $add: ['$bodyBytes', '$anexosBytes'] } }
+          }
+        }
+      ]),
+      CondMsgMessage.aggregate([
+        { $match: match },
+        { $addFields: addFields },
+        { $unwind: '$states' },
+        {
+          $group: {
+            _id: dateKeyUtcExpression(),
+            receivedCount: { $sum: 1 },
+            receivedBytes: { $sum: { $add: ['$bodyBytes', '$anexosBytes'] } }
+          }
+        }
+      ])
+    ]);
+
+    const points = mergeAdminMetricMaps(sentAgg, recvAgg, 'date')
+      .map(row => ({
+        date: row.date,
+        sentCount: row.sentCount,
+        sentBytes: row.sentBytes,
+        receivedCount: row.receivedCount,
+        receivedBytes: row.receivedBytes
+      }))
+      .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+    return res.json({
+      ok: true,
+      success: true,
+      interval: 'day',
+      points
+    });
+  } catch (e) {
+    console.error('[mensagens][GET /api/msg/admin/metrics/timeseries/mailboxes] erro:', e);
+    return next(e);
+  }
 });
 
 router.get('/admin/mailboxes', async (req, res, next) => {
