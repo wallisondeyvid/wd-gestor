@@ -1,28 +1,23 @@
-﻿import assert from 'node:assert/strict';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import test from 'node:test';
+﻿import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
 
-const moduleDir = path.resolve(process.cwd(), 'src/modules/mensagens/app');
+const sourcePath = 'src/modules/mensagens/app/mensagens-api.js';
 
-async function readMensagemSources() {
-  const files = [
-    'mensagens-api.js',
-    'mensagens-api-helpers.js',
-    'mensagens-app.js',
-    'mensagens-settings.js',
-  ];
+test('admin/mailboxes foi migrado para o módulo Mensagens', () => {
+  const src = fs.readFileSync(sourcePath, 'utf8');
 
-  const chunks = await Promise.all(
-    files.map(async (file) => fs.readFile(path.join(moduleDir, file), 'utf8')),
-  );
+  assert.match(src, /router\.get\('\/admin\/mailboxes'/);
+  assert.match(src, /router\.patch\('\/admin\/mailboxes\/:id\/status'/);
+  assert.match(src, /router\.delete\('\/admin\/mailboxes\/:id'/);
 
-  return chunks.join('\n');
-}
+  assert.match(src, /function\s+mailboxAdminToClient\s*\(/);
+  assert.match(src, /function\s+mailboxAdminCanHardDelete\s*\(/);
 
-test('modulo mensagens nao registra rotas admin mailboxes legadas', async () => {
-  const source = await readMensagemSources();
+  assert.match(src, /CondMsgMailbox\.find\(\s*\{\s*unidade_id:\s*unidadeObjectId\s*\}/);
+  assert.match(src, /CondMsgMailbox\.findByIdAndUpdate\(/);
+  assert.match(src, /hardDeleteMailboxWithCleanup\(mailboxId/);
 
-  assert.doesNotMatch(source, /admin\/mailboxes/);
-  assert.doesNotMatch(source, /api\/msg\/admin\/mailboxes/);
+  assert.match(src, /type\s*===\s*'grupo'/);
+  assert.match(src, /!linkType\s*&&\s*!linkId/);
 });

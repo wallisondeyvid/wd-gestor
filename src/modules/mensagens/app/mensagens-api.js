@@ -150,6 +150,41 @@ function pushAdminUserRow(out, seen, raw) {
   });
 }
 
+function mailboxAdminToClient(doc) {
+  const mb = doc && typeof doc.toObject === 'function' ? doc.toObject() : (doc || {});
+  const linkType = String(mb.link_type || '').trim();
+  const linkId = mb.link_id ? String(mb.link_id) : '';
+
+  return {
+    id: mb._id ? String(mb._id) : String(mb.id || ''),
+    _id: mb._id ? String(mb._id) : String(mb.id || ''),
+    name: String(mb.name || '').trim(),
+    type: String(mb.type || 'grupo').trim() || 'grupo',
+    unidade_id: mb.unidade_id ? String(mb.unidade_id) : '',
+    unidade_nome: String(mb.unidade_nome || ''),
+    public: !!mb.public,
+    isPublic: !!mb.public,
+    createdBy: String(mb.createdBy || ''),
+    operators: Array.isArray(mb.operators) ? mb.operators : [],
+    ativo: mb.ativo !== false,
+    link_type: linkType,
+    linkType,
+    link_id: linkId,
+    linkId,
+    createdAt: mb.createdAt || null,
+    updatedAt: mb.updatedAt || null
+  };
+}
+
+function mailboxAdminCanHardDelete(doc) {
+  const mb = doc && typeof doc.toObject === 'function' ? doc.toObject() : (doc || {});
+  const type = String(mb.type || '').trim().toLowerCase();
+  const linkType = String(mb.link_type || '').trim();
+  const linkId = mb.link_id ? String(mb.link_id) : '';
+
+  return type === 'grupo' && !linkType && !linkId;
+}
+
 function pickAdminUnidadeId(req) {
   return String(
     req?.query?.unidade_id ||
@@ -1908,6 +1943,150 @@ router.get('/health', (req, res) => {
     module: 'mensagens',
     api: 'msg'
   });
+});
+
+router.get('/admin/mailboxes', async (req, res, next) => {
+  try {
+    const adminUser = requireMsgAdmin(req, res);
+    if (!adminUser) return;
+
+    const unidadeId = pickAdminUnidadeId(req);
+    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'unidade_id inválido',
+        message: 'unidade_id inválido'
+      });
+    }
+
+    const ready = await ensureMongoReady();
+    if (!ready) {
+      return res.status(503).json({
+        success: false,
+        error: 'Banco de dados indisponível',
+        message: 'Banco de dados indisponível'
+      });
+    }
+
+    const unidadeObjectId = new mongoose.Types.ObjectId(unidadeId);
+    const docs = await CondMsgMailbox.find({ unidade_id: unidadeObjectId })
+      .sort({ ativo: -1, type: 1, name: 1, createdAt: -1 })
+      .lean();
+
+    return res.json({
+      success: true,
+      data: (docs || []).map(mailboxAdminToClient)
+    });
+  } catch (e) {
+    console.error('[mensagens][GET /api/msg/admin/mailboxes] erro:', e);
+    return next(e);
+  }
+});
+
+router.patch('/admin/mailboxes/:id/status', express.json({ limit: '64kb' }), async (req, res, next) => {
+  try {
+    const adminUser = requireMsgAdmin(req, res);
+    if (!adminUser) return;
+
+    const mailboxId = String(req.params?.id || '').trim();
+    if (!mailboxId || !mongoose.isValidObjectId(mailboxId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'id inválido',
+        message: 'id inválido'
+      });
+    }
+
+    const ready = await ensureMongoReady();
+    if (!ready) {
+      return res.status(503).json({
+        success: false,
+        error: 'Banco de dados indisponível',
+        message: 'Banco de dados indisponível'
+      });
+    }
+
+    const update = {
+      ativo: req.body?.ativo !== false
+    };
+
+    const mailbox = await CondMsgMailbox.findByIdAndUpdate(
+      mailboxId,
+      { $set: update },
+      { new: true }
+    ).lean();
+
+    if (!mailbox) {
+      return res.status(404).json({
+        success: false,
+        error: 'Caixa não encontrada',
+        message: 'Caixa não encontrada'
+      });
+    }
+
+    return res.json({
+      success: true,
+      mailbox: mailboxAdminToClient(mailbox)
+    });
+  } catch (e) {
+    console.error('[mensagens][PATCH /api/msg/admin/mailboxes/:id/status] erro:', e);
+    return next(e);
+  }
+});
+
+router.delete('/admin/mailboxes/:id', async (req, res, next) => {
+  try {
+    const adminUser = requireMsgAdmin(req, res);
+    if (!adminUser) return;
+
+    const mailboxId = String(req.params?.id || '').trim();
+    if (!mailboxId || !mongoose.isValidObjectId(mailboxId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'id inválido',
+        message: 'id inválido'
+      });
+    }
+
+    const ready = await ensureMongoReady();
+    if (!ready) {
+      return res.status(503).json({
+        success: false,
+        error: 'Banco de dados indisponível',
+        message: 'Banco de dados indisponível'
+      });
+    }
+
+    const mailbox = await CondMsgMailbox.findById(mailboxId).lean();
+    if (!mailbox) {
+      return res.status(404).json({
+        success: false,
+        error: 'Caixa não encontrada',
+        message: 'Caixa não encontrada'
+      });
+    }
+
+    if (!mailboxAdminCanHardDelete(mailbox)) {
+      return res.status(409).json({
+        success: false,
+        error: 'Esta caixa não pode ser excluída',
+        message: 'Esta caixa não pode ser excluída'
+      });
+    }
+
+    const cleanup = await hardDeleteMailboxWithCleanup(mailboxId, {
+      logTag: '[mensagens][admin/deleteMailbox]'
+    });
+
+    return res.json({
+      success: true,
+      deleted: true,
+      cleanup
+    });
+  } catch (e) {
+    console.error('[mensagens][DELETE /api/msg/admin/mailboxes/:id] erro:', e);
+    return next(e);
+  }
 });
 
 router.get('/admin/users', async (req, res, next) => {

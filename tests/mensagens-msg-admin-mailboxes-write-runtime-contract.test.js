@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict';
+﻿import assert from 'node:assert/strict';
 import test from 'node:test';
 import request from 'supertest';
 
@@ -61,7 +61,7 @@ async function closeWithTeardownGuard(close, teardownGuard) {
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-test('PATCH /mensagens/api/msg/admin/mailboxes/:id/status permanece nao migrado no modulo mensagens', async () => {
+test('PATCH /mensagens/api/msg/admin/mailboxes/:id/status está migrado e exige autenticação admin', async () => {
   const { app, close } = await createServer({ skipDb: true });
   const teardownGuard = installTeardownSuppression();
 
@@ -70,14 +70,11 @@ test('PATCH /mensagens/api/msg/admin/mailboxes/:id/status permanece nao migrado 
       .patch(`/mensagens/api/msg/admin/mailboxes/${MAILBOX_ID}/status`)
       .set('Accept', 'application/json')
       .set('Connection', 'close')
-      .send({
-        unidade_id: '507f1f77bcf86cd799439010',
-        ativo: false,
-      });
+      .send({ ativo: false });
 
-    assert.equal(res.status, 404, JSON.stringify(res.body));
+    assert.equal(res.status, 401, JSON.stringify(res.body));
     assert.equal(res.body?.success, false, JSON.stringify(res.body));
-    assert.match(String(res.body?.message || ''), /^Recurso n.o encontrado$/u);
+    assert.match(String(res.body?.message || res.body?.error || ''), /não autenticado/i);
   } finally {
     try {
       await closeWithTeardownGuard(close, teardownGuard);
@@ -87,7 +84,7 @@ test('PATCH /mensagens/api/msg/admin/mailboxes/:id/status permanece nao migrado 
   }
 });
 
-test('DELETE /mensagens/api/msg/admin/mailboxes/:id permanece nao migrado no modulo mensagens', async () => {
+test('DELETE /mensagens/api/msg/admin/mailboxes/:id está migrado e exige autenticação admin', async () => {
   const { app, close } = await createServer({ skipDb: true });
   const teardownGuard = installTeardownSuppression();
 
@@ -95,14 +92,11 @@ test('DELETE /mensagens/api/msg/admin/mailboxes/:id permanece nao migrado no mod
     const res = await request(app)
       .delete(`/mensagens/api/msg/admin/mailboxes/${MAILBOX_ID}`)
       .set('Accept', 'application/json')
-      .set('Connection', 'close')
-      .send({
-        unidade_id: '507f1f77bcf86cd799439010',
-      });
+      .set('Connection', 'close');
 
-    assert.equal(res.status, 404, JSON.stringify(res.body));
+    assert.equal(res.status, 401, JSON.stringify(res.body));
     assert.equal(res.body?.success, false, JSON.stringify(res.body));
-    assert.match(String(res.body?.message || ''), /^Recurso n.o encontrado$/u);
+    assert.match(String(res.body?.message || res.body?.error || ''), /não autenticado/i);
   } finally {
     try {
       await closeWithTeardownGuard(close, teardownGuard);
