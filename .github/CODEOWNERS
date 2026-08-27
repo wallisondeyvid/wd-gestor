@@ -1,0 +1,5 @@
+# Responsável padrão por todo o repositório
+* @wdgestor/core
+
+# Governança e automação do GitHub
+/.github/ @wdgestor/infraestrutura
